@@ -8,13 +8,12 @@
 
 body {
   font-family: var(--font-family-main);
-  background: var(--bg-solid-color, #FBF9F5);
+  background: var(--bg-solid-color, #F4F4F6);
   color: var(--text-main, #1E293B);
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  transition: background 0.3s ease;
 }
 
 button {
@@ -40,7 +39,7 @@ input, select {
   flex-direction: column;
 }
 
-/* 30% Structure: Card & Surface Utilities */
+/* Card & Surface Utilities */
 .glass-card {
   background: var(--card-bg, #FFFFFF);
   border: 1px solid #E2E8F0;
@@ -59,6 +58,24 @@ input, select {
   padding: 24px;
 }
 
+/* Diagonal Ribbon Badge (Kahoot Style) */
+.ribbon-badge {
+  position: absolute;
+  top: 16px;
+  left: -32px;
+  transform: rotate(-25deg);
+  background: #C00A27;
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 5px 36px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  letter-spacing: 0.5px;
+  z-index: 5;
+  white-space: nowrap;
+}
+
 /* Response Counter Badge */
 .counter-badge {
   display: inline-flex;
@@ -75,14 +92,14 @@ input, select {
 }
 
 .counter-badge .highlight {
-  color: var(--accent-earth-orange, #C05621);
+  color: var(--accent-earth-orange, #D97706);
   font-size: 1.25rem;
   font-weight: 800;
 }
 
 /* Connection Status Banner */
 .connection-banner {
-  background: #991B1B;
+  background: #C00A27;
   color: #FFFFFF;
   text-align: center;
   padding: 8px 16px;

@@ -1,38 +1,39 @@
 :root {
-  /* 60% (Base): Soft Warm Cream / Ivory Background Tone */
-  --bg-solid-color: #FBF9F5;
-  --bg-secondary: #F3EFE6;
+  /* Comfortable Solid Background Tone (No Gradients) */
+  --bg-solid-color: #F4F4F6;
+  --bg-secondary: #EBEBEF;
 
-  /* 30% (Structure): Slate Dark Charcoal Text & Clean 1px Border Surfaces */
+  /* Typography & Surfaces */
   --text-main: #1E293B;
-  --text-muted: #475569;
-  --text-light: #64748B;
+  --text-muted: #64748B;
+  --text-light: #94A3B8;
   
   --card-bg: #FFFFFF;
   --card-border: 1px solid #E2E8F0;
   --card-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
 
-  /* 10% (Accent): Natural Earth Tones (No Neon, No Electric Purple/Pink) */
-  --accent-earth-blue: #1E3A8A;       /* Deep Navy Primary CTA */
-  --accent-earth-green: #2D6A4F;      /* Olive / Forest Green */
-  --accent-earth-orange: #C05621;     /* Terracotta / Warm Rust */
-  --accent-earth-yellow: #D97706;     /* Warm Amber */
+  /* Primary Accent & Kahoot Style Green Action Colors */
+  --accent-green: #138808;
+  --accent-green-hover: #0f6e06;
+  --accent-red-ribbon: #C00A27;
+  --accent-earth-blue: #1E3A8A;
+  --accent-earth-orange: #D97706;
 
-  /* Quiz Choice Colors - Natural Soft Tones */
-  --choice-red: #991B1B;
-  --choice-blue: #1E40AF;
-  --choice-yellow: #B45309;
-  --choice-green: #166534;
+  /* Quiz Choice Colors */
+  --choice-red: #E21B3C;
+  --choice-blue: #1368CE;
+  --choice-yellow: #D89E00;
+  --choice-green: #26890C;
   
-  --choice-red-gradient: linear-gradient(135deg, #B91C1C 0%, #991B1B 100%);
-  --choice-blue-gradient: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
-  --choice-yellow-gradient: linear-gradient(135deg, #D97706 0%, #B45309 100%);
-  --choice-green-gradient: linear-gradient(135deg, #15803D 0%, #166534 100%);
+  --choice-red-gradient: linear-gradient(135deg, #E21B3C 0%, #C00A27 100%);
+  --choice-blue-gradient: linear-gradient(135deg, #1368CE 0%, #0F52A5 100%);
+  --choice-yellow-gradient: linear-gradient(135deg, #D89E00 0%, #B28200 100%);
+  --choice-green-gradient: linear-gradient(135deg, #26890C 0%, #1E6B09 100%);
 
   /* Pulse Colors */
-  --pulse-green: #15803D;
-  --pulse-yellow: #D97706;
-  --pulse-red: #B91C1C;
+  --pulse-green: #26890C;
+  --pulse-yellow: #D89E00;
+  --pulse-red: #E21B3C;
 
   /* Typography */
   --font-family-main: 'Kanit', 'Outfit', system-ui, -apple-system, sans-serif;

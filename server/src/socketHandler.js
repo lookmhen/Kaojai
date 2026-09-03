@@ -59,6 +59,11 @@ module.exports = function setupSocketHandlers(io) {
         const room = roomManager.getRoom(pin);
         if (!room) return socket.emit('error_message', { message: 'ไม่พบห้อง' });
 
+        if (room.questionTimer) {
+          clearTimeout(room.questionTimer);
+          room.questionTimer = null;
+        }
+
         const result = roomManager.startQuestion(pin, 0);
         if (result.isEnded) {
           const leaderboard = roomManager.getLeaderboard(pin);
@@ -74,7 +79,6 @@ module.exports = function setupSocketHandlers(io) {
           totalPlayers: counts.totalPlayers
         });
 
-        if (room.questionTimer) clearTimeout(room.questionTimer);
         const timeLimitMs = (result.question.timeLimitSeconds + 1) * 1000;
         room.questionTimer = setTimeout(() => {
           const questionResult = roomManager.getQuestionResult(pin);
@@ -97,7 +101,10 @@ module.exports = function setupSocketHandlers(io) {
           return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true });
         }
 
-        if (room.questionTimer) clearTimeout(room.questionTimer);
+        if (room.questionTimer) {
+          clearTimeout(room.questionTimer);
+          room.questionTimer = null;
+        }
 
         const result = roomManager.startQuestion(pin);
         if (result.isEnded) {
@@ -131,14 +138,18 @@ module.exports = function setupSocketHandlers(io) {
         const room = roomManager.getRoom(pin);
         if (!room) return socket.emit('error_message', { message: 'ไม่พบห้อง' });
 
+        if (room.questionTimer) {
+          clearTimeout(room.questionTimer);
+          room.questionTimer = null;
+        }
+
         const leaderboard = roomManager.getLeaderboard(pin);
-        
-        // If current index was the last question, set status to ENDED
-        if (room.currentQuestionIndex >= room.quizSet.questions.length - 1) {
-          room.status = 'ENDED';
+
+        if (room.status === 'ENDED') {
           return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true });
         }
 
+        room.status = 'LEADERBOARD';
         io.to(pin).emit('show_leaderboard', { leaderboard, status: 'LEADERBOARD' });
       } catch (err) {
         console.error('[Socket Error] show_leaderboard:', err);
@@ -148,10 +159,20 @@ module.exports = function setupSocketHandlers(io) {
 
     socket.on('switch_mode', ({ pin, mode }) => {
       try {
-        const room = roomManager.switchMode(pin, mode);
+        const room = roomManager.getRoom(pin);
+        if (!room) return socket.emit('error_message', { message: 'ไม่พบห้อง' });
+
+        if (room.questionTimer) {
+          clearTimeout(room.questionTimer);
+          room.questionTimer = null;
+        }
+
+        roomManager.switchMode(pin, mode);
         const counts = roomManager.getPlayerCounts(pin);
+
         io.to(pin).emit('mode_switched', {
           mode: room.mode,
+          status: room.status,
           pulseVotes: room.pulseVotes,
           pulseAnsweredCount: counts.pulseAnsweredCount,
           totalPlayers: counts.totalPlayers
@@ -235,6 +256,7 @@ module.exports = function setupSocketHandlers(io) {
           const room = roomManager.getRoom(pin);
           if (room && room.questionTimer) {
             clearTimeout(room.questionTimer);
+            room.questionTimer = null;
           }
           const questionResult = roomManager.getQuestionResult(pin);
           io.to(pin).emit('question_result', questionResult);
