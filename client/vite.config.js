@@ -17,7 +17,18 @@ export default defineConfig({
       },
       '/socket.io': {
         target: 'http://localhost:4000',
-        ws: true
+        ws: true,
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
+            if (err.code === 'ECONNRESET' || err.code === 'ECONNABORTED') return;
+            console.error('[Vite Proxy Error]:', err.message);
+          });
+          proxy.on('proxyReqWs', (_proxyReq, _req, socket) => {
+            socket.on('error', (err) => {
+              if (err.code === 'ECONNRESET' || err.code === 'ECONNABORTED') return;
+            });
+          });
+        }
       }
     }
   }

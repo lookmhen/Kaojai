@@ -12,6 +12,18 @@ app.use(cors());
 app.use(express.json({ limit: '25mb' }));
 
 const server = http.createServer(app);
+
+// Suppress noisy ECONNRESET / ECONNABORTED socket disconnect logs when client tabs close or refresh
+server.on('clientError', (err, socket) => {
+  if (err.code === 'ECONNRESET' || err.code === 'ECONNABORTED') {
+    if (socket.writable) {
+      socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+    }
+    return;
+  }
+  console.error('[HTTP Client Error]:', err.message);
+});
+
 const io = new Server(server, {
   cors: {
     origin: '*',
