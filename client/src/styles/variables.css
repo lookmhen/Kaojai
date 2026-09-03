@@ -1,47 +1,45 @@
 :root {
-  /* Solid Color Token - No Gradients */
-  --bg-solid-color: #1a237e;
+  /* 60% (Base): Soft Warm Cream / Ivory Background Tone */
+  --bg-solid-color: #FBF9F5;
+  --bg-secondary: #F3EFE6;
+
+  /* 30% (Structure): Slate Dark Charcoal Text & Clean 1px Border Surfaces */
+  --text-main: #1E293B;
+  --text-muted: #475569;
+  --text-light: #64748B;
   
-  --primary-purple: #7c4dff;
-  --primary-purple-hover: #651fff;
-  --primary-purple-glow: rgba(124, 77, 255, 0.5);
+  --card-bg: #FFFFFF;
+  --card-border: 1px solid #E2E8F0;
+  --card-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+
+  /* 10% (Accent): Natural Earth Tones (No Neon, No Electric Purple/Pink) */
+  --accent-earth-blue: #1E3A8A;       /* Deep Navy Primary CTA */
+  --accent-earth-green: #2D6A4F;      /* Olive / Forest Green */
+  --accent-earth-orange: #C05621;     /* Terracotta / Warm Rust */
+  --accent-earth-yellow: #D97706;     /* Warm Amber */
+
+  /* Quiz Choice Colors - Natural Soft Tones */
+  --choice-red: #991B1B;
+  --choice-blue: #1E40AF;
+  --choice-yellow: #B45309;
+  --choice-green: #166534;
   
-  --accent-pink: #ff4081;
-  --accent-cyan: #00e5ff;
-  --accent-yellow: #ffd600;
-  
-  /* Quiz Choice Colors */
-  --choice-red: #e74c3c;
-  --choice-blue: #2980b9;
-  --choice-yellow: #f39c12;
-  --choice-green: #27ae60;
-  
-  --choice-red-gradient: linear-gradient(135deg, #ff5252 0%, #ff1744 100%);
-  --choice-blue-gradient: linear-gradient(135deg, #448aff 0%, #2979ff 100%);
-  --choice-yellow-gradient: linear-gradient(135deg, #ffd740 0%, #ffab00 100%);
-  --choice-green-gradient: linear-gradient(135deg, #69f0ae 0%, #00e676 100%);
+  --choice-red-gradient: linear-gradient(135deg, #B91C1C 0%, #991B1B 100%);
+  --choice-blue-gradient: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+  --choice-yellow-gradient: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  --choice-green-gradient: linear-gradient(135deg, #15803D 0%, #166534 100%);
 
   /* Pulse Colors */
-  --pulse-green: #00e676;
-  --pulse-yellow: #ffd600;
-  --pulse-red: #ff5252;
-
-  /* Glassmorphism Surface Tokens */
-  --glass-bg: rgba(255, 255, 255, 0.12);
-  --glass-border: rgba(255, 255, 255, 0.25);
-  --glass-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25);
-
-  --glass-card-light: rgba(255, 255, 255, 0.95);
-  --glass-border-light: rgba(255, 255, 255, 0.4);
+  --pulse-green: #15803D;
+  --pulse-yellow: #D97706;
+  --pulse-red: #B91C1C;
 
   /* Typography */
   --font-family-main: 'Kanit', 'Outfit', system-ui, -apple-system, sans-serif;
   
-  /* Radii & Elevation */
+  /* Radii */
   --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 28px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
   --radius-full: 9999px;
-  
-  --shadow-glow: 0 0 25px rgba(124, 77, 255, 0.6);
 }

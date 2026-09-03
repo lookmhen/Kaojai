@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
-import { Trophy, Award } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 
 export const PlayerEndedView = ({ player, leaderboard }) => {
   useEffect(() => {
@@ -16,41 +16,41 @@ export const PlayerEndedView = ({ player, leaderboard }) => {
   return (
     <div style={{ maxWidth: '440px', margin: '40px auto', padding: '0 16px', textAlign: 'center' }}>
       <div className="glass-card animate-pop" style={{ padding: '36px 20px' }}>
-        <Trophy size={64} color="var(--accent-yellow)" style={{ marginBottom: '16px' }} />
-        <h1 style={{ fontSize: '2.2rem', fontWeight: 900, background: 'linear-gradient(90deg, #FDCB6E, #FF7675)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        <Trophy size={60} color="var(--accent-earth-orange)" style={{ marginBottom: '14px' }} />
+        <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-main)' }}>
           จบกิจกรรมตอบคำถามแล้ว!
         </h1>
-        <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '1rem', marginTop: '6px', marginBottom: '24px' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '4px', marginBottom: '24px' }}>
           ขอบคุณสำหรับการมีส่วนร่วมสุดยอดเยี่ยม ✨
         </p>
 
-        <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.15)', marginBottom: '24px' }}>
+        <div style={{ background: '#F8FAFC', borderRadius: '16px', padding: '20px', border: '1px solid #E2E8F0', marginBottom: '24px' }}>
           <img
             src={`/avatars/${player.avatar || '0291dcc0ce.svg'}`}
             alt={player.name}
             onError={(e) => { e.target.src = '/avatars/0291dcc0ce.svg'; }}
-            style={{ width: '80px', height: '80px', borderRadius: '50%', border: '3px solid var(--accent-yellow)', marginBottom: '10px' }}
+            style={{ width: '76px', height: '76px', borderRadius: '50%', border: '3px solid var(--accent-earth-orange)', marginBottom: '10px', background: '#FFFFFF' }}
           />
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>{player.name}</h2>
+          <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-main)' }}>{player.name}</h2>
           
           <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '16px' }}>
             <div>
-              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' }}>อันดับของคุณ</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--accent-yellow)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>อันดับของคุณ</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--accent-earth-orange)' }}>
                 {myRank ? `#${myRank}` : '-'}
               </div>
             </div>
-            <div style={{ width: '1px', background: 'rgba(255,255,255,0.2)' }} />
+            <div style={{ width: '1px', background: '#CBD5E1' }} />
             <div>
-              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' }}>คะแนนรวม</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--pulse-green)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>คะแนนรวม</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--accent-earth-green)' }}>
                 {myScore.toLocaleString()} Pts
               </div>
             </div>
           </div>
         </div>
 
-        <div style={{ color: 'var(--accent-cyan)', fontWeight: 600, fontSize: '0.95rem' }}>
+        <div style={{ color: 'var(--accent-earth-blue)', fontWeight: 700, fontSize: '0.9rem' }}>
           🌟 รอวิทยากรสรุปกิจกรรมบนหน้าจอใหญ่...
         </div>
       </div>

@@ -112,29 +112,9 @@ export const TeacherBackoffice = ({ onBack }) => {
           type="button"
           onClick={onBack}
           style={{
-            background: 'rgba(255,255,255,0.15)',
-            color: '#fff',
-            padding: '10px 20px',
-            borderRadius: '12px',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          <ArrowLeft size={18} /> กลับหน้าหลัก
-        </button>
-
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--accent-yellow)' }}>
-          🎓 Teacher Backoffice (ระบบจัดการคำถาม)
-        </h1>
-
-        <button
-          type="button"
-          onClick={handleCreateNewQuiz}
-          style={{
-            background: 'linear-gradient(135deg, #00CEC9 0%, #0984e3 100%)',
-            color: '#fff',
+            background: '#FFFFFF',
+            border: '1px solid #CBD5E1',
+            color: 'var(--text-main)',
             padding: '10px 20px',
             borderRadius: '12px',
             fontWeight: 700,
@@ -143,31 +123,53 @@ export const TeacherBackoffice = ({ onBack }) => {
             gap: '8px'
           }}
         >
+          <ArrowLeft size={18} /> กลับหน้าหลัก
+        </button>
+
+        <h1 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--accent-earth-orange)' }}>
+          🎓 Teacher Backoffice (ระบบจัดการคำถาม)
+        </h1>
+
+        <button
+          type="button"
+          onClick={handleCreateNewQuiz}
+          style={{
+            background: 'var(--accent-earth-blue)',
+            color: '#FFFFFF',
+            padding: '10px 20px',
+            borderRadius: '12px',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 4px 12px rgba(30, 58, 138, 0.2)'
+          }}
+        >
           <Plus size={18} /> สร้างชุดคำถามใหม่
         </button>
       </div>
 
       {notification && (
-        <div style={{ background: 'rgba(46, 204, 113, 0.25)', border: '1px solid #2ecc71', color: '#2ecc71', padding: '12px 20px', borderRadius: '12px', marginBottom: '20px', fontWeight: 700, textAlign: 'center' }}>
+        <div style={{ background: '#F0FDF4', border: '1px solid #86EFAC', color: '#166534', padding: '12px 20px', borderRadius: '12px', marginBottom: '20px', fontWeight: 700, textAlign: 'center' }}>
           {notification}
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: isEditing ? '300px 1fr' : '1fr', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isEditing ? '290px 1fr' : '1fr', gap: '24px' }}>
         {/* Quiz List Panel */}
         <div className="glass-card">
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '16px', color: 'rgba(255,255,255,0.9)' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '16px', color: 'var(--text-main)' }}>
             คลังชุดคำถามทั้งหมด ({quizzes.length})
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {quizzes.map(q => (
               <div
                 key={q.id}
                 style={{
-                  padding: '14px',
+                  padding: '12px 14px',
                   borderRadius: '12px',
-                  background: activeQuiz?.id === q.id ? 'var(--primary-purple)' : 'rgba(0,0,0,0.3)',
-                  border: '1px solid rgba(255,255,255,0.2)',
+                  background: activeQuiz?.id === q.id ? '#EFF6FF' : '#F8FAFC',
+                  border: activeQuiz?.id === q.id ? '2px solid var(--accent-earth-blue)' : '1px solid #E2E8F0',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
@@ -176,13 +178,13 @@ export const TeacherBackoffice = ({ onBack }) => {
                 onClick={() => { setActiveQuiz(q); setIsEditing(true); }}
               >
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: '1rem' }}>{q.title}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)' }}>{q.questions.length} ข้อ</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>{q.title}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{q.questions.length} ข้อ</div>
                 </div>
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); handleDeleteQuiz(q.id); }}
-                  style={{ background: 'transparent', color: '#ff7675', padding: '4px' }}
+                  style={{ background: 'transparent', color: '#991B1B', padding: '4px' }}
                 >
                   <Trash2 size={16} />
                 </button>
@@ -195,17 +197,17 @@ export const TeacherBackoffice = ({ onBack }) => {
         {isEditing && activeQuiz && (
           <div className="glass-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>แก้ไขชุดคำถาม</h2>
+              <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-main)' }}>แก้ไขชุดคำถาม</h2>
               <button
                 type="button"
                 onClick={handleSaveQuiz}
                 style={{
-                  padding: '10px 24px',
+                  padding: '10px 22px',
                   borderRadius: '12px',
-                  background: 'var(--pulse-green)',
-                  color: '#000',
+                  background: 'var(--accent-earth-green)',
+                  color: '#FFFFFF',
                   fontWeight: 800,
-                  fontSize: '1rem',
+                  fontSize: '0.95rem',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px'
@@ -216,32 +218,32 @@ export const TeacherBackoffice = ({ onBack }) => {
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '0.9rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>ชื่อชุดคำถาม:</label>
+              <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '4px', color: 'var(--text-main)' }}>ชื่อชุดคำถาม:</label>
               <input
                 type="text"
                 value={activeQuiz.title}
                 onChange={(e) => setActiveQuiz({ ...activeQuiz, title: e.target.value })}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', background: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #CBD5E1' }}
               />
             </div>
 
             {/* Questions Form List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '24px' }}>
               {activeQuiz.questions.map((q, qIdx) => (
-                <div key={q.id || qIdx} style={{ background: 'rgba(0,0,0,0.3)', padding: '20px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.15)' }}>
+                <div key={q.id || qIdx} style={{ background: '#F8FAFC', padding: '20px', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <h4 style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>ข้อที่ {qIdx + 1}</h4>
+                    <h4 style={{ fontWeight: 800, color: 'var(--accent-earth-blue)' }}>ข้อที่ {qIdx + 1}</h4>
                     <button
                       type="button"
                       onClick={() => handleRemoveQuestion(qIdx)}
-                      style={{ background: 'rgba(231, 76, 60, 0.2)', border: '1px solid #e74c3c', color: '#ff7675', padding: '4px 10px', borderRadius: '8px', fontSize: '0.8rem' }}
+                      style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B', padding: '4px 10px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600 }}
                     >
                       <Trash2 size={14} /> ลบข้อนี้
                     </button>
                   </div>
 
                   <div style={{ marginBottom: '12px' }}>
-                    <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '4px' }}>โจทย์คำถาม:</label>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '4px', color: 'var(--text-main)' }}>โจทย์คำถาม:</label>
                     <input
                       type="text"
                       value={q.questionText}
@@ -250,14 +252,14 @@ export const TeacherBackoffice = ({ onBack }) => {
                         updated[qIdx].questionText = e.target.value;
                         setActiveQuiz({ ...activeQuiz, questions: updated });
                       }}
-                      style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', background: '#FFFFFF', color: 'var(--text-main)', border: '1px solid #CBD5E1' }}
                     />
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
-                        <Clock size={14} /> กำหนดเวลาตอบ (วินาที):
+                      <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', color: 'var(--text-main)' }}>
+                        <Clock size={14} color="var(--accent-earth-blue)" /> กำหนดเวลาตอบ (วินาที):
                       </label>
                       <select
                         value={q.timeLimitSeconds}
@@ -266,7 +268,7 @@ export const TeacherBackoffice = ({ onBack }) => {
                           updated[qIdx].timeLimitSeconds = parseInt(e.target.value, 10);
                           setActiveQuiz({ ...activeQuiz, questions: updated });
                         }}
-                        style={{ width: '100%', padding: '8px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}
+                        style={{ width: '100%', padding: '8px', borderRadius: '8px', background: '#FFFFFF', color: 'var(--text-main)', border: '1px solid #CBD5E1' }}
                       >
                         <option value={10}>10 วินาที</option>
                         <option value={15}>15 วินาที</option>
@@ -277,8 +279,8 @@ export const TeacherBackoffice = ({ onBack }) => {
                     </div>
 
                     <div>
-                      <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
-                        <ImageIcon size={14} /> รูปภาพประกอบคำถาม (Image URL):
+                      <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', color: 'var(--text-main)' }}>
+                        <ImageIcon size={14} color="var(--accent-earth-blue)" /> รูปภาพประกอบคำถาม (Image URL):
                       </label>
                       <input
                         type="text"
@@ -289,14 +291,14 @@ export const TeacherBackoffice = ({ onBack }) => {
                           updated[qIdx].imageUrl = e.target.value;
                           setActiveQuiz({ ...activeQuiz, questions: updated });
                         }}
-                        style={{ width: '100%', padding: '8px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}
+                        style={{ width: '100%', padding: '8px', borderRadius: '8px', background: '#FFFFFF', color: 'var(--text-main)', border: '1px solid #CBD5E1' }}
                       />
                     </div>
                   </div>
 
                   {/* Options */}
                   <div style={{ marginTop: '12px' }}>
-                    <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '8px' }}>ตัวเลือก 4 ข้อ (คลิกเลือกปุ่มถูกสำหรับข้อที่ถูกต้อง):</label>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>ตัวเลือก 4 ข้อ (คลิกเลือกปุ่มถูกสำหรับข้อที่ถูกต้อง):</label>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                       {q.options.map((opt, optIdx) => (
                         <div key={opt.id || optIdx} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -308,8 +310,8 @@ export const TeacherBackoffice = ({ onBack }) => {
                               setActiveQuiz({ ...activeQuiz, questions: updated });
                             }}
                             style={{
-                              background: opt.isCorrect ? 'var(--pulse-green)' : 'rgba(255,255,255,0.1)',
-                              color: opt.isCorrect ? '#000' : '#fff',
+                              background: opt.isCorrect ? 'var(--pulse-green)' : '#E2E8F0',
+                              color: opt.isCorrect ? '#FFFFFF' : '#475569',
                               borderRadius: '6px',
                               padding: '6px 10px',
                               fontWeight: 700,
@@ -326,7 +328,7 @@ export const TeacherBackoffice = ({ onBack }) => {
                               updated[qIdx].options[optIdx].text = e.target.value;
                               setActiveQuiz({ ...activeQuiz, questions: updated });
                             }}
-                            style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', background: 'rgba(0,0,0,0.5)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', fontSize: '0.9rem' }}
+                            style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', background: '#FFFFFF', color: 'var(--text-main)', border: '1px solid #CBD5E1', fontSize: '0.9rem' }}
                           />
                         </div>
                       ))}
@@ -341,9 +343,9 @@ export const TeacherBackoffice = ({ onBack }) => {
                 style={{
                   padding: '12px',
                   borderRadius: '12px',
-                  background: 'rgba(255,255,255,0.1)',
-                  border: '1px dashed rgba(255,255,255,0.3)',
-                  color: '#fff',
+                  background: '#FFFFFF',
+                  border: '1px dashed #CBD5E1',
+                  color: 'var(--text-main)',
                   fontWeight: 700,
                   fontSize: '0.95rem',
                   display: 'flex',

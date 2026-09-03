@@ -18,7 +18,6 @@ export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers 
   const [timeLeft, setTimeLeft] = useState(question.timeLimitSeconds);
 
   useEffect(() => {
-    // Reset state on new question
     setSelectedOptionId(null);
     setFeedback(null);
     setIsSubmitting(false);
@@ -30,7 +29,6 @@ export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers 
           clearInterval(interval);
           return 0;
         }
-        // Play accelerating tense tick sound when time <= 5 seconds!
         if (prev <= 6) {
           sfx.playTenseTick(prev - 1);
         }
@@ -75,9 +73,9 @@ export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers 
 
   return (
     <div style={{ maxWidth: '480px', margin: '20px auto', padding: '0 16px' }}>
-      {/* Top Status Bar: Question Progress, Countdown Timer & Answered Counter */}
+      {/* Top Status Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
+        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
           ข้อที่ {question.questionIndex + 1} / {question.totalQuestions}
         </div>
 
@@ -87,26 +85,26 @@ export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers 
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            background: timeLeft <= 5 ? 'rgba(231, 76, 60, 0.3)' : 'rgba(0,0,0,0.3)',
-            border: timeLeft <= 5 ? '1px solid #e74c3c' : '1px solid rgba(255,255,255,0.2)',
+            background: timeLeft <= 5 ? '#FEF2F2' : '#FFFFFF',
+            border: timeLeft <= 5 ? '1px solid #FCA5A5' : '1px solid #E2E8F0',
             padding: '6px 14px',
             borderRadius: '20px'
           }}
         >
-          <Clock size={16} color={timeLeft <= 5 ? '#e74c3c' : 'var(--accent-cyan)'} />
-          <span style={{ fontWeight: 800, color: timeLeft <= 5 ? '#ff7675' : '#fff', fontSize: '1.1rem' }}>
+          <Clock size={16} color={timeLeft <= 5 ? '#991B1B' : 'var(--accent-earth-blue)'} />
+          <span style={{ fontWeight: 800, color: timeLeft <= 5 ? '#991B1B' : 'var(--text-main)', fontSize: '1.05rem' }}>
             {timeLeft}s
           </span>
         </div>
 
-        {/* Answered / Total Count Counter Badge */}
-        <div className="counter-badge" style={{ padding: '6px 12px', fontSize: '0.95rem' }}>
-          <Users size={14} color="var(--accent-yellow)" />
+        {/* Counter Badge */}
+        <div className="counter-badge" style={{ padding: '6px 12px', fontSize: '0.9rem' }}>
+          <Users size={14} color="var(--accent-earth-orange)" />
           <span><span className="highlight" style={{ fontSize: '1.1rem' }}>{answeredCount}</span>/{totalPlayers}</span>
         </div>
       </div>
 
-      {/* Question Card (with Image Support) */}
+      {/* Question Card */}
       <div className="glass-card" style={{ marginBottom: '20px', textAlign: 'center' }}>
         {question.imageUrl && (
           <div style={{ marginBottom: '12px', overflow: 'hidden', borderRadius: '12px', maxHeight: '180px' }}>
@@ -118,7 +116,7 @@ export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers 
             />
           </div>
         )}
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, lineHeight: 1.4 }}>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 700, lineHeight: 1.4, color: 'var(--text-main)' }}>
           {question.questionText}
         </h2>
       </div>
@@ -128,29 +126,29 @@ export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers 
           className="glass-card animate-pop"
           style={{
             textAlign: 'center',
-            padding: '30px 20px',
-            background: feedback.isCorrect ? 'rgba(39, 174, 96, 0.25)' : 'rgba(231, 76, 60, 0.25)',
-            border: feedback.isCorrect ? '2px solid var(--pulse-green)' : '2px solid var(--pulse-red)'
+            padding: '28px 20px',
+            background: feedback.isCorrect ? '#F0FDF4' : '#FEF2F2',
+            border: feedback.isCorrect ? '2px solid #166534' : '2px solid #991B1B'
           }}
         >
           {feedback.isCorrect ? (
             <>
-              <CheckCircle2 size={54} color="var(--pulse-green)" style={{ marginBottom: '12px' }} />
-              <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--pulse-green)' }}>ถูกต้องที่สุด! 🎉</h3>
-              <p style={{ fontSize: '1.2rem', marginTop: '8px', fontWeight: 600 }}>
+              <CheckCircle2 size={50} color="#166534" style={{ marginBottom: '10px' }} />
+              <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#166534' }}>ถูกต้องที่สุด! 🎉</h3>
+              <p style={{ fontSize: '1.15rem', marginTop: '6px', fontWeight: 700, color: '#15803D' }}>
                 +{feedback.pointsEarned} คะแนน!
               </p>
             </>
           ) : (
             <>
-              <XCircle size={54} color="var(--pulse-red)" style={{ marginBottom: '12px' }} />
-              <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--pulse-red)' }}>ยังไม่ถูกต้อง 😅</h3>
-              <p style={{ fontSize: '1rem', marginTop: '8px', color: 'rgba(255,255,255,0.8)' }}>
+              <XCircle size={50} color="#991B1B" style={{ marginBottom: '10px' }} />
+              <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#991B1B' }}>ยังไม่ถูกต้อง 😅</h3>
+              <p style={{ fontSize: '0.95rem', marginTop: '6px', color: 'var(--text-muted)' }}>
                 ไม่ต้องเสียใจ สะสมความเข้าใจในข้อถัดไปกันนะ!
               </p>
             </>
           )}
-          <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', marginTop: '20px' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '16px' }}>
             รอการสรุปผลคำตอบจากวิทยากร...
           </p>
         </div>
@@ -168,23 +166,23 @@ export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers 
                 disabled={selectedOptionId !== null}
                 style={{
                   background: styleObj.bg,
-                  borderRadius: '16px',
-                  padding: '20px 14px',
-                  color: '#fff',
-                  fontSize: '1.05rem',
+                  borderRadius: '14px',
+                  padding: '18px 14px',
+                  color: '#FFFFFF',
+                  fontSize: '1rem',
                   fontWeight: 700,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px',
-                  boxShadow: isChosen ? '0 0 20px rgba(255,255,255,0.8)' : '0 6px 18px rgba(0,0,0,0.3)',
+                  gap: '6px',
+                  boxShadow: '0 4px 12px rgba(15,23,42,0.06)',
                   opacity: selectedOptionId && !isChosen ? 0.4 : 1,
-                  transform: isChosen ? 'scale(1.05)' : 'scale(1)',
-                  minHeight: '110px'
+                  transform: isChosen ? 'scale(1.03)' : 'scale(1)',
+                  minHeight: '105px'
                 }}
               >
-                <span style={{ fontSize: '1.5rem' }}>{styleObj.symbol}</span>
+                <span style={{ fontSize: '1.4rem' }}>{styleObj.symbol}</span>
                 <span>{opt.text}</span>
               </button>
             );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { AvatarPicker } from './AvatarPicker';
-import { LogIn, Crown, BookOpen, Users, GraduationCap, Play } from 'lucide-react';
+import { LogIn, Crown, BookOpen, Users, GraduationCap } from 'lucide-react';
 
 export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) => {
   const { socket, saveSessionData } = useSocket();
@@ -12,7 +12,6 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Parse ?pin=XXXXXX from URL Query String if present
     const urlParams = new URLSearchParams(window.location.search);
     const queryPin = urlParams.get('pin');
     if (queryPin && queryPin.length === 6) {
@@ -59,44 +58,44 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
 
   return (
     <div style={{ maxWidth: '960px', margin: '40px auto', padding: '0 20px' }}>
-      {/* App Header Title */}
+      {/* Header Banner */}
       <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-        <h1 style={{ fontSize: '3rem', fontWeight: 900, background: 'linear-gradient(90deg, #FFD600, #FF4081, #00E5FF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '1px' }}>
+        <h1 style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--accent-earth-blue)', letterSpacing: '0.5px' }}>
           KaoJai Interactive Pulse
         </h1>
-        <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1.15rem', marginTop: '6px', fontWeight: 500 }}>
-          เลือกบทบาทเพื่อเริ่มใช้งานระบบถาม-ตอบเรียลไทม์ และเช็กความเข้าใจ
+        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginTop: '6px', fontWeight: 500 }}>
+          เลือกบทบาทเพื่อเริ่มใช้งานระบบถาม-ตอบเรียลไทม์ และเช็กความเข้าใจในการฝึกอบรม
         </p>
       </div>
 
-      {/* 2 Big Column Selection Box Layout */}
+      {/* 2 Column Selection Box Layout (60-30-10 Earth Tones) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '28px', alignItems: 'stretch' }}>
         
-        {/* COLUMN 1: Student / Participant Box */}
-        <div className="glass-card animate-pop" style={{ display: 'flex', flexDirection: 'column', borderTop: '6px solid var(--accent-cyan)' }}>
+        {/* COLUMN 1: Student Box */}
+        <div className="glass-card animate-pop" style={{ display: 'flex', flexDirection: 'column', borderTop: '6px solid var(--accent-earth-blue)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-            <div style={{ background: 'rgba(0, 229, 255, 0.2)', padding: '12px', borderRadius: '16px', border: '1px solid var(--accent-cyan)' }}>
-              <Users size={28} color="var(--accent-cyan)" />
+            <div style={{ background: '#EFF6FF', padding: '12px', borderRadius: '14px', border: '1px solid #BFDBFE' }}>
+              <Users size={26} color="var(--accent-earth-blue)" />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)' }}>
                 สำหรับผู้เรียน / ผู้เข้าร่วม
               </h2>
-              <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                 กรอก PIN หรือสแกน QR Code เพื่อเข้าเล่น
               </span>
             </div>
           </div>
 
           {error && (
-            <div style={{ background: 'rgba(255, 82, 82, 0.25)', border: '1px solid #ff5252', color: '#ff8a80', padding: '10px 14px', borderRadius: '10px', marginBottom: '16px', fontSize: '0.9rem', fontWeight: 600 }}>
+            <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B', padding: '10px 14px', borderRadius: '10px', marginBottom: '16px', fontSize: '0.9rem', fontWeight: 600 }}>
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
             <div style={{ marginBottom: '14px', textAlign: 'left' }}>
-              <label style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.9)', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+              <label style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
                 Game PIN (รหัส 6 หลัก):
               </label>
               <input
@@ -108,20 +107,20 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
                 style={{
                   width: '100%',
                   padding: '12px',
-                  fontSize: '1.5rem',
+                  fontSize: '1.4rem',
                   textAlign: 'center',
                   letterSpacing: '4px',
                   borderRadius: '12px',
-                  border: '2px solid rgba(255,255,255,0.25)',
-                  background: 'rgba(0,0,0,0.35)',
-                  color: '#fff',
+                  border: '1px solid #CBD5E1',
+                  background: '#F8FAFC',
+                  color: 'var(--text-main)',
                   fontWeight: 800
                 }}
               />
             </div>
 
             <div style={{ marginBottom: '14px', textAlign: 'left' }}>
-              <label style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.9)', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+              <label style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
                 ชื่อของคุณ (Nickname):
               </label>
               <input
@@ -133,11 +132,11 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
                 style={{
                   width: '100%',
                   padding: '12px 14px',
-                  fontSize: '1.05rem',
+                  fontSize: '1rem',
                   borderRadius: '12px',
-                  border: '2px solid rgba(255,255,255,0.25)',
-                  background: 'rgba(0,0,0,0.35)',
-                  color: '#fff'
+                  border: '1px solid #CBD5E1',
+                  background: '#F8FAFC',
+                  color: 'var(--text-main)'
                 }}
               />
             </div>
@@ -151,11 +150,11 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
                 width: '100%',
                 padding: '16px',
                 borderRadius: '14px',
-                background: 'linear-gradient(135deg, #00e5ff 0%, #2979ff 100%)',
-                color: '#fff',
-                fontSize: '1.2rem',
-                fontWeight: 800,
-                boxShadow: '0 8px 24px rgba(0, 229, 255, 0.4)',
+                background: 'var(--accent-earth-blue)',
+                color: '#FFFFFF',
+                fontSize: '1.15rem',
+                fontWeight: 700,
+                boxShadow: '0 4px 14px rgba(30, 58, 138, 0.2)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -168,61 +167,61 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
           </form>
         </div>
 
-        {/* COLUMN 2: Teacher / Host Box */}
-        <div className="glass-card animate-pop" style={{ display: 'flex', flexDirection: 'column', borderTop: '6px solid var(--accent-yellow)' }}>
+        {/* COLUMN 2: Teacher Box */}
+        <div className="glass-card animate-pop" style={{ display: 'flex', flexDirection: 'column', borderTop: '6px solid var(--accent-earth-orange)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-            <div style={{ background: 'rgba(255, 214, 0, 0.2)', padding: '12px', borderRadius: '16px', border: '1px solid var(--accent-yellow)' }}>
-              <GraduationCap size={28} color="var(--accent-yellow)" />
+            <div style={{ background: '#FFF7ED', padding: '12px', borderRadius: '14px', border: '1px solid #FFEDD5' }}>
+              <GraduationCap size={26} color="var(--accent-earth-orange)" />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)' }}>
                 สำหรับวิทยากร / ผู้สอน
               </h2>
-              <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                 สร้างห้องกิจกรรม หรือจัดการคลังคำถาม
               </span>
             </div>
           </div>
 
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.95rem', marginBottom: '24px', lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '24px', lineHeight: 1.6 }}>
             ควบคุมเกมขึ้นจอใหญ่ (Projector Dashboard), สลับโหมด Quiz & Pulse เรียลไทม์ และปรับแต่งชุดคำถามได้อย่างอิสระ
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: 'auto' }}>
-            {/* Big Action Button 1: Create Host Room */}
+            {/* Action 1: Create Host Room */}
             <button
               type="button"
               onClick={onSwitchToHost}
               style={{
                 width: '100%',
-                padding: '20px 16px',
-                borderRadius: '16px',
-                background: 'linear-gradient(135deg, #ffd600 0%, #ffab00 100%)',
-                color: '#000',
-                fontSize: '1.2rem',
-                fontWeight: 800,
+                padding: '18px 16px',
+                borderRadius: '14px',
+                background: 'var(--accent-earth-orange)',
+                color: '#FFFFFF',
+                fontSize: '1.15rem',
+                fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '10px',
-                boxShadow: '0 8px 24px rgba(255, 214, 0, 0.4)'
+                boxShadow: '0 4px 14px rgba(192, 86, 33, 0.2)'
               }}
             >
-              <Crown size={24} /> สร้างห้องกิจกรรมใหม่ (Create Host Room)
+              <Crown size={22} /> สร้างห้องกิจกรรมใหม่ (Create Host Room)
             </button>
 
-            {/* Big Action Button 2: Teacher Backoffice */}
+            {/* Action 2: Teacher Backoffice */}
             <button
               type="button"
               onClick={onOpenTeacherBackoffice}
               style={{
                 width: '100%',
-                padding: '18px 16px',
-                borderRadius: '16px',
-                background: 'rgba(255, 255, 255, 0.12)',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
-                color: '#fff',
-                fontSize: '1.1rem',
+                padding: '16px',
+                borderRadius: '14px',
+                background: '#F8FAFC',
+                border: '1px solid #CBD5E1',
+                color: 'var(--text-main)',
+                fontSize: '1.05rem',
                 fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
@@ -230,7 +229,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
                 gap: '10px'
               }}
             >
-              <BookOpen size={22} color="var(--accent-cyan)" /> ระบบจัดการชุดคำถาม (Teacher Backoffice)
+              <BookOpen size={20} color="var(--accent-earth-blue)" /> ระบบจัดการชุดคำถาม (Teacher Backoffice)
             </button>
           </div>
         </div>

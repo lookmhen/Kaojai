@@ -8,8 +8,8 @@
 
 body {
   font-family: var(--font-family-main);
-  background: var(--bg-solid-color, #1a237e);
-  color: #ffffff;
+  background: var(--bg-solid-color, #FBF9F5);
+  color: var(--text-main, #1E293B);
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.5;
@@ -26,11 +26,12 @@ button {
 }
 
 button:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
 input, select {
   font-family: var(--font-family-main);
+  color: var(--text-main, #1E293B);
 }
 
 .app-container {
@@ -39,22 +40,21 @@ input, select {
   flex-direction: column;
 }
 
-/* Glassmorphism Card Utility */
+/* 30% Structure: Card & Surface Utilities */
 .glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
+  background: var(--card-bg, #FFFFFF);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
   border-radius: var(--radius-md);
   padding: 24px;
+  color: var(--text-main, #1E293B);
 }
 
 .glass-card-light {
-  background: rgba(255, 255, 255, 0.95);
-  color: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  background: #F8FAFC;
+  color: var(--text-main, #1E293B);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
   border-radius: var(--radius-md);
   padding: 24px;
 }
@@ -64,26 +64,26 @@ input, select {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 8px 16px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  padding: 8px 18px;
   border-radius: var(--radius-full);
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  color: var(--text-main, #1E293B);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
 .counter-badge .highlight {
-  color: var(--accent-yellow);
-  font-size: 1.3rem;
+  color: var(--accent-earth-orange, #C05621);
+  font-size: 1.25rem;
   font-weight: 800;
 }
 
 /* Connection Status Banner */
 .connection-banner {
-  background: #e74c3c;
-  color: white;
+  background: #991B1B;
+  color: #FFFFFF;
   text-align: center;
   padding: 8px 16px;
   font-weight: 600;
@@ -93,40 +93,39 @@ input, select {
   left: 0;
   right: 0;
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* Sleek Custom Scrollbar for Desktop & Mobile Containers */
+/* Clean Soft Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.15);
+  background: #F1F5F9;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(108, 92, 231, 0.6);
+  background: #94A3B8;
   border-radius: 10px;
   transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(108, 92, 231, 0.9);
+  background: #64748B;
 }
 
 /* Avatar Picker Grid Styles */
 .avatar-grid-wrapper {
-  background: rgba(0, 0, 0, 0.25);
+  background: #F8FAFC;
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid #E2E8F0;
   padding: 12px;
   max-height: 200px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(108, 92, 231, 0.6) rgba(0, 0, 0, 0.15);
+  scrollbar-color: #94A3B8 #F1F5F9;
 }
 
 .avatar-grid {
@@ -146,14 +145,13 @@ input, select {
 }
 
 .avatar-item:hover {
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
 .avatar-item.selected {
-  background: var(--primary-purple);
-  border: 2px solid var(--accent-yellow);
-  box-shadow: 0 0 12px rgba(253, 203, 110, 0.6);
-  transform: scale(1.15);
+  background: #E0E7FF;
+  border: 2px solid var(--accent-earth-blue, #1E3A8A);
+  transform: scale(1.1);
 }
 
 @media (max-width: 480px) {
@@ -168,19 +166,10 @@ input, select {
 
 /* Animations */
 @keyframes popIn {
-  0% { transform: scale(0.8); opacity: 0; }
+  0% { transform: scale(0.96); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 
-@keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 15px rgba(108, 92, 231, 0.4); }
-  50% { box-shadow: 0 0 30px rgba(108, 92, 231, 0.8); }
-}
-
 .animate-pop {
-  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-.animate-glow {
-  animation: pulseGlow 2s infinite;
+  animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
