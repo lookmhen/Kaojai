@@ -183,6 +183,20 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
+    socket.on('send_pulse_nudge', ({ pin }) => {
+      try {
+        const room = roomManager.getRoom(pin);
+        if (!room) return socket.emit('error_message', { message: 'ไม่พบห้องดังกล่าว' });
+
+        io.to(pin).emit('pulse_nudge_alert', {
+          message: '🔔 วิทยากรกำลังรอผลตอบรับจากคุณอยู่นะครับ! ✨',
+          timestamp: Date.now()
+        });
+      } catch (err) {
+        console.error('[Socket Error] send_pulse_nudge:', err);
+      }
+    });
+
     // --- PLAYER HANDLERS ---
     socket.on('join_room', ({ pin, name, avatar, playerId }, ackCallback) => {
       try {

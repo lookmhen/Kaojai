@@ -269,6 +269,7 @@ export function AppContent() {
           />
           {roomMode === 'PULSE' ? (
             <HostPulse
+              pin={pin}
               pulseVotes={pulseVotes}
               pulseAnsweredCount={counts.pulseAnsweredCount}
               totalPlayers={counts.totalPlayers}

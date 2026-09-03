@@ -4,3 +4,7 @@ dist/
 .env.local
 .DS_Store
 *.log
+
+# Ignore uploaded user images
+server/public/uploads/*
+!server/public/uploads/.gitkeep

@@ -1,16 +1,28 @@
-import React from 'react';
-import { Users, Smile, Meh, Frown, Activity } from 'lucide-react';
+import React, { useState } from 'react';
+import { useSocket } from '../../context/SocketContext';
+import { Users, Smile, Meh, Frown, Activity, Bell, Sparkles } from 'lucide-react';
 
-export const HostPulse = ({ pulseVotes, pulseAnsweredCount, totalPlayers }) => {
+export const HostPulse = ({ pin, pulseVotes, pulseAnsweredCount, totalPlayers }) => {
+  const { socket } = useSocket();
+  const [isNudged, setIsNudged] = useState(false);
+
   const greenCount = pulseVotes?.green || 0;
   const yellowCount = pulseVotes?.yellow || 0;
   const redCount = pulseVotes?.red || 0;
 
   const totalVoted = greenCount + yellowCount + redCount;
-  
+  const unvotedCount = Math.max(0, (totalPlayers || 0) - (pulseAnsweredCount || 0));
+
   const greenPct = totalVoted > 0 ? Math.round((greenCount / totalVoted) * 100) : 0;
   const yellowPct = totalVoted > 0 ? Math.round((yellowCount / totalVoted) * 100) : 0;
   const redPct = totalVoted > 0 ? Math.round((redCount / totalVoted) * 100) : 0;
+
+  const handleSendNudge = () => {
+    if (!socket || !pin) return;
+    socket.emit('send_pulse_nudge', { pin });
+    setIsNudged(true);
+    setTimeout(() => setIsNudged(false), 3000);
+  };
 
   return (
     <div style={{ maxWidth: '950px', margin: '30px auto', padding: '0 24px' }}>
@@ -25,11 +37,34 @@ export const HostPulse = ({ pulseVotes, pulseAnsweredCount, totalPlayers }) => {
           ผู้เรียนสามารถกดแจ้งระดับความเข้าใจบนหน้าจอมือถือได้แบบเรียลไทม์
         </p>
 
-        <div style={{ marginTop: '20px' }}>
+        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div className="counter-badge" style={{ fontSize: '1.1rem', padding: '8px 20px' }}>
             <Users size={18} color="var(--accent-earth-orange)" />
             <span>ส่งสัญญาณแล้ว <span className="highlight" style={{ fontSize: '1.35rem' }}>{pulseAnsweredCount}</span> / {totalPlayers} คน</span>
           </div>
+
+          <button
+            type="button"
+            onClick={handleSendNudge}
+            style={{
+              background: isNudged ? '#FEF3C7' : '#F59E0B',
+              color: isNudged ? '#92400E' : '#FFFFFF',
+              border: isNudged ? '2px solid #F59E0B' : 'none',
+              borderRadius: '30px',
+              padding: '10px 22px',
+              fontWeight: 800,
+              fontSize: '0.95rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(245, 158, 11, 0.35)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Bell size={18} className={isNudged ? 'animate-bounce' : ''} />
+            {isNudged ? '✨ ส่งสัญญาณเรียกสำเร็จแล้ว!' : `🔔 ส่งสัญญาณตามผู้เรียน (ยังไม่ส่งอีก ${unvotedCount} คน)`}
+          </button>
         </div>
       </div>
 

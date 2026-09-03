@@ -1,22 +1,97 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
-import { Smile, Meh, Frown, Users } from 'lucide-react';
+import { sfx } from '../../utils/audioSFX';
+import { Smile, Meh, Frown, Users, Bell, Sparkles, X } from 'lucide-react';
 
 export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers }) => {
   const { socket } = useSocket();
   const [activeChoice, setActiveChoice] = useState(null);
+  const [nudgeAlert, setNudgeAlert] = useState(null);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handlePulseNudge = (data) => {
+      sfx.playCuteChime();
+      setNudgeAlert(data.message || '🔔 วิทยากรกำลังรอผลตอบรับจากคุณอยู่นะครับ! ✨');
+    };
+
+    socket.on('pulse_nudge_alert', handlePulseNudge);
+
+    return () => {
+      socket.off('pulse_nudge_alert', handlePulseNudge);
+    };
+  }, [socket]);
 
   const handleSendPulse = (choice) => {
     setActiveChoice(choice);
-    socket.emit('submit_pulse', {
-      pin,
-      playerId: player.playerId,
-      choice
-    });
+    if (socket) {
+      socket.emit('submit_pulse', {
+        pin,
+        playerId: player.playerId,
+        choice
+      });
+    }
   };
 
   return (
     <div style={{ maxWidth: '440px', margin: '30px auto', padding: '0 16px', textAlign: 'center' }}>
+      {/* Cute Nudge Floating Modal */}
+      {nudgeAlert && (
+        <div
+          className="animate-pop"
+          style={{
+            position: 'fixed',
+            top: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '90%',
+            maxWidth: '400px',
+            background: '#FEF3C7',
+            border: '2px solid #F59E0B',
+            borderRadius: '20px',
+            padding: '16px 20px',
+            boxShadow: '0 10px 30px rgba(245, 158, 11, 0.35)',
+            zIndex: 1200,
+            color: '#92400E',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
+            <Bell size={26} color="#D97706" className="animate-bounce" />
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#92400E' }}>
+                ส่งสัญญาณเรียกจากวิทยากร
+              </div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#B45309' }}>
+                {nudgeAlert}
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setNudgeAlert(null)}
+            style={{
+              background: '#FDE68A',
+              border: 'none',
+              borderRadius: '50%',
+              width: '28px',
+              height: '28px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#92400E'
+            }}
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {/* Counter Badge */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
         <div className="counter-badge">
@@ -109,8 +184,8 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers }) =
       </div>
 
       {activeChoice && (
-        <div style={{ marginTop: '20px', color: 'var(--accent-earth-green)', fontSize: '0.9rem', fontWeight: 700 }}>
-          ✓ ส่งผลตอบรับแล้ว สามารถกดเปลี่ยนระดับได้ตลอดเวลา
+        <div className="animate-pop" style={{ marginTop: '20px', color: 'var(--pulse-green)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <Sparkles size={18} /> ส่งสัญญาณตอบรับเรียบร้อยแล้ว ขอบคุณครับ!
         </div>
       )}
     </div>

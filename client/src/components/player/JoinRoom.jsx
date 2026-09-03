@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { AvatarPicker } from './AvatarPicker';
-import { LogIn, Crown, BookOpen, Users, GraduationCap, ArrowLeft, Play, Sparkles } from 'lucide-react';
+import { LogIn, Crown, BookOpen, Gamepad2, MonitorPlay, ArrowLeft, Rocket, Sparkles, Tv, Users } from 'lucide-react';
 
 export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) => {
   const { socket, saveSessionData } = useSocket();
@@ -20,7 +20,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
     const queryPin = urlParams.get('pin');
     if (queryPin && queryPin.length === 6) {
       setPin(queryPin);
-      setScreen('PLAYER_FORM'); // Auto switch to player form if PIN is in URL
+      setScreen('PLAYER_FORM');
     }
   }, []);
 
@@ -61,13 +61,9 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
     });
   };
 
-  // =========================================================================
-  // VIEW 2: DEDICATED PLAYER JOIN FORM SCREEN
-  // =========================================================================
   if (screen === 'PLAYER_FORM') {
     return (
       <div style={{ maxWidth: '520px', margin: '40px auto', padding: '0 20px' }}>
-        {/* Top Back Navigation Bar */}
         <div style={{ marginBottom: '20px' }}>
           <button
             type="button"
@@ -90,11 +86,10 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
           </button>
         </div>
 
-        {/* Form Card */}
         <div className="glass-card animate-pop" style={{ padding: '32px 24px', borderTop: '5px solid #138808' }}>
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <div style={{ background: '#F0FDF4', display: 'inline-flex', padding: '14px', borderRadius: '50%', border: '1px solid #BBF7D0', marginBottom: '12px' }}>
-              <Users size={32} color="#138808" />
+              <Gamepad2 size={34} color="#138808" />
             </div>
             <h2 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--text-main)' }}>
               เข้าร่วมตอบคำถาม (Join Game)
@@ -188,12 +183,8 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
     );
   }
 
-  // =========================================================================
-  // VIEW 1: FRIENDLY SIDE-BY-SIDE MODE SELECTION SCREEN
-  // =========================================================================
   return (
     <div style={{ maxWidth: '960px', margin: '40px auto', padding: '0 20px' }}>
-      {/* App Header Title */}
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--accent-earth-orange)', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>
           <Sparkles size={16} /> Interactive Training & Quiz System
@@ -206,7 +197,6 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
         </p>
       </div>
 
-      {/* Side-by-Side 2 Column Vertical Layout */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '32px', alignItems: 'stretch' }}>
         
         {/* LEFT COLUMN: Participant / Join Card */}
@@ -223,7 +213,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
             <div style={{ background: '#F0FDF4', padding: '14px', borderRadius: '16px', border: '1px solid #BBF7D0' }}>
-              <Users size={32} color="#138808" />
+              <Gamepad2 size={34} color="#138808" />
             </div>
             <div>
               <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#138808', textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -259,7 +249,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
               borderBottom: '4px solid #0B5605'
             }}
           >
-            <Play size={22} /> Join / เข้าตอบคำถาม
+            <Rocket size={22} /> Join / เข้าตอบคำถาม
           </button>
         </div>
 
@@ -277,7 +267,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
             <div style={{ background: '#EFF6FF', padding: '14px', borderRadius: '16px', border: '1px solid #BFDBFE' }}>
-              <GraduationCap size={32} color="var(--accent-earth-blue)" />
+              <MonitorPlay size={34} color="var(--accent-earth-blue)" />
             </div>
             <div>
               <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-earth-blue)', textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -294,7 +284,6 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: 'auto' }}>
-            {/* Primary Action Button */}
             <button
               type="button"
               onClick={onSwitchToHost}
@@ -314,10 +303,9 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
                 borderBottom: '4px solid #172554'
               }}
             >
-              <Crown size={22} /> Teach / สร้างห้องกิจกรรมสด
+              <Tv size={22} /> Teach / สร้างห้องกิจกรรมสด
             </button>
 
-            {/* Secondary Action Button */}
             <button
               type="button"
               onClick={onOpenTeacherBackoffice}

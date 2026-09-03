@@ -16,7 +16,13 @@ export const TeacherBackoffice = ({ onBack }) => {
     fetch('/api/quizzes')
       .then(res => res.json())
       .then(data => {
-        if (data.quizzes) setQuizzes(data.quizzes);
+        if (data.quizzes) {
+          setQuizzes(data.quizzes);
+          if (data.quizzes.length > 0 && !activeQuiz) {
+            setActiveQuiz(data.quizzes[0]);
+            setIsEditing(true);
+          }
+        }
       })
       .catch(err => console.error('Fetch error:', err));
   };
@@ -109,7 +115,10 @@ export const TeacherBackoffice = ({ onBack }) => {
   };
 
   const handleSaveQuiz = () => {
-    if (!activeQuiz || !activeQuiz.title.trim()) return;
+    if (!activeQuiz || !activeQuiz.title.trim()) {
+      alert('กรุณากรอกชื่อชุดคำถาม');
+      return;
+    }
 
     fetch('/api/quizzes', {
       method: 'POST',
@@ -119,9 +128,11 @@ export const TeacherBackoffice = ({ onBack }) => {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          setNotification('บันทึกชุดคำถามสำเร็จ! 🎉');
+          setNotification('บันทึกชุดคำถามสำเร็จเรียบร้อย! 🎉');
           fetchQuizzes();
-          setTimeout(() => setNotification(''), 3000);
+          setTimeout(() => setNotification(''), 3500);
+        } else {
+          alert(data.message || 'ไม่สามารถบันทึกได้');
         }
       })
       .catch(err => console.error('Save error:', err));
@@ -144,51 +155,77 @@ export const TeacherBackoffice = ({ onBack }) => {
   };
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '30px auto', padding: '0 20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <button
-          type="button"
-          onClick={onBack}
-          style={{
-            background: '#FFFFFF',
-            border: '1px solid #CBD5E1',
-            color: 'var(--text-main)',
-            padding: '10px 20px',
-            borderRadius: '12px',
-            fontWeight: 700,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          <ArrowLeft size={18} /> กลับหน้าหลัก
-        </button>
+    <div style={{ maxWidth: '1050px', margin: '30px auto', padding: '0 20px', paddingBottom: '100px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button
+            type="button"
+            onClick={onBack}
+            style={{
+              background: '#FFFFFF',
+              border: '1px solid #CBD5E1',
+              color: 'var(--text-main)',
+              padding: '10px 18px',
+              borderRadius: '12px',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <ArrowLeft size={18} /> กลับหน้าหลัก
+          </button>
 
-        <h1 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--accent-earth-orange)' }}>
-          🎓 Teacher Backoffice (ระบบจัดการคำถาม)
-        </h1>
+          <h1 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--accent-earth-orange)' }}>
+            🎓 Teacher Backoffice (จัดการคำถาม)
+          </h1>
+        </div>
 
-        <button
-          type="button"
-          onClick={handleCreateNewQuiz}
-          style={{
-            background: 'var(--accent-earth-blue)',
-            color: '#FFFFFF',
-            padding: '10px 20px',
-            borderRadius: '12px',
-            fontWeight: 700,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 4px 12px rgba(30, 58, 138, 0.2)'
-          }}
-        >
-          <Plus size={18} /> สร้างชุดคำถามใหม่
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {isEditing && activeQuiz && (
+            <button
+              type="button"
+              onClick={handleSaveQuiz}
+              style={{
+                background: '#138808',
+                color: '#FFFFFF',
+                padding: '10px 22px',
+                borderRadius: '12px',
+                fontWeight: 800,
+                fontSize: '0.95rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 12px rgba(19, 136, 8, 0.3)',
+                borderBottom: '3px solid #0B5605'
+              }}
+            >
+              <Save size={18} /> บันทึกชุดคำถาม
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleCreateNewQuiz}
+            style={{
+              background: 'var(--accent-earth-blue)',
+              color: '#FFFFFF',
+              padding: '10px 20px',
+              borderRadius: '12px',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 12px rgba(30, 58, 138, 0.2)'
+            }}
+          >
+            <Plus size={18} /> สร้างชุดคำถามใหม่
+          </button>
+        </div>
       </div>
 
       {notification && (
-        <div style={{ background: '#F0FDF4', border: '1px solid #86EFAC', color: '#166534', padding: '12px 20px', borderRadius: '12px', marginBottom: '20px', fontWeight: 700, textAlign: 'center' }}>
+        <div className="animate-pop" style={{ background: '#F0FDF4', border: '1px solid #86EFAC', color: '#166534', padding: '14px 20px', borderRadius: '12px', marginBottom: '20px', fontWeight: 800, textAlign: 'center', fontSize: '1.05rem' }}>
           {notification}
         </div>
       )}
@@ -197,7 +234,7 @@ export const TeacherBackoffice = ({ onBack }) => {
         {/* Quiz List Panel */}
         <div className="glass-card">
           <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '16px', color: 'var(--text-main)' }}>
-            คลังชุดคำถามทั้งหมด ({quizzes.length})
+            คลังชุดคำถาม ({quizzes.length})
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {quizzes.map(q => (
@@ -234,7 +271,7 @@ export const TeacherBackoffice = ({ onBack }) => {
         {/* Quiz Editor Panel */}
         {isEditing && activeQuiz && (
           <div className="glass-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid #E2E8F0' }}>
               <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-main)' }}>แก้ไขชุดคำถาม</h2>
               <button
                 type="button"
@@ -242,13 +279,15 @@ export const TeacherBackoffice = ({ onBack }) => {
                 style={{
                   padding: '10px 22px',
                   borderRadius: '12px',
-                  background: 'var(--accent-earth-green)',
+                  background: '#138808',
                   color: '#FFFFFF',
                   fontWeight: 800,
                   fontSize: '0.95rem',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px'
+                  gap: '8px',
+                  boxShadow: '0 4px 12px rgba(19, 136, 8, 0.3)',
+                  borderBottom: '3px solid #0B5605'
                 }}
               >
                 <Save size={18} /> บันทึกชุดคำถาม
@@ -261,7 +300,7 @@ export const TeacherBackoffice = ({ onBack }) => {
                 type="text"
                 value={activeQuiz.title}
                 onChange={(e) => setActiveQuiz({ ...activeQuiz, title: e.target.value })}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', background: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #CBD5E1' }}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', background: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #CBD5E1', fontSize: '1.05rem', fontWeight: 700 }}
               />
             </div>
 
@@ -270,7 +309,7 @@ export const TeacherBackoffice = ({ onBack }) => {
               {activeQuiz.questions.map((q, qIdx) => (
                 <div key={q.id || qIdx} style={{ background: '#F8FAFC', padding: '20px', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <h4 style={{ fontWeight: 800, color: 'var(--accent-earth-blue)' }}>ข้อที่ {qIdx + 1}</h4>
+                    <h4 style={{ fontWeight: 800, color: 'var(--accent-earth-blue)', fontSize: '1.05rem' }}>ข้อที่ {qIdx + 1}</h4>
                     <button
                       type="button"
                       onClick={() => handleRemoveQuestion(qIdx)}
@@ -321,7 +360,6 @@ export const TeacherBackoffice = ({ onBack }) => {
                         <ImageIcon size={14} color="var(--accent-earth-blue)" /> รูปภาพประกอบคำถาม:
                       </label>
 
-                      {/* File Upload or External URL */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <label
@@ -365,7 +403,6 @@ export const TeacherBackoffice = ({ onBack }) => {
                     </div>
                   </div>
 
-                  {/* Image Preview Box */}
                   {q.imageUrl && (
                     <div style={{ marginTop: '8px', marginBottom: '16px', position: 'relative', display: 'inline-block', maxWidth: '240px' }}>
                       <div style={{ width: '220px', height: '120px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}>
@@ -402,7 +439,6 @@ export const TeacherBackoffice = ({ onBack }) => {
                     </div>
                   )}
 
-                  {/* Options */}
                   <div style={{ marginTop: '12px' }}>
                     <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>ตัวเลือก 4 ข้อ (คลิกเลือกปุ่มถูกสำหรับข้อที่ถูกต้อง):</label>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -466,6 +502,50 @@ export const TeacherBackoffice = ({ onBack }) => {
           </div>
         )}
       </div>
+
+      {/* Floating Sticky Save Bar at Bottom */}
+      {isEditing && activeQuiz && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: '#FFFFFF',
+            border: '2px solid #138808',
+            borderRadius: '50px',
+            padding: '10px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+            zIndex: 1000
+          }}
+        >
+          <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>
+            แก้ไข: <strong>{activeQuiz.title}</strong> ({activeQuiz.questions.length} ข้อ)
+          </span>
+          <button
+            type="button"
+            onClick={handleSaveQuiz}
+            style={{
+              padding: '10px 24px',
+              borderRadius: '30px',
+              background: '#138808',
+              color: '#FFFFFF',
+              fontWeight: 800,
+              fontSize: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 14px rgba(19, 136, 8, 0.4)',
+              cursor: 'pointer'
+            }}
+          >
+            <Save size={18} /> บันทึกชุดคำถาม
+          </button>
+        </div>
+      )}
     </div>
   );
 };
