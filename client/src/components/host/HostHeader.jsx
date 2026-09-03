@@ -37,13 +37,14 @@ export const HostHeader = ({ pin, mode, counts, onSwitchMode, onLeave }) => {
             style={{
               padding: '8px 18px',
               borderRadius: '24px',
-              background: mode === 'QUIZ' ? 'var(--accent-earth-blue)' : 'transparent',
+              background: mode === 'QUIZ' ? 'var(--accent-earth-blue, #1E3A8A)' : 'transparent',
               color: mode === 'QUIZ' ? '#FFFFFF' : 'var(--text-main)',
               fontWeight: 700,
               fontSize: '0.85rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '6px',
+              boxShadow: mode === 'QUIZ' ? '0 2px 8px rgba(30, 58, 138, 0.25)' : 'none'
             }}
           >
             <Play size={15} /> Quiz Game
@@ -54,13 +55,14 @@ export const HostHeader = ({ pin, mode, counts, onSwitchMode, onLeave }) => {
             style={{
               padding: '8px 18px',
               borderRadius: '24px',
-              background: mode === 'PULSE' ? 'var(--accent-earth-green)' : 'transparent',
+              background: mode === 'PULSE' ? 'var(--accent-earth-green, #138808)' : 'transparent',
               color: mode === 'PULSE' ? '#FFFFFF' : 'var(--text-main)',
               fontWeight: 700,
               fontSize: '0.85rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '6px',
+              boxShadow: mode === 'PULSE' ? '0 2px 8px rgba(19, 136, 8, 0.3)' : 'none'
             }}
           >
             <Activity size={15} /> Training Pulse
