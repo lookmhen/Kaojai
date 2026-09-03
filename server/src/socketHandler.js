@@ -47,7 +47,7 @@ module.exports = function setupSocketHandlers(io) {
         });
 
       } catch (err) {
-        console.error('[Socket Error] reconnect_host:', err);
+        console.log(`[Socket Info] reconnect_host failed: ${err.message}`);
         const errPayload = { success: false, message: err.message };
         if (typeof ackCallback === 'function') ackCallback(errPayload);
         socket.emit('error_message', errPayload);
@@ -243,7 +243,7 @@ module.exports = function setupSocketHandlers(io) {
         });
 
       } catch (err) {
-        console.error('[Socket Error] join_room:', err);
+        console.log(`[Socket Info] join_room failed: ${err.message}`);
         const res = { success: false, message: err.message };
         if (typeof ackCallback === 'function') ackCallback(res);
         socket.emit('error_message', res);

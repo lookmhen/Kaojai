@@ -37,7 +37,12 @@ export const SocketProvider = ({ children }) => {
       if (savedPin) {
         if (isHost) {
           console.log('Reconnecting as Host for PIN:', savedPin);
-          newSocket.emit('reconnect_host', { pin: savedPin });
+          newSocket.emit('reconnect_host', { pin: savedPin }, (res) => {
+            if (res && !res.success) {
+              console.log('Stale host session expired, clearing session...');
+              clearSession();
+            }
+          });
         } else if (savedName) {
           console.log('Reconnecting as Player:', savedName, 'for PIN:', savedPin);
           newSocket.emit('join_room', {
@@ -45,6 +50,11 @@ export const SocketProvider = ({ children }) => {
             name: savedName,
             avatar: savedAvatar,
             playerId: savedPlayerId
+          }, (res) => {
+            if (res && !res.success) {
+              console.log('Stale player session expired, clearing session...');
+              clearSession();
+            }
           });
         }
       }
