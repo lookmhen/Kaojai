@@ -58,7 +58,7 @@ input, select {
   padding: 24px;
 }
 
-/* Response Counter Badge (CRITICAL FEATURE REQUIREMENT) */
+/* Response Counter Badge */
 .counter-badge {
   display: inline-flex;
   align-items: center;
@@ -93,6 +93,76 @@ input, select {
   right: 0;
   z-index: 1000;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Sleek Custom Scrollbar for Desktop & Mobile Containers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(108, 92, 231, 0.6);
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(108, 92, 231, 0.9);
+}
+
+/* Avatar Picker Grid Styles */
+.avatar-grid-wrapper {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(108, 92, 231, 0.6) rgba(0, 0, 0, 0.15);
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+
+.avatar-item {
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-item:hover {
+  transform: scale(1.1);
+}
+
+.avatar-item.selected {
+  background: var(--primary-purple);
+  border: 2px solid var(--accent-yellow);
+  box-shadow: 0 0 12px rgba(253, 203, 110, 0.6);
+  transform: scale(1.15);
+}
+
+@media (max-width: 480px) {
+  .avatar-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+  .avatar-grid-wrapper {
+    max-height: 240px;
+  }
 }
 
 /* Animations */

@@ -22,10 +22,20 @@ export const AvatarPicker = ({ selectedAvatar, onSelectAvatar }) => {
 
   return (
     <div className="avatar-picker-container" style={{ margin: '16px 0' }}>
+      {/* Top Header & Active Avatar Preview */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <label style={{ fontSize: '0.95rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>
-          เลือก Avatar ประจำตัว:
-        </label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <img
+            src={`/avatars/${selectedAvatar || '0291dcc0ce.svg'}`}
+            alt="Selected Avatar Preview"
+            onError={(e) => { e.target.src = '/avatars/0291dcc0ce.svg'; }}
+            style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid var(--accent-yellow)' }}
+          />
+          <label style={{ fontSize: '0.95rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>
+            เลือก Avatar (30 แบบ):
+          </label>
+        </div>
+
         <button
           type="button"
           onClick={handleRandomize}
@@ -46,49 +56,29 @@ export const AvatarPicker = ({ selectedAvatar, onSelectAvatar }) => {
         </button>
       </div>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(6, 1fr)',
-          gap: '8px',
-          maxHeight: '180px',
-          overflowY: 'auto',
-          padding: '8px',
-          background: 'rgba(0, 0, 0, 0.2)',
-          borderRadius: '12px',
-          border: '1px solid rgba(255,255,255,0.1)'
-        }}
-      >
-        {avatars.map((fileName) => {
-          const isSelected = selectedAvatar === fileName;
-          return (
-            <div
-              key={fileName}
-              onClick={() => onSelectAvatar(fileName)}
-              style={{
-                cursor: 'pointer',
-                borderRadius: '50%',
-                padding: '4px',
-                background: isSelected ? 'var(--primary-purple)' : 'transparent',
-                border: isSelected ? '2px solid var(--accent-yellow)' : '2px solid transparent',
-                transform: isSelected ? 'scale(1.1)' : 'scale(1)',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <img
-                src={`/avatars/${fileName}`}
-                alt="Avatar"
-                onError={(e) => {
-                  e.target.src = '/avatars/0291dcc0ce.svg';
-                }}
-                style={{ width: '36px', height: '36px', borderRadius: '50%' }}
-              />
-            </div>
-          );
-        })}
+      {/* Avatar Grid Wrapper with Responsive Columns & Sleek Custom Scrollbar */}
+      <div className="avatar-grid-wrapper">
+        <div className="avatar-grid">
+          {avatars.map((fileName) => {
+            const isSelected = selectedAvatar === fileName;
+            return (
+              <div
+                key={fileName}
+                onClick={() => onSelectAvatar(fileName)}
+                className={`avatar-item ${isSelected ? 'selected' : ''}`}
+              >
+                <img
+                  src={`/avatars/${fileName}`}
+                  alt="Avatar option"
+                  onError={(e) => {
+                    e.target.src = '/avatars/0291dcc0ce.svg';
+                  }}
+                  style={{ width: '38px', height: '38px', borderRadius: '50%' }}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
