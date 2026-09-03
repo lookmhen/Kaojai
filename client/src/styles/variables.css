@@ -1,0 +1,48 @@
+:root {
+  /* Color Tokens */
+  --bg-dark-gradient: linear-gradient(135deg, #0f0c29 0%, #201435 50%, #111d4e 100%);
+  --bg-light-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  
+  --primary-purple: #6C5CE7;
+  --primary-purple-hover: #5b4cc4;
+  --primary-purple-glow: rgba(108, 92, 231, 0.4);
+  
+  --accent-pink: #FF7675;
+  --accent-cyan: #00CEC9;
+  --accent-yellow: #FDCB6E;
+  
+  /* Quiz Choice Colors */
+  --choice-red: #e74c3c;
+  --choice-blue: #2980b9;
+  --choice-yellow: #f39c12;
+  --choice-green: #27ae60;
+  
+  --choice-red-gradient: linear-gradient(135deg, #ff4e50 0%, #f9d423 100%);
+  --choice-blue-gradient: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+  --choice-yellow-gradient: linear-gradient(135deg, #f83600 0%, #fe8c00 100%);
+  --choice-green-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+
+  /* Pulse Colors */
+  --pulse-green: #2ecc71;
+  --pulse-yellow: #f1c40f;
+  --pulse-red: #e74c3c;
+
+  /* Glassmorphism Surface Tokens */
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+  --glass-card-light: rgba(255, 255, 255, 0.9);
+  --glass-border-light: rgba(255, 255, 255, 0.4);
+
+  /* Typography */
+  --font-family-main: 'Kanit', 'Outfit', system-ui, -apple-system, sans-serif;
+  
+  /* Radii & Elevation */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+  
+  --shadow-glow: 0 0 20px rgba(108, 92, 231, 0.5);
+}
