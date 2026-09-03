@@ -11,6 +11,7 @@ import { HostQuiz } from './components/host/HostQuiz';
 import { HostPulse } from './components/host/HostPulse';
 import { HostLeaderboard } from './components/host/HostLeaderboard';
 import { TeacherBackoffice } from './components/teacher/TeacherBackoffice';
+import { ThemePicker } from './components/ThemePicker';
 import { WifiOff } from 'lucide-react';
 import './styles/global.css';
 
@@ -225,6 +226,9 @@ export function AppContent() {
 
   return (
     <div className="app-container">
+      {/* Top Right Floating Background Color Theme Customizer */}
+      <ThemePicker />
+
       {/* Connection Indicator Banner */}
       {!isConnected && (
         <div className="connection-banner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>

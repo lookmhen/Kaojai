@@ -8,12 +8,13 @@
 
 body {
   font-family: var(--font-family-main);
-  background: var(--bg-dark-gradient);
+  background: var(--bg-solid-color, #1a237e);
   color: #ffffff;
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background 0.3s ease;
 }
 
 button {
