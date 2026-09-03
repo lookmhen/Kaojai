@@ -145,6 +145,13 @@ async function testRoomManager() {
     assert.strictEqual(reconnect3.player.isConnected, true);
     assert.strictEqual(reconnect3.player.disconnectTimeout, null, 'disconnectTimeout should be cleared');
 
+    // Host Reconnection test
+    const hostRec = rm.reconnectHost(room.pin, 'host-new-socket');
+    assert.strictEqual(hostRec.success, true);
+    assert.strictEqual(room.hostSocketId, 'host-new-socket', 'hostSocketId should be updated');
+    assert.strictEqual(hostRec.pin, room.pin);
+    assert.ok(Array.isArray(hostRec.players));
+
     console.log('    ✓ Reconnection & Disconnect grace period passed');
   }
 

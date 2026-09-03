@@ -50,6 +50,48 @@ class RoomManager {
     return null;
   }
 
+  reconnectHost(pin, hostSocketId) {
+    const room = this.rooms.get(pin);
+    if (!room) {
+      throw new Error('ไม่พบห้องหรือเซสชันของคุณหมดอายุแล้ว');
+    }
+
+    room.hostSocketId = hostSocketId;
+
+    let currentQuestion = null;
+    if (room.status === 'QUESTION' && room.currentQuestionIndex >= 0 && room.quizSet.questions[room.currentQuestionIndex]) {
+      const q = room.quizSet.questions[room.currentQuestionIndex];
+      currentQuestion = {
+        id: q.id,
+        questionText: q.questionText,
+        timeLimitSeconds: q.timeLimitSeconds,
+        imageUrl: q.imageUrl || '',
+        options: q.options.map(opt => ({ id: opt.id, text: opt.text })),
+        questionIndex: room.currentQuestionIndex,
+        totalQuestions: room.quizSet.questions.length
+      };
+    }
+
+    const questionResult = room.status === 'QUESTION_RESULT' ? this.getQuestionResult(pin) : null;
+    const leaderboard = room.status === 'LEADERBOARD' ? this.getLeaderboard(pin) : [];
+    const counts = this.getPlayerCounts(pin);
+    const players = this.getPlayerList(pin);
+
+    return {
+      success: true,
+      pin: room.pin,
+      mode: room.mode,
+      status: room.status,
+      quizSet: room.quizSet,
+      currentQuestion,
+      questionResult,
+      pulseVotes: room.pulseVotes,
+      leaderboard,
+      players,
+      counts
+    };
+  }
+
   joinPlayer(pin, socketId, { name, avatar, playerId: clientPlayerId }) {
     const room = this.rooms.get(pin);
     if (!room) {
@@ -62,7 +104,7 @@ class RoomManager {
 
     let existingPlayer = room.players.get(playerId);
     if (!existingPlayer) {
-      // Search by name if client lost session token
+      // Search by name (case-insensitive) if client lost session token
       for (const [id, player] of room.players.entries()) {
         if (player.name.toLowerCase() === sanitizedName.toLowerCase()) {
           existingPlayer = player;
@@ -71,8 +113,10 @@ class RoomManager {
       }
     }
 
+    let isReconnect = false;
+
     if (existingPlayer) {
-      // Reconnection
+      isReconnect = true;
       if (existingPlayer.disconnectTimeout) {
         clearTimeout(existingPlayer.disconnectTimeout);
         existingPlayer.disconnectTimeout = null;
@@ -81,29 +125,65 @@ class RoomManager {
       existingPlayer.isConnected = true;
       existingPlayer.name = sanitizedName;
       existingPlayer.avatar = sanitizedAvatar;
-      return { room, player: existingPlayer, isReconnect: true };
+    } else {
+      isReconnect = false;
+      existingPlayer = {
+        playerId,
+        socketId,
+        name: sanitizedName,
+        avatar: sanitizedAvatar,
+        score: 0,
+        isConnected: true,
+        disconnectTimeout: null,
+        pulseChoice: null
+      };
+      room.players.set(playerId, existingPlayer);
     }
 
-    const newPlayer = {
-      playerId,
-      socketId,
-      name: sanitizedName,
-      avatar: sanitizedAvatar,
-      score: 0,
-      isConnected: true,
-      disconnectTimeout: null,
-      pulseChoice: null
-    };
+    // Build active question payload if currently in QUESTION status
+    let currentQuestion = null;
+    if (room.status === 'QUESTION' && room.currentQuestionIndex >= 0 && room.quizSet.questions[room.currentQuestionIndex]) {
+      const q = room.quizSet.questions[room.currentQuestionIndex];
+      currentQuestion = {
+        id: q.id,
+        questionText: q.questionText,
+        timeLimitSeconds: q.timeLimitSeconds,
+        imageUrl: q.imageUrl || '',
+        options: q.options.map(opt => ({ id: opt.id, text: opt.text })),
+        questionIndex: room.currentQuestionIndex,
+        totalQuestions: room.quizSet.questions.length
+      };
+    }
 
-    room.players.set(playerId, newPlayer);
-    return { room, player: newPlayer, isReconnect: false };
+    const questionResult = room.status === 'QUESTION_RESULT' ? this.getQuestionResult(pin) : null;
+    const leaderboard = room.status === 'LEADERBOARD' ? this.getLeaderboard(pin) : [];
+    const counts = this.getPlayerCounts(pin);
+
+    return {
+      room,
+      player: existingPlayer,
+      isReconnect,
+      mode: room.mode,
+      status: room.status,
+      currentQuestion,
+      questionResult,
+      pulseVotes: room.pulseVotes,
+      leaderboard,
+      counts
+    };
   }
 
-  handleDisconnect(socketId, gracePeriodMs = 45000) {
+  handleDisconnect(socketId, gracePeriodMs = 60000) {
     for (const room of this.rooms.values()) {
+      // Check if Host disconnected
+      if (room.hostSocketId === socketId) {
+        console.log(`[Host Disconnected] Room PIN: ${room.pin}`);
+      }
+
       for (const [playerId, player] of room.players.entries()) {
         if (player.socketId === socketId) {
           player.isConnected = false;
+          if (player.disconnectTimeout) clearTimeout(player.disconnectTimeout);
           player.disconnectTimeout = setTimeout(() => {
             room.players.delete(playerId);
             room.currentAnswers.delete(playerId);
@@ -152,7 +232,6 @@ class RoomManager {
     room.currentAnswers.clear();
 
     const currentQuestion = room.quizSet.questions[room.currentQuestionIndex];
-    // Return question without disclosing correct option to clients
     const safeQuestion = {
       id: currentQuestion.id,
       questionText: currentQuestion.questionText,
@@ -181,7 +260,6 @@ class RoomManager {
     const timeLimitMs = currentQuestion.timeLimitSeconds * 1000;
     const timeUsedMs = Math.min(Date.now() - room.questionStartTime, timeLimitMs);
     
-    // Time-based speed bonus calculation: max 1000 pts
     let pointsEarned = 0;
     if (isCorrect) {
       const speedRatio = (timeLimitMs - timeUsedMs) / timeLimitMs;
@@ -222,11 +300,12 @@ class RoomManager {
     room.status = 'QUESTION_RESULT';
     const currentQuestion = room.quizSet.questions[room.currentQuestionIndex];
     
-    // Aggregate answers for chart
     const optionCounts = {};
-    currentQuestion.options.forEach(opt => {
-      optionCounts[opt.id] = 0;
-    });
+    if (currentQuestion && currentQuestion.options) {
+      currentQuestion.options.forEach(opt => {
+        optionCounts[opt.id] = 0;
+      });
+    }
 
     for (const answer of room.currentAnswers.values()) {
       if (optionCounts[answer.optionId] !== undefined) {
@@ -237,8 +316,8 @@ class RoomManager {
     const counts = this.getPlayerCounts(pin);
 
     return {
-      questionId: currentQuestion.id,
-      correctOptionId: currentQuestion.options.find(o => o.isCorrect)?.id,
+      questionId: currentQuestion ? currentQuestion.id : null,
+      correctOptionId: currentQuestion?.options?.find(o => o.isCorrect)?.id,
       optionCounts,
       answeredCount: counts.answeredCount,
       totalPlayers: counts.totalPlayers
@@ -312,4 +391,3 @@ class RoomManager {
 
 module.exports = new RoomManager();
 module.exports.RoomManager = RoomManager;
-

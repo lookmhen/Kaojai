@@ -52,6 +52,20 @@ export function AppContent() {
       saveSessionData({ pin: data.pin, isHost: true });
     };
 
+    const onHostReconnected = (data) => {
+      setPin(data.pin);
+      setRoomMode(data.mode);
+      setStatus(data.status || 'LOBBY');
+      setPlayers(data.players || []);
+      setCounts(data.counts || { totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 });
+      if (data.currentQuestion) setCurrentQuestion(data.currentQuestion);
+      if (data.questionResult) setQuestionResult(data.questionResult);
+      if (data.pulseVotes) setPulseVotes(data.pulseVotes);
+      if (data.leaderboard) setLeaderboard(data.leaderboard);
+      setViewMode('HOST_GAME');
+      saveSessionData({ pin: data.pin, isHost: true });
+    };
+
     const onRoomUpdated = (data) => {
       setPlayers(data.players || []);
       if (data.counts) setCounts(data.counts);
@@ -61,7 +75,21 @@ export function AppContent() {
       setPin(data.pin);
       setPlayerData(data.player);
       setRoomMode(data.mode);
+      setStatus(data.status || 'LOBBY');
       if (data.counts) setCounts(data.counts);
+      if (data.currentQuestion) setCurrentQuestion(data.currentQuestion);
+      if (data.questionResult) setQuestionResult(data.questionResult);
+      if (data.pulseVotes) setPulseVotes(data.pulseVotes);
+      if (data.leaderboard) setLeaderboard(data.leaderboard);
+      
+      saveSessionData({
+        pin: data.pin,
+        playerId: data.player.playerId,
+        name: data.player.name,
+        avatar: data.player.avatar,
+        isHost: false
+      });
+      
       setViewMode('PLAYER_GAME');
     };
 
@@ -124,6 +152,7 @@ export function AppContent() {
     };
 
     socket.on('room_created', onRoomCreated);
+    socket.on('host_reconnected', onHostReconnected);
     socket.on('room_updated', onRoomUpdated);
     socket.on('join_success', onJoinSuccess);
     socket.on('question_start', onQuestionStart);
@@ -136,6 +165,7 @@ export function AppContent() {
 
     return () => {
       socket.off('room_created', onRoomCreated);
+      socket.off('host_reconnected', onHostReconnected);
       socket.off('room_updated', onRoomUpdated);
       socket.off('join_success', onJoinSuccess);
       socket.off('question_start', onQuestionStart);

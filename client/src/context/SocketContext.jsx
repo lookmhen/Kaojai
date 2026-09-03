@@ -19,7 +19,7 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     const newSocket = io(window.location.origin, {
       transports: ['websocket', 'polling'],
-      reconnectionAttempts: 10,
+      reconnectionAttempts: 15,
       reconnectionDelay: 1000
     });
 
@@ -27,20 +27,26 @@ export const SocketProvider = ({ children }) => {
       console.log('Socket connected:', newSocket.id);
       setIsConnected(true);
 
-      // Auto-reconnect if session exists
+      // Auto-reconnect session upon socket connect/reconnect
       const savedPin = sessionStorage.getItem('kaojai_pin');
       const savedPlayerId = sessionStorage.getItem('kaojai_playerId');
       const savedName = sessionStorage.getItem('kaojai_name');
       const savedAvatar = sessionStorage.getItem('kaojai_avatar');
       const isHost = sessionStorage.getItem('kaojai_isHost') === 'true';
 
-      if (savedPin && savedName && !isHost) {
-        newSocket.emit('join_room', {
-          pin: savedPin,
-          name: savedName,
-          avatar: savedAvatar,
-          playerId: savedPlayerId
-        });
+      if (savedPin) {
+        if (isHost) {
+          console.log('Reconnecting as Host for PIN:', savedPin);
+          newSocket.emit('reconnect_host', { pin: savedPin });
+        } else if (savedName) {
+          console.log('Reconnecting as Player:', savedName, 'for PIN:', savedPin);
+          newSocket.emit('join_room', {
+            pin: savedPin,
+            name: savedName,
+            avatar: savedAvatar,
+            playerId: savedPlayerId
+          });
+        }
       }
     });
 

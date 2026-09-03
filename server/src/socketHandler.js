@@ -14,6 +14,7 @@ module.exports = function setupSocketHandlers(io) {
           success: true,
           pin: room.pin,
           mode: room.mode,
+          status: room.status,
           quizSet: room.quizSet,
           players: roomManager.getPlayerList(room.pin),
           counts: roomManager.getPlayerCounts(room.pin)
@@ -26,6 +27,31 @@ module.exports = function setupSocketHandlers(io) {
       } catch (err) {
         console.error('[Socket Error] create_room:', err);
         socket.emit('error_message', { code: 'CREATE_ROOM_FAILED', message: err.message });
+      }
+    });
+
+    socket.on('reconnect_host', ({ pin }, ackCallback) => {
+      try {
+        if (!pin) return;
+        const snapshot = roomManager.reconnectHost(pin, socket.id);
+        socket.join(pin);
+
+        if (typeof ackCallback === 'function') {
+          ackCallback(snapshot);
+        }
+        socket.emit('host_reconnected', snapshot);
+
+        // Notify room of host presence
+        io.to(pin).emit('room_updated', {
+          players: snapshot.players,
+          counts: snapshot.counts
+        });
+
+      } catch (err) {
+        console.error('[Socket Error] reconnect_host:', err);
+        const errPayload = { success: false, message: err.message };
+        if (typeof ackCallback === 'function') ackCallback(errPayload);
+        socket.emit('error_message', errPayload);
       }
     });
 
@@ -48,7 +74,6 @@ module.exports = function setupSocketHandlers(io) {
           totalPlayers: counts.totalPlayers
         });
 
-        // Set authoritative server timer
         if (room.questionTimer) clearTimeout(room.questionTimer);
         const timeLimitMs = (result.question.timeLimitSeconds + 1) * 1000;
         room.questionTimer = setTimeout(() => {
@@ -135,26 +160,29 @@ module.exports = function setupSocketHandlers(io) {
         }
 
         const cleanPin = pin.trim();
-        const { room, player, isReconnect } = roomManager.joinPlayer(cleanPin, socket.id, { name, avatar, playerId });
+        const joinData = roomManager.joinPlayer(cleanPin, socket.id, { name, avatar, playerId });
         
         socket.join(cleanPin);
 
-        const counts = roomManager.getPlayerCounts(cleanPin);
         const playerList = roomManager.getPlayerList(cleanPin);
 
         const successPayload = {
           success: true,
           pin: cleanPin,
           player: {
-            playerId: player.playerId,
-            name: player.name,
-            avatar: player.avatar,
-            score: player.score
+            playerId: joinData.player.playerId,
+            name: joinData.player.name,
+            avatar: joinData.player.avatar,
+            score: joinData.player.score
           },
-          mode: room.mode,
-          status: room.status,
-          isReconnect,
-          counts
+          mode: joinData.mode,
+          status: joinData.status,
+          currentQuestion: joinData.currentQuestion,
+          questionResult: joinData.questionResult,
+          pulseVotes: joinData.pulseVotes,
+          leaderboard: joinData.leaderboard,
+          isReconnect: joinData.isReconnect,
+          counts: joinData.counts
         };
 
         if (typeof ackCallback === 'function') {
@@ -165,7 +193,7 @@ module.exports = function setupSocketHandlers(io) {
         // Notify Host and Lobby of updated player list and answered counts
         io.to(cleanPin).emit('room_updated', {
           players: playerList,
-          counts
+          counts: joinData.counts
         });
 
       } catch (err) {
@@ -180,7 +208,6 @@ module.exports = function setupSocketHandlers(io) {
       try {
         const result = roomManager.submitAnswer(pin, playerId, optionId);
         
-        // Send feedback to caller
         socket.emit('answer_feedback', {
           isCorrect: result.isCorrect,
           pointsEarned: result.pointsEarned,
@@ -188,13 +215,11 @@ module.exports = function setupSocketHandlers(io) {
           alreadyAnswered: result.alreadyAnswered
         });
 
-        // Broadcast updated answered counts to room (Host & Players)
         io.to(pin).emit('answered_count_update', {
           answeredCount: result.answeredCount,
           totalPlayers: result.totalPlayers
         });
 
-        // If everyone answered, finish question timer immediately
         if (result.allAnswered) {
           const room = roomManager.getRoom(pin);
           if (room && room.questionTimer) {
@@ -216,7 +241,6 @@ module.exports = function setupSocketHandlers(io) {
         
         socket.emit('pulse_ack', { choice, success: true });
 
-        // Broadcast pulse results and total answered count to entire room
         io.to(pin).emit('pulse_updated', {
           pulseVotes: result.pulseVotes,
           pulseAnsweredCount: result.pulseAnsweredCount,
