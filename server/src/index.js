@@ -11,6 +11,14 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '25mb' }));
 
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
+
 // Static uploads serving
 const uploadsDir = path.join(__dirname, '../public/uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -60,7 +68,6 @@ app.post('/api/upload', (req, res) => {
 
     const matches = imageData.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
     if (!matches) {
-      // If it's already a URL or raw base64, handle gracefully
       return res.json({ success: true, imageUrl: imageData });
     }
 
@@ -71,7 +78,6 @@ app.post('/api/upload', (req, res) => {
 
     fs.writeFileSync(filePath, base64Data, 'base64');
     
-    // Return relative static URL
     const imageUrl = `/uploads/${safeFileName}`;
     res.json({ success: true, imageUrl });
 
