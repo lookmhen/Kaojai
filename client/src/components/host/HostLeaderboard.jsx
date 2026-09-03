@@ -1,31 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
-import { Trophy, ArrowRight, Zap, Flag } from 'lucide-react';
+import { Trophy, ArrowRight, Flag, RotateCcw } from 'lucide-react';
 
-export const HostLeaderboard = ({ leaderboard, onNextQuestion }) => {
+export const HostLeaderboard = ({ leaderboard, isEnded, onNextQuestion, onResetToLobby }) => {
   const [animatedScores, setAnimatedScores] = useState({});
-  const [isRacing, setIsRacing] = useState(true);
 
   useEffect(() => {
     fireConfetti();
     sfx.playFanfare();
 
-    // Initialize scores at previousScore for the race animation
     const initialMap = {};
     leaderboard.forEach(p => {
       initialMap[p.playerId] = p.previousScore || 0;
     });
     setAnimatedScores(initialMap);
 
-    // Animate score count-up after 400ms delay
     const timer = setTimeout(() => {
       const targetMap = {};
       leaderboard.forEach(p => {
         targetMap[p.playerId] = p.score;
       });
       setAnimatedScores(targetMap);
-      setIsRacing(false);
     }, 400);
 
     return () => clearTimeout(timer);
@@ -38,10 +34,10 @@ export const HostLeaderboard = ({ leaderboard, onNextQuestion }) => {
       {/* Header Banner */}
       <div className="glass-card" style={{ textAlign: 'center', marginBottom: '24px', padding: '24px 20px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--accent-yellow)', fontSize: '1rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '4px' }}>
-          <Flag size={20} color="var(--accent-yellow)" /> KAOJAI RACING LEADERBOARD <Flag size={20} color="var(--accent-yellow)" />
+          <Flag size={20} color="var(--accent-yellow)" /> {isEnded ? '🏆 FINAL PODIUM CHAMPIONS 🏆' : 'KAOJAI RACING LEADERBOARD'} <Flag size={20} color="var(--accent-yellow)" />
         </div>
         <h1 style={{ fontSize: '2.2rem', fontWeight: 900, background: 'linear-gradient(90deg, #FDCB6E, #FF7675)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          สรุปการอันดับและการเปลี่ยนแปลงคะแนนรอบนี้ 🏎️💨
+          {isEnded ? 'สรุปอันดับผู้ชนะการแข่งขันสิ้นสุดเกม! 🎉' : 'สรุปการอันดับและการเปลี่ยนแปลงคะแนนรอบนี้ 🏎️💨'}
         </h1>
       </div>
 
@@ -83,7 +79,6 @@ export const HostLeaderboard = ({ leaderboard, onNextQuestion }) => {
                   transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)'
                 }}
               >
-                {/* Rank Badge */}
                 <div
                   style={{
                     width: '60px',
@@ -97,7 +92,6 @@ export const HostLeaderboard = ({ leaderboard, onNextQuestion }) => {
                   {rankBadge}
                 </div>
 
-                {/* Avatar */}
                 <div style={{ position: 'relative', flexShrink: 0 }}>
                   <img
                     src={`/avatars/${player.avatar || '0291dcc0ce.svg'}`}
@@ -111,7 +105,7 @@ export const HostLeaderboard = ({ leaderboard, onNextQuestion }) => {
                       background: 'rgba(0,0,0,0.4)'
                     }}
                   />
-                  {pointsEarned > 0 && (
+                  {pointsEarned > 0 && !isEnded && (
                     <div
                       className="animate-pop"
                       style={{
@@ -133,7 +127,6 @@ export const HostLeaderboard = ({ leaderboard, onNextQuestion }) => {
                   )}
                 </div>
 
-                {/* Player Info & Animated Racing Bar */}
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                     <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff' }}>
@@ -144,7 +137,6 @@ export const HostLeaderboard = ({ leaderboard, onNextQuestion }) => {
                     </span>
                   </div>
 
-                  {/* Horizontal Track Bar */}
                   <div
                     style={{
                       height: '24px',
@@ -183,24 +175,45 @@ export const HostLeaderboard = ({ leaderboard, onNextQuestion }) => {
 
       {/* Control Button */}
       <div style={{ textAlign: 'center' }}>
-        <button
-          type="button"
-          onClick={onNextQuestion}
-          style={{
-            padding: '16px 48px',
-            borderRadius: '50px',
-            background: 'linear-gradient(135deg, #6C5CE7 0%, #a29bfe 100%)',
-            color: '#fff',
-            fontSize: '1.25rem',
-            fontWeight: 800,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '10px',
-            boxShadow: '0 8px 24px rgba(108, 92, 231, 0.4)'
-          }}
-        >
-          ลุยคำถามถัดไป <ArrowRight size={22} />
-        </button>
+        {isEnded ? (
+          <button
+            type="button"
+            onClick={onResetToLobby}
+            style={{
+              padding: '16px 48px',
+              borderRadius: '50px',
+              background: 'linear-gradient(135deg, #00CEC9 0%, #0984e3 100%)',
+              color: '#fff',
+              fontSize: '1.25rem',
+              fontWeight: 800,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '10px',
+              boxShadow: '0 8px 24px rgba(0, 206, 201, 0.4)'
+            }}
+          >
+            <RotateCcw size={22} /> จบเกม / กลับสู่หน้า Lobby
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onNextQuestion}
+            style={{
+              padding: '16px 48px',
+              borderRadius: '50px',
+              background: 'linear-gradient(135deg, #6C5CE7 0%, #a29bfe 100%)',
+              color: '#fff',
+              fontSize: '1.25rem',
+              fontWeight: 800,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '10px',
+              boxShadow: '0 8px 24px rgba(108, 92, 231, 0.4)'
+            }}
+          >
+            ลุยคำถามถัดไป <ArrowRight size={22} />
+          </button>
+        )}
       </div>
     </div>
   );

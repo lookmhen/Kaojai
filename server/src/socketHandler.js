@@ -41,7 +41,6 @@ module.exports = function setupSocketHandlers(io) {
         }
         socket.emit('host_reconnected', snapshot);
 
-        // Notify room of host presence
         io.to(pin).emit('room_updated', {
           players: snapshot.players,
           counts: snapshot.counts
@@ -62,7 +61,8 @@ module.exports = function setupSocketHandlers(io) {
 
         const result = roomManager.startQuestion(pin, 0);
         if (result.isEnded) {
-          return io.to(pin).emit('quiz_ended', { leaderboard: roomManager.getLeaderboard(pin) });
+          const leaderboard = roomManager.getLeaderboard(pin);
+          return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true });
         }
 
         const counts = roomManager.getPlayerCounts(pin);
@@ -92,12 +92,17 @@ module.exports = function setupSocketHandlers(io) {
         const room = roomManager.getRoom(pin);
         if (!room) return socket.emit('error_message', { message: 'ไม่พบห้อง' });
 
+        if (room.status === 'ENDED') {
+          const leaderboard = roomManager.getLeaderboard(pin);
+          return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true });
+        }
+
         if (room.questionTimer) clearTimeout(room.questionTimer);
 
         const result = roomManager.startQuestion(pin);
         if (result.isEnded) {
           const leaderboard = roomManager.getLeaderboard(pin);
-          return io.to(pin).emit('quiz_ended', { leaderboard });
+          return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true });
         }
 
         const counts = roomManager.getPlayerCounts(pin);
@@ -127,7 +132,14 @@ module.exports = function setupSocketHandlers(io) {
         if (!room) return socket.emit('error_message', { message: 'ไม่พบห้อง' });
 
         const leaderboard = roomManager.getLeaderboard(pin);
-        io.to(pin).emit('show_leaderboard', { leaderboard });
+        
+        // If current index was the last question, set status to ENDED
+        if (room.currentQuestionIndex >= room.quizSet.questions.length - 1) {
+          room.status = 'ENDED';
+          return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true });
+        }
+
+        io.to(pin).emit('show_leaderboard', { leaderboard, status: 'LEADERBOARD' });
       } catch (err) {
         console.error('[Socket Error] show_leaderboard:', err);
         socket.emit('error_message', { message: err.message });
@@ -190,7 +202,6 @@ module.exports = function setupSocketHandlers(io) {
         }
         socket.emit('join_success', successPayload);
 
-        // Notify Host and Lobby of updated player list and answered counts
         io.to(cleanPin).emit('room_updated', {
           players: playerList,
           counts: joinData.counts

@@ -4,6 +4,7 @@ import { JoinRoom } from './components/player/JoinRoom';
 import { PlayerLobby } from './components/player/PlayerLobby';
 import { PlayerQuiz } from './components/player/PlayerQuiz';
 import { PlayerPulse } from './components/player/PlayerPulse';
+import { PlayerEndedView } from './components/player/PlayerEndedView';
 import { HostHeader } from './components/host/HostHeader';
 import { HostLobby } from './components/host/HostLobby';
 import { HostQuiz } from './components/host/HostQuiz';
@@ -124,7 +125,16 @@ export function AppContent() {
 
     const onShowLeaderboard = (data) => {
       setLeaderboard(data.leaderboard || []);
-      setStatus('LEADERBOARD');
+      if (data.status === 'ENDED' || data.isEnded) {
+        setStatus('ENDED');
+      } else {
+        setStatus('LEADERBOARD');
+      }
+    };
+
+    const onQuizEnded = (data) => {
+      if (data.leaderboard) setLeaderboard(data.leaderboard);
+      setStatus('ENDED');
     };
 
     const onPulseUpdated = (data) => {
@@ -159,6 +169,7 @@ export function AppContent() {
     socket.on('answered_count_update', onAnsweredCountUpdate);
     socket.on('question_result', onQuestionResult);
     socket.on('show_leaderboard', onShowLeaderboard);
+    socket.on('quiz_ended', onQuizEnded);
     socket.on('pulse_updated', onPulseUpdated);
     socket.on('mode_switched', onModeSwitched);
     socket.on('error_message', onErrorMessage);
@@ -172,6 +183,7 @@ export function AppContent() {
       socket.off('answered_count_update', onAnsweredCountUpdate);
       socket.off('question_result', onQuestionResult);
       socket.off('show_leaderboard', onShowLeaderboard);
+      socket.off('quiz_ended', onQuizEnded);
       socket.off('pulse_updated', onPulseUpdated);
       socket.off('mode_switched', onModeSwitched);
       socket.off('error_message', onErrorMessage);
@@ -190,7 +202,7 @@ export function AppContent() {
   };
 
   const handleNextQuestion = () => {
-    if (!socket) return;
+    if (!socket || status === 'ENDED') return;
     socket.emit('next_question', { pin });
   };
 
@@ -268,10 +280,12 @@ export function AppContent() {
               counts={counts}
               onStartQuiz={handleStartQuiz}
             />
-          ) : status === 'LEADERBOARD' ? (
+          ) : status === 'LEADERBOARD' || status === 'ENDED' ? (
             <HostLeaderboard
               leaderboard={leaderboard}
+              isEnded={status === 'ENDED'}
               onNextQuestion={handleNextQuestion}
+              onResetToLobby={() => setStatus('LOBBY')}
             />
           ) : (
             <HostQuiz
@@ -309,6 +323,11 @@ export function AppContent() {
               player={playerData}
               totalPlayers={counts.totalPlayers}
               mode={roomMode}
+            />
+          ) : status === 'ENDED' ? (
+            <PlayerEndedView
+              player={playerData}
+              leaderboard={leaderboard}
             />
           ) : (
             <PlayerQuiz
