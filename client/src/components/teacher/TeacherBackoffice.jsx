@@ -508,38 +508,65 @@ export const TeacherBackoffice = ({ onBack }) => {
         <div
           style={{
             position: 'fixed',
-            bottom: '20px',
+            bottom: '24px',
             left: '50%',
             transform: 'translateX(-50%)',
+            width: 'min(620px, 92vw)',
+            height: '60px',
             background: '#FFFFFF',
             border: '2px solid #138808',
             borderRadius: '50px',
-            padding: '10px 24px',
+            padding: '8px 16px 8px 24px',
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'space-between',
             gap: '16px',
-            boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.18)',
             zIndex: 1000
           }}
         >
-          <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>
-            แก้ไข: <strong>{activeQuiz.title}</strong> ({activeQuiz.questions.length} ข้อ)
-          </span>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+              แก้ไข:
+            </span>
+            <span
+              style={{
+                fontWeight: 800,
+                fontSize: '0.95rem',
+                color: 'var(--accent-earth-blue)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              {activeQuiz.title || 'ชุดคำถามใหม่'}
+            </span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+              ({activeQuiz.questions?.length || 0} ข้อ)
+            </span>
+          </div>
+
           <button
             type="button"
             onClick={handleSaveQuiz}
             style={{
-              padding: '10px 24px',
+              width: '180px',
+              minWidth: '180px',
+              height: '44px',
               borderRadius: '30px',
               background: '#138808',
               color: '#FFFFFF',
               fontWeight: 800,
-              fontSize: '1rem',
+              fontSize: '0.95rem',
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: '8px',
-              boxShadow: '0 4px 14px rgba(19, 136, 8, 0.4)',
-              cursor: 'pointer'
+              boxShadow: '0 4px 14px rgba(19, 136, 8, 0.35)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              border: 'none',
+              flexShrink: 0
             }}
           >
             <Save size={18} /> บันทึกชุดคำถาม
