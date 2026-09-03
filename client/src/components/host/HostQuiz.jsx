@@ -56,11 +56,11 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
       {/* Question Card */}
       <div className="glass-card" style={{ textAlign: 'center', marginBottom: '32px', padding: '32px 24px' }}>
         {question.imageUrl && (
-          <div style={{ marginBottom: '16px', overflow: 'hidden', borderRadius: '14px', maxHeight: '260px' }}>
+          <div style={{ marginBottom: '20px', overflow: 'hidden', borderRadius: '14px', maxHeight: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '8px' }}>
             <img
               src={question.imageUrl}
               alt="Question Illustration"
-              style={{ width: '100%', maxHeight: '260px', objectFit: 'contain', borderRadius: '14px' }}
+              style={{ maxWidth: '100%', maxHeight: '260px', objectFit: 'contain', borderRadius: '10px' }}
               onError={(e) => { e.target.style.display = 'none'; }}
             />
           </div>

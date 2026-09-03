@@ -107,11 +107,11 @@ export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers 
       {/* Question Card */}
       <div className="glass-card" style={{ marginBottom: '20px', textAlign: 'center' }}>
         {question.imageUrl && (
-          <div style={{ marginBottom: '12px', overflow: 'hidden', borderRadius: '12px', maxHeight: '180px' }}>
+          <div style={{ marginBottom: '14px', overflow: 'hidden', borderRadius: '12px', maxHeight: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '6px' }}>
             <img
               src={question.imageUrl}
               alt="Question Illustration"
-              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '12px' }}
+              style={{ maxWidth: '100%', maxHeight: '168px', objectFit: 'contain', borderRadius: '8px' }}
               onError={(e) => { e.target.style.display = 'none'; }}
             />
           </div>

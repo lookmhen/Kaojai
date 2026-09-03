@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Save, ArrowLeft, Image as ImageIcon, Clock, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, Image as ImageIcon, Clock, CheckCircle2, Upload, X } from 'lucide-react';
 
 export const TeacherBackoffice = ({ onBack }) => {
   const [quizzes, setQuizzes] = useState([]);
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [notification, setNotification] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     fetchQuizzes();
@@ -68,6 +69,43 @@ export const TeacherBackoffice = ({ onBack }) => {
     if (!activeQuiz) return;
     const updatedQ = activeQuiz.questions.filter((_, idx) => idx !== qIdx);
     setActiveQuiz({ ...activeQuiz, questions: updatedQ });
+  };
+
+  const handleImageFileUpload = (e, qIdx) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 15 * 1024 * 1024) {
+      alert('ขนาดไฟล์รูปภาพเกิน 15MB กรุณาเลือกไฟล์ที่มีขนาดเล็กลง');
+      return;
+    }
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64Data = event.target?.result;
+      fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageData: base64Data, fileName: file.name })
+      })
+        .then(res => res.json())
+        .then(data => {
+          setIsUploading(false);
+          if (data.success && data.imageUrl) {
+            const updated = [...activeQuiz.questions];
+            updated[qIdx].imageUrl = data.imageUrl;
+            setActiveQuiz({ ...activeQuiz, questions: updated });
+          } else {
+            alert('ไม่สามารถอัปโหลดรูปภาพได้');
+          }
+        })
+        .catch(err => {
+          setIsUploading(false);
+          console.error('Upload error:', err);
+        });
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSaveQuiz = () => {
@@ -280,21 +318,89 @@ export const TeacherBackoffice = ({ onBack }) => {
 
                     <div>
                       <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', color: 'var(--text-main)' }}>
-                        <ImageIcon size={14} color="var(--accent-earth-blue)" /> รูปภาพประกอบคำถาม (Image URL):
+                        <ImageIcon size={14} color="var(--accent-earth-blue)" /> รูปภาพประกอบคำถาม:
                       </label>
-                      <input
-                        type="text"
-                        placeholder="https://..."
-                        value={q.imageUrl || ''}
-                        onChange={(e) => {
-                          const updated = [...activeQuiz.questions];
-                          updated[qIdx].imageUrl = e.target.value;
-                          setActiveQuiz({ ...activeQuiz, questions: updated });
-                        }}
-                        style={{ width: '100%', padding: '8px', borderRadius: '8px', background: '#FFFFFF', color: 'var(--text-main)', border: '1px solid #CBD5E1' }}
-                      />
+
+                      {/* File Upload or External URL */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <label
+                            style={{
+                              flex: 1,
+                              padding: '8px 12px',
+                              borderRadius: '8px',
+                              background: 'var(--accent-earth-blue)',
+                              color: '#FFFFFF',
+                              fontSize: '0.85rem',
+                              fontWeight: 700,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <Upload size={14} /> {isUploading ? 'กำลังอัปโหลด...' : 'อัปโหลดจากคอมพิวเตอร์'}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              style={{ display: 'none' }}
+                              onChange={(e) => handleImageFileUpload(e, qIdx)}
+                            />
+                          </label>
+                        </div>
+
+                        <input
+                          type="text"
+                          placeholder="หรือวาง URL รูปภาพภายนอก (https://...)"
+                          value={q.imageUrl || ''}
+                          onChange={(e) => {
+                            const updated = [...activeQuiz.questions];
+                            updated[qIdx].imageUrl = e.target.value;
+                            setActiveQuiz({ ...activeQuiz, questions: updated });
+                          }}
+                          style={{ width: '100%', padding: '8px', borderRadius: '8px', background: '#FFFFFF', color: 'var(--text-main)', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
+                        />
+                      </div>
                     </div>
                   </div>
+
+                  {/* Image Preview Box */}
+                  {q.imageUrl && (
+                    <div style={{ marginTop: '8px', marginBottom: '16px', position: 'relative', display: 'inline-block', maxWidth: '240px' }}>
+                      <div style={{ width: '220px', height: '120px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}>
+                        <img
+                          src={q.imageUrl}
+                          alt="Question Preview"
+                          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '6px' }}
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...activeQuiz.questions];
+                          updated[qIdx].imageUrl = '';
+                          setActiveQuiz({ ...activeQuiz, questions: updated });
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: '-6px',
+                          right: '-6px',
+                          background: '#991B1B',
+                          color: '#FFFFFF',
+                          borderRadius: '50%',
+                          width: '22px',
+                          height: '22px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
 
                   {/* Options */}
                   <div style={{ marginTop: '12px' }}>
