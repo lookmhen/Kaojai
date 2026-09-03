@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { sfx } from '../../utils/audioSFX';
-import { CheckCircle2, XCircle, Users, Clock } from 'lucide-react';
+import { CheckCircle2, XCircle, Users, Clock, BarChart3 } from 'lucide-react';
 import { SoundToggle } from '../common/SoundToggle';
 
 const OPTION_STYLES = [
@@ -11,7 +11,7 @@ const OPTION_STYLES = [
   { bg: 'var(--choice-green-gradient)', symbol: '■' }
 ];
 
-export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers }) => {
+export const PlayerQuiz = ({ question, result, pin, player, answeredCount, totalPlayers }) => {
   const { socket } = useSocket();
   const [selectedOptionId, setSelectedOptionId] = useState(null);
   const [feedback, setFeedback] = useState(null);
@@ -153,8 +153,70 @@ export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers 
             </>
           )}
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '16px' }}>
-            รอการสรุปผลคำตอบจากวิทยากร...
+            {result ? 'สรุปผลคำตอบของเพื่อนๆ ทุกคนในข้อนี้:' : 'รอการสรุปผลคำตอบจากวิทยากร...'}
           </p>
+
+          {result && (
+            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed #CBD5E1' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${question.options.length}, 1fr)`,
+                  gap: '8px',
+                  alignItems: 'flex-end',
+                  height: '160px',
+                  padding: '10px 4px 0 4px',
+                  borderBottom: '2px solid #CBD5E1',
+                  marginBottom: '10px'
+                }}
+              >
+                {question.options.map((opt, idx) => {
+                  const styleObj = OPTION_STYLES[idx % OPTION_STYLES.length];
+                  const isCorrect = result.correctOptionId === opt.id;
+                  const count = result.optionCounts?.[opt.id] || 0;
+                  const barHeight = Math.max(16, Math.round((count / Math.max(...question.options.map(o => result?.optionCounts?.[o.id] || 0), 1)) * 115));
+
+                  return (
+                    <div key={opt.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.9rem', color: isCorrect ? '#166534' : 'var(--text-main)', marginBottom: '4px' }}>
+                        {isCorrect && <span style={{ color: '#166534', fontSize: '0.75rem', display: 'block', fontWeight: 900 }}>✓</span>}
+                        {count}
+                      </div>
+                      <div
+                        className="animate-pop"
+                        style={{
+                          width: '100%',
+                          maxWidth: '55px',
+                          height: `${barHeight}px`,
+                          background: styleObj.bg,
+                          borderRadius: '8px 8px 0 0',
+                          border: isCorrect ? '2px solid #22C55E' : 'none',
+                          boxShadow: isCorrect ? '0 0 10px rgba(34,197,94,0.4)' : 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <span style={{ fontSize: '1.2rem', color: '#FFFFFF' }}>{styleObj.symbol}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${question.options.length}, 1fr)`, gap: '6px' }}>
+                {question.options.map((opt, idx) => {
+                  const isCorrect = result.correctOptionId === opt.id;
+                  const styleObj = OPTION_STYLES[idx % OPTION_STYLES.length];
+                  return (
+                    <div key={opt.id} style={{ fontSize: '0.75rem', fontWeight: 700, color: isCorrect ? '#166534' : 'var(--text-muted)' }}>
+                      {styleObj.symbol} ข้อ {idx + 1}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

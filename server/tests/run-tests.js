@@ -1,3 +1,4 @@
+process.env.NODE_ENV = 'test';
 const { testQuizData } = require('./quizData.test');
 const { testRoomManager } = require('./roomManager.test');
 const { testSocketHandlers } = require('./socketHandler.test');

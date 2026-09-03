@@ -11,6 +11,7 @@ import { HostQuiz } from './components/host/HostQuiz';
 import { HostPulse } from './components/host/HostPulse';
 import { HostLeaderboard } from './components/host/HostLeaderboard';
 import { TeacherBackoffice } from './components/teacher/TeacherBackoffice';
+import { PrepareCountdown } from './components/common/PrepareCountdown';
 import { WifiOff } from 'lucide-react';
 import './styles/global.css';
 
@@ -38,6 +39,7 @@ export function AppContent() {
   const [pulseVotes, setPulseVotes] = useState({ green: 0, yellow: 0, red: 0 });
   const [leaderboard, setLeaderboard] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
+  const [prepareData, setPrepareData] = useState(null);
 
   // Socket Listeners
   useEffect(() => {
@@ -45,7 +47,7 @@ export function AppContent() {
 
     const onRoomCreated = (data) => {
       setPin(data.pin);
-      setRoomMode(data.mode);
+      setRoomMode(data.mode || 'QUIZ');
       setPlayers(data.players || []);
       setCounts(data.counts || { totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 });
       setStatus('LOBBY');
@@ -94,7 +96,12 @@ export function AppContent() {
       setViewMode('PLAYER_GAME');
     };
 
+    const onQuestionPrepare = (data) => {
+      setPrepareData(data);
+    };
+
     const onQuestionStart = (data) => {
+      setPrepareData(null);
       setCurrentQuestion(data.question);
       setQuestionResult(null);
       setStatus('QUESTION');
@@ -112,6 +119,7 @@ export function AppContent() {
     };
 
     const onQuestionResult = (data) => {
+      setPrepareData(null);
       setQuestionResult(data);
       setStatus('QUESTION_RESULT');
       if (data.answeredCount !== undefined) {
@@ -124,6 +132,7 @@ export function AppContent() {
     };
 
     const onShowLeaderboard = (data) => {
+      setPrepareData(null);
       setLeaderboard(data.leaderboard || []);
       if (data.status === 'ENDED' || data.isEnded) {
         setStatus('ENDED');
@@ -133,6 +142,7 @@ export function AppContent() {
     };
 
     const onQuizEnded = (data) => {
+      setPrepareData(null);
       if (data.leaderboard) setLeaderboard(data.leaderboard);
       setStatus('ENDED');
     };
@@ -147,6 +157,7 @@ export function AppContent() {
     };
 
     const onModeSwitched = (data) => {
+      setPrepareData(null);
       setRoomMode(data.mode);
       if (data.pulseVotes) setPulseVotes(data.pulseVotes);
       setCounts(prev => ({
@@ -165,6 +176,7 @@ export function AppContent() {
     socket.on('host_reconnected', onHostReconnected);
     socket.on('room_updated', onRoomUpdated);
     socket.on('join_success', onJoinSuccess);
+    socket.on('question_prepare', onQuestionPrepare);
     socket.on('question_start', onQuestionStart);
     socket.on('answered_count_update', onAnsweredCountUpdate);
     socket.on('question_result', onQuestionResult);
@@ -179,6 +191,7 @@ export function AppContent() {
       socket.off('host_reconnected', onHostReconnected);
       socket.off('room_updated', onRoomUpdated);
       socket.off('join_success', onJoinSuccess);
+      socket.off('question_prepare', onQuestionPrepare);
       socket.off('question_start', onQuestionStart);
       socket.off('answered_count_update', onAnsweredCountUpdate);
       socket.off('question_result', onQuestionResult);
@@ -335,6 +348,7 @@ export function AppContent() {
           ) : (
             <PlayerQuiz
               question={currentQuestion}
+              result={questionResult}
               pin={pin}
               player={playerData}
               answeredCount={counts.answeredCount}
@@ -342,6 +356,15 @@ export function AppContent() {
             />
           )}
         </div>
+      )}
+
+      {prepareData && (
+        <PrepareCountdown
+          nextQuestionIndex={prepareData.nextQuestionIndex}
+          totalQuestions={prepareData.totalQuestions}
+          initialSeconds={prepareData.countdownSeconds || 5}
+          onComplete={() => setPrepareData(null)}
+        />
       )}
     </div>
   );

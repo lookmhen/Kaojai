@@ -1,3 +1,4 @@
+process.env.NODE_ENV = 'test';
 const assert = require('node:assert/strict');
 const setupSocketHandlers = require('../src/socketHandler');
 const roomManager = require('../src/roomManager');
@@ -143,19 +144,28 @@ async function testSocketHandlers() {
   assert.ok(roomUpdates.length > 0, 'room_updated broadcast should be sent');
   console.log('    ✓ join_room success passed');
 
-  // Test 4: start_quiz handler (Host)
-  console.log('  Testing start_quiz event...');
+  // Test 4: start_quiz handler with 5-second countdown (Host)
+  console.log('  Testing start_quiz event with 5s countdown (question_prepare)...');
   await hostSocket.fire('start_quiz', { pin: roomPin });
 
+  // 1. Verify question_prepare event
+  const qPrepareBroadcast = broadcasts.find(b => b.roomPin === roomPin && b.event === 'question_prepare');
+  assert.ok(qPrepareBroadcast, 'question_prepare broadcast should be emitted for countdown');
+  assert.strictEqual(qPrepareBroadcast.payload.countdownSeconds, 5, 'Should count down from 5s');
+  assert.strictEqual(qPrepareBroadcast.payload.nextQuestionIndex, 0);
+
+  // 2. Wait 35ms for test countdown timeout to trigger question_start
+  await new Promise(r => setTimeout(r, 35));
+
   const qStartBroadcast = broadcasts.find(b => b.roomPin === roomPin && b.event === 'question_start');
-  assert.ok(qStartBroadcast, 'question_start broadcast should be emitted');
+  assert.ok(qStartBroadcast, 'question_start broadcast should be emitted after countdown');
   assert.strictEqual(qStartBroadcast.payload.currentQuestionIndex, 0);
   assert.ok(qStartBroadcast.payload.question, 'Question details included');
   assert.strictEqual(qStartBroadcast.payload.question.options[0].isCorrect, undefined, 'Correct answers not leaked');
-  console.log('    ✓ start_quiz passed');
+  console.log('    ✓ start_quiz and 5s countdown passed');
 
-  // Test 5: submit_answer handler (Player)
-  console.log('  Testing submit_answer event...');
+  // Test 5: submit_answer handler & vertical bar chart stats (Player)
+  console.log('  Testing submit_answer and vertical bar chart optionCounts...');
   const room = roomManager.getRoom(roomPin);
   const correctOptId = room.quizSet.questions[0].options.find(o => o.isCorrect).id;
 
@@ -166,10 +176,16 @@ async function testSocketHandlers() {
   assert.strictEqual(feedback.isCorrect, true);
   assert.ok(feedback.pointsEarned > 0);
 
+  // Verify optionCounts for vertical bar chart
+  const qResult = roomManager.getQuestionResult(roomPin);
+  assert.ok(qResult, 'Question result should be available');
+  assert.strictEqual(qResult.optionCounts[correctOptId], 1, 'Vertical bar chart count for chosen option should be 1');
+  assert.strictEqual(qResult.correctOptionId, correctOptId, 'Correct option identified for bar chart indicator');
+
   const ansCountUpdate = broadcasts.find(b => b.roomPin === roomPin && b.event === 'answered_count_update');
   assert.ok(ansCountUpdate, 'answered_count_update broadcast should be emitted');
   assert.strictEqual(ansCountUpdate.payload.answeredCount, 1);
-  console.log('    ✓ submit_answer passed');
+  console.log('    ✓ submit_answer and bar chart optionCounts passed');
 
   // Test 6: switch_mode handler (Host)
   console.log('  Testing switch_mode event...');
