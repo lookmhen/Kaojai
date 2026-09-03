@@ -104,7 +104,6 @@ class RoomManager {
 
     let existingPlayer = room.players.get(playerId);
     if (!existingPlayer) {
-      // Search by name (case-insensitive) if client lost session token
       for (const [id, player] of room.players.entries()) {
         if (player.name.toLowerCase() === sanitizedName.toLowerCase()) {
           existingPlayer = player;
@@ -133,6 +132,8 @@ class RoomManager {
         name: sanitizedName,
         avatar: sanitizedAvatar,
         score: 0,
+        previousScore: 0,
+        lastPointsEarned: 0,
         isConnected: true,
         disconnectTimeout: null,
         pulseChoice: null
@@ -140,7 +141,6 @@ class RoomManager {
       room.players.set(playerId, existingPlayer);
     }
 
-    // Build active question payload if currently in QUESTION status
     let currentQuestion = null;
     if (room.status === 'QUESTION' && room.currentQuestionIndex >= 0 && room.quizSet.questions[room.currentQuestionIndex]) {
       const q = room.quizSet.questions[room.currentQuestionIndex];
@@ -175,7 +175,6 @@ class RoomManager {
 
   handleDisconnect(socketId, gracePeriodMs = 60000) {
     for (const room of this.rooms.values()) {
-      // Check if Host disconnected
       if (room.hostSocketId === socketId) {
         console.log(`[Host Disconnected] Room PIN: ${room.pin}`);
       }
@@ -227,6 +226,12 @@ class RoomManager {
       return { isEnded: true };
     }
 
+    // Save previous scores for racing leaderboard transition
+    for (const player of room.players.values()) {
+      player.previousScore = player.score;
+      player.lastPointsEarned = 0;
+    }
+
     room.status = 'QUESTION';
     room.questionStartTime = Date.now();
     room.currentAnswers.clear();
@@ -268,6 +273,7 @@ class RoomManager {
 
     const player = room.players.get(playerId);
     if (player) {
+      player.lastPointsEarned = pointsEarned;
       player.score += pointsEarned;
     }
 
@@ -335,6 +341,8 @@ class RoomManager {
       name: p.name,
       avatar: p.avatar,
       score: p.score,
+      previousScore: p.previousScore || 0,
+      lastPointsEarned: p.lastPointsEarned || 0,
       isConnected: p.isConnected
     }));
 
