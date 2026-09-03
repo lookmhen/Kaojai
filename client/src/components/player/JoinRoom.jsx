@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { AvatarPicker } from './AvatarPicker';
-import { LogIn, Crown } from 'lucide-react';
+import { LogIn, Crown, BookOpen } from 'lucide-react';
 
-export const JoinRoom = ({ onJoined, onSwitchToHost }) => {
+export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) => {
   const { socket, saveSessionData } = useSocket();
   const [pin, setPin] = useState('');
   const [name, setName] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('0291dcc0ce.svg');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Parse ?pin=XXXXXX from URL Query String if present
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryPin = urlParams.get('pin');
+    if (queryPin && queryPin.length === 6) {
+      setPin(queryPin);
+    }
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -69,7 +78,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost }) => {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px', textAlign: 'left' }}>
             <label style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.9)', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
-              Game PIN (รหัส 6 หลัก):
+              Game PIN (รหัส 6 หลัก หรือ สแกน QR Code):
             </label>
             <input
               type="text"
@@ -139,7 +148,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost }) => {
           </button>
         </form>
 
-        <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <button
             type="button"
             onClick={onSwitchToHost}
@@ -149,11 +158,32 @@ export const JoinRoom = ({ onJoined, onSwitchToHost }) => {
               fontSize: '0.9rem',
               display: 'inline-flex',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: '6px',
               textDecoration: 'underline'
             }}
           >
             <Crown size={16} /> คุณเป็นวิทยากร/โฮสต์? สร้างห้องตรงนี้
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenTeacherBackoffice}
+            style={{
+              background: 'rgba(0, 206, 201, 0.15)',
+              border: '1px solid var(--accent-cyan)',
+              color: 'var(--accent-cyan)',
+              padding: '10px 16px',
+              borderRadius: '12px',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <BookOpen size={16} /> ระบบจัดการชุดคำถาม (Teacher Backoffice)
           </button>
         </div>
       </div>

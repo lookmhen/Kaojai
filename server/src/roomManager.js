@@ -157,6 +157,7 @@ class RoomManager {
       id: currentQuestion.id,
       questionText: currentQuestion.questionText,
       timeLimitSeconds: currentQuestion.timeLimitSeconds,
+      imageUrl: currentQuestion.imageUrl || '',
       options: currentQuestion.options.map(opt => ({ id: opt.id, text: opt.text })),
       questionIndex: room.currentQuestionIndex,
       totalQuestions: room.quizSet.questions.length
@@ -310,3 +311,5 @@ class RoomManager {
 }
 
 module.exports = new RoomManager();
+module.exports.RoomManager = RoomManager;
+

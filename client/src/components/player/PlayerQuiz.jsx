@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { sfx } from '../../utils/audioSFX';
-import { CheckCircle2, XCircle, Users } from 'lucide-react';
+import { CheckCircle2, XCircle, Users, Clock } from 'lucide-react';
 
 const OPTION_STYLES = [
   { bg: 'var(--choice-red-gradient)', symbol: '▲' },
@@ -15,12 +15,30 @@ export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers 
   const [selectedOptionId, setSelectedOptionId] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(question.timeLimitSeconds);
 
   useEffect(() => {
     // Reset state on new question
     setSelectedOptionId(null);
     setFeedback(null);
     setIsSubmitting(false);
+    setTimeLeft(question.timeLimitSeconds);
+
+    const interval = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        // Play accelerating tense tick sound when time <= 5 seconds!
+        if (prev <= 6) {
+          sfx.playTenseTick(prev - 1);
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, [question?.id]);
 
   useEffect(() => {
@@ -57,19 +75,50 @@ export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers 
 
   return (
     <div style={{ maxWidth: '480px', margin: '20px auto', padding: '0 16px' }}>
-      {/* Answered / Total Count Counter Badge (CRITICAL USER FEATURE) */}
+      {/* Top Status Bar: Question Progress, Countdown Timer & Answered Counter */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
           ข้อที่ {question.questionIndex + 1} / {question.totalQuestions}
         </div>
-        <div className="counter-badge">
-          <Users size={16} color="var(--accent-yellow)" />
-          <span>ตอบแล้ว <span className="highlight">{answeredCount}</span> / {totalPlayers}</span>
+
+        {/* Visible Countdown Timer */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: timeLeft <= 5 ? 'rgba(231, 76, 60, 0.3)' : 'rgba(0,0,0,0.3)',
+            border: timeLeft <= 5 ? '1px solid #e74c3c' : '1px solid rgba(255,255,255,0.2)',
+            padding: '6px 14px',
+            borderRadius: '20px'
+          }}
+        >
+          <Clock size={16} color={timeLeft <= 5 ? '#e74c3c' : 'var(--accent-cyan)'} />
+          <span style={{ fontWeight: 800, color: timeLeft <= 5 ? '#ff7675' : '#fff', fontSize: '1.1rem' }}>
+            {timeLeft}s
+          </span>
+        </div>
+
+        {/* Answered / Total Count Counter Badge */}
+        <div className="counter-badge" style={{ padding: '6px 12px', fontSize: '0.95rem' }}>
+          <Users size={14} color="var(--accent-yellow)" />
+          <span><span className="highlight" style={{ fontSize: '1.1rem' }}>{answeredCount}</span>/{totalPlayers}</span>
         </div>
       </div>
 
+      {/* Question Card (with Image Support) */}
       <div className="glass-card" style={{ marginBottom: '20px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: '1.3rem', fontWeight: 700, lineHeight: 1.4 }}>
+        {question.imageUrl && (
+          <div style={{ marginBottom: '12px', overflow: 'hidden', borderRadius: '12px', maxHeight: '180px' }}>
+            <img
+              src={question.imageUrl}
+              alt="Question Illustration"
+              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '12px' }}
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          </div>
+        )}
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, lineHeight: 1.4 }}>
           {question.questionText}
         </h2>
       </div>
@@ -120,9 +169,9 @@ export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers 
                 style={{
                   background: styleObj.bg,
                   borderRadius: '16px',
-                  padding: '24px 16px',
+                  padding: '20px 14px',
                   color: '#fff',
-                  fontSize: '1.1rem',
+                  fontSize: '1.05rem',
                   fontWeight: 700,
                   display: 'flex',
                   flexDirection: 'column',
@@ -132,10 +181,10 @@ export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers 
                   boxShadow: isChosen ? '0 0 20px rgba(255,255,255,0.8)' : '0 6px 18px rgba(0,0,0,0.3)',
                   opacity: selectedOptionId && !isChosen ? 0.4 : 1,
                   transform: isChosen ? 'scale(1.05)' : 'scale(1)',
-                  minHeight: '120px'
+                  minHeight: '110px'
                 }}
               >
-                <span style={{ fontSize: '1.6rem' }}>{styleObj.symbol}</span>
+                <span style={{ fontSize: '1.5rem' }}>{styleObj.symbol}</span>
                 <span>{opt.text}</span>
               </button>
             );

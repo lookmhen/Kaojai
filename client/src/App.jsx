@@ -9,14 +9,15 @@ import { HostLobby } from './components/host/HostLobby';
 import { HostQuiz } from './components/host/HostQuiz';
 import { HostPulse } from './components/host/HostPulse';
 import { HostLeaderboard } from './components/host/HostLeaderboard';
-import { WifiOff, RefreshCw } from 'lucide-react';
+import { TeacherBackoffice } from './components/teacher/TeacherBackoffice';
+import { WifiOff } from 'lucide-react';
 import './styles/global.css';
 
 export function AppContent() {
   const { socket, isConnected, session, saveSessionData, clearSession } = useSocket();
   
-  // App Mode & Views
-  const [viewMode, setViewMode] = useState('PLAYER_JOIN'); // 'PLAYER_JOIN', 'PLAYER_GAME', 'HOST_LOBBY', 'HOST_GAME'
+  // App Mode & Views: 'PLAYER_JOIN', 'PLAYER_GAME', 'HOST_LOBBY', 'HOST_GAME', 'TEACHER_BACKOFFICE'
+  const [viewMode, setViewMode] = useState('PLAYER_JOIN');
   
   // Room State
   const [pin, setPin] = useState(session.pin || '');
@@ -209,6 +210,11 @@ export function AppContent() {
         </div>
       )}
 
+      {/* TEACHER BACKOFFICE ROUTING */}
+      {viewMode === 'TEACHER_BACKOFFICE' && (
+        <TeacherBackoffice onBack={() => setViewMode('PLAYER_JOIN')} />
+      )}
+
       {/* HOST VIEW ROUTING */}
       {viewMode === 'HOST_GAME' && (
         <div>
@@ -255,6 +261,7 @@ export function AppContent() {
         <JoinRoom
           onJoined={() => setViewMode('PLAYER_GAME')}
           onSwitchToHost={handleCreateRoom}
+          onOpenTeacherBackoffice={() => setViewMode('TEACHER_BACKOFFICE')}
         />
       )}
 

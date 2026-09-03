@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSocket } from '../../context/SocketContext';
-import { Play, Users, BookOpen } from 'lucide-react';
+import { generateQRCodeSVG } from '../../utils/qrcode';
+import { Play, Users, BookOpen, QrCode } from 'lucide-react';
 
 export const HostLobby = ({ pin, players, counts, onStartQuiz }) => {
   const [quizzes, setQuizzes] = useState([]);
@@ -20,18 +20,37 @@ export const HostLobby = ({ pin, players, counts, onStartQuiz }) => {
       .catch(err => console.error('Fetch quizzes error:', err));
   }, []);
 
+  const joinUrl = `${window.location.origin}/?pin=${pin}`;
+  const qrCodeImgSrc = generateQRCodeSVG(joinUrl, 180);
+
   return (
-    <div style={{ maxWidth: '1100px', margin: '40px auto', padding: '0 24px' }}>
-      <div className="glass-card" style={{ textAlign: 'center', marginBottom: '32px', padding: '40px 24px' }}>
-        <h2 style={{ fontSize: '1.2rem', textTransform: 'uppercase', letterSpacing: '2px', color: 'rgba(255,255,255,0.7)' }}>
-          เข้าเล่นผ่านเบราว์เซอร์ กรอก PIN:
-        </h2>
-        <div style={{ fontSize: '5rem', fontWeight: 900, color: 'var(--accent-yellow)', letterSpacing: '8px', margin: '10px 0', textShadow: '0 0 30px rgba(253, 203, 110, 0.5)' }}>
-          {pin}
+    <div style={{ maxWidth: '1100px', margin: '30px auto', padding: '0 24px' }}>
+      <div className="glass-card" style={{ textAlign: 'center', marginBottom: '32px', padding: '32px 24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '40px', flexWrap: 'wrap' }}>
+          {/* QR Code Container */}
+          <div style={{ background: '#fff', padding: '12px', borderRadius: '16px', boxShadow: '0 8px 24px rgba(0,0,0,0.3)', textAlign: 'center' }}>
+            <img src={qrCodeImgSrc} alt="QR Code Join Room" style={{ width: '160px', height: '160px', borderRadius: '8px', display: 'block' }} />
+            <div style={{ color: '#333', fontSize: '0.8rem', fontWeight: 700, marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+              <QrCode size={14} /> สแกนเข้าห้องได้เลย
+            </div>
+          </div>
+
+          {/* PIN Container */}
+          <div style={{ textAlign: 'left' }}>
+            <h2 style={{ fontSize: '1.1rem', textTransform: 'uppercase', letterSpacing: '2px', color: 'rgba(255,255,255,0.7)' }}>
+              หรือเข้าเว็บกรอก GAME PIN:
+            </h2>
+            <div style={{ fontSize: '5rem', fontWeight: 900, color: 'var(--accent-yellow)', letterSpacing: '8px', lineHeight: 1, textShadow: '0 0 30px rgba(253, 203, 110, 0.5)' }}>
+              {pin}
+            </div>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', marginTop: '8px' }}>
+              URL: <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>{window.location.host}</span>
+            </p>
+          </div>
         </div>
 
         {/* Quiz Set Selection */}
-        <div style={{ maxWidth: '500px', margin: '24px auto', textAlign: 'left' }}>
+        <div style={{ maxWidth: '500px', margin: '28px auto 16px auto', textAlign: 'left' }}>
           <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
             <BookOpen size={16} /> เลือกชุดคำถาม (Quiz Set):
           </label>
@@ -72,7 +91,7 @@ export const HostLobby = ({ pin, players, counts, onStartQuiz }) => {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '12px',
-            marginTop: '16px',
+            marginTop: '12px',
             cursor: players.length > 0 ? 'pointer' : 'not-allowed'
           }}
         >

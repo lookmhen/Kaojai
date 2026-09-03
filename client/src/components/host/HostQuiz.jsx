@@ -21,7 +21,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
           return 0;
         }
         if (prev <= 6) {
-          sfx.playTick();
+          sfx.playTenseTick(prev - 1);
         }
         return prev - 1;
       });
@@ -32,13 +32,13 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
 
   return (
     <div style={{ maxWidth: '1000px', margin: '30px auto', padding: '0 24px' }}>
-      {/* Top Status Bar: Question Progress, Countdown Timer & Answered Counter */}
+      {/* Top Status Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>
           คำถามที่ {question.questionIndex + 1} / {question.totalQuestions}
         </div>
 
-        {/* Answered / Total Counter Badge (CRITICAL USER FEATURE) */}
+        {/* Answered / Total Counter Badge */}
         <div className="counter-badge" style={{ fontSize: '1.3rem', padding: '10px 24px' }}>
           <Users size={22} color="var(--accent-yellow)" />
           <span>ตอบแล้ว <span className="highlight" style={{ fontSize: '1.6rem' }}>{answeredCount}</span> / {totalPlayers} คน</span>
@@ -53,8 +53,18 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
         </div>
       </div>
 
-      {/* Question Card */}
+      {/* Question Card (with Optional Image Support) */}
       <div className="glass-card" style={{ textAlign: 'center', marginBottom: '32px', padding: '32px 24px' }}>
+        {question.imageUrl && (
+          <div style={{ marginBottom: '16px', overflow: 'hidden', borderRadius: '16px', maxHeight: '280px' }}>
+            <img
+              src={question.imageUrl}
+              alt="Question Illustration"
+              style={{ width: '100%', maxHeight: '280px', objectFit: 'contain', borderRadius: '16px' }}
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          </div>
+        )}
         <h1 style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1.4 }}>
           {question.questionText}
         </h1>
