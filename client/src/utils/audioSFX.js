@@ -1,6 +1,8 @@
 class SoundEffects {
   constructor() {
     this.ctx = null;
+    this.muted = typeof window !== 'undefined' ? localStorage.getItem('kaojai_sfx_muted') === 'true' : false;
+    this.listeners = new Set();
   }
 
   init() {
@@ -12,7 +14,28 @@ class SoundEffects {
     }
   }
 
+  isMuted() {
+    return this.muted;
+  }
+
+  toggleMute() {
+    this.muted = !this.muted;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kaojai_sfx_muted', String(this.muted));
+    }
+    this.listeners.forEach(fn => {
+      try { fn(this.muted); } catch (e) {}
+    });
+    return this.muted;
+  }
+
+  subscribe(listener) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
   playTick() {
+    if (this.muted) return;
     try {
       this.init();
       if (!this.ctx) return;
@@ -34,6 +57,7 @@ class SoundEffects {
   }
 
   playTenseTick(secondsLeft) {
+    if (this.muted) return;
     try {
       this.init();
       if (!this.ctx) return;
@@ -59,6 +83,7 @@ class SoundEffects {
   }
 
   playCuteChime() {
+    if (this.muted) return;
     try {
       this.init();
       if (!this.ctx) return;
@@ -86,6 +111,7 @@ class SoundEffects {
   }
 
   playCorrect() {
+    if (this.muted) return;
     try {
       this.init();
       if (!this.ctx) return;
@@ -111,6 +137,7 @@ class SoundEffects {
   }
 
   playWrong() {
+    if (this.muted) return;
     try {
       this.init();
       if (!this.ctx) return;
@@ -135,6 +162,7 @@ class SoundEffects {
   }
 
   playFanfare() {
+    if (this.muted) return;
     try {
       this.init();
       if (!this.ctx) return;

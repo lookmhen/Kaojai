@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Save, ArrowLeft, Image as ImageIcon, Clock, CheckCircle2, Upload, X } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, Image as ImageIcon, Clock, CheckCircle2, Upload, X, Copy } from 'lucide-react';
 
 export const TeacherBackoffice = ({ onBack }) => {
   const [quizzes, setQuizzes] = useState([]);
@@ -25,6 +25,26 @@ export const TeacherBackoffice = ({ onBack }) => {
         }
       })
       .catch(err => console.error('Fetch error:', err));
+  };
+
+  const handleDuplicateQuiz = (quizId) => {
+    fetch(`/api/quizzes/${quizId}/duplicate`, { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.quiz) {
+          setNotification(`คัดลอกชุดคำถาม "${data.quiz.title}" สำเร็จเรียบร้อย! 🎉`);
+          fetchQuizzes();
+          setActiveQuiz(data.quiz);
+          setIsEditing(true);
+          setTimeout(() => setNotification(''), 3500);
+        } else {
+          alert(data.message || 'ไม่สามารถคัดลอกชุดคำถามได้');
+        }
+      })
+      .catch(err => {
+        console.error('Duplicate error:', err);
+        alert('เกิดข้อผิดพลาดในการคัดลอกชุดคำถาม');
+      });
   };
 
   const handleCreateNewQuiz = () => {
@@ -256,13 +276,42 @@ export const TeacherBackoffice = ({ onBack }) => {
                   <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>{q.title}</div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{q.questions.length} ข้อ</div>
                 </div>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); handleDeleteQuiz(q.id); }}
-                  style={{ background: 'transparent', color: '#991B1B', padding: '4px' }}
-                >
-                  <Trash2 size={16} />
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <button
+                    type="button"
+                    title="คัดลอกชุดคำถามนี้"
+                    onClick={(e) => { e.stopPropagation(); handleDuplicateQuiz(q.id); }}
+                    style={{
+                      background: '#F1F5F9',
+                      border: '1px solid #CBD5E1',
+                      color: 'var(--accent-earth-blue)',
+                      padding: '6px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Copy size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    title="ลบชุดคำถามนี้"
+                    onClick={(e) => { e.stopPropagation(); handleDeleteQuiz(q.id); }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#991B1B',
+                      padding: '6px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

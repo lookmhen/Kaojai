@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { sfx } from '../../utils/audioSFX';
 import { Smile, Meh, Frown, Users, Bell, Sparkles, X } from 'lucide-react';
+import { SoundToggle } from '../common/SoundToggle';
 
 export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers }) => {
   const { socket } = useSocket();
@@ -92,12 +93,13 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers }) =
         </div>
       )}
 
-      {/* Counter Badge */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+      {/* Counter Badge & Sound Toggle */}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
         <div className="counter-badge">
           <Users size={16} color="var(--accent-earth-orange)" />
           <span>ส่งผลตอบรับแล้ว <span className="highlight">{pulseAnsweredCount}</span> / {totalPlayers} คน</span>
         </div>
+        <SoundToggle size={16} style={{ width: '34px', height: '34px' }} />
       </div>
 
       <div className="glass-card animate-pop" style={{ marginBottom: '24px' }}>

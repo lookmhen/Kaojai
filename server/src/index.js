@@ -5,7 +5,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const setupSocketHandlers = require('./socketHandler');
-const { getAllQuizzes, saveQuiz, deleteQuiz } = require('./quizData');
+const { getAllQuizzes, saveQuiz, deleteQuiz, duplicateQuiz } = require('./quizData');
 
 const app = express();
 app.use(cors());
@@ -55,6 +55,19 @@ app.post('/api/quizzes', (req, res) => {
     }
     const saved = saveQuiz(quiz);
     res.json({ success: true, quiz: saved });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.post('/api/quizzes/:id/duplicate', (req, res) => {
+  try {
+    const quizId = req.params.id;
+    const duplicated = duplicateQuiz(quizId);
+    if (!duplicated) {
+      return res.status(404).json({ success: false, message: 'ไม่พบชุดคำถามที่ต้องการคัดลอก' });
+    }
+    res.json({ success: true, quiz: duplicated });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

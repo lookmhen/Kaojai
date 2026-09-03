@@ -70,9 +70,32 @@ function deleteQuiz(quizId) {
   return true;
 }
 
+function duplicateQuiz(quizId) {
+  const original = quizStore.find(q => q.id === quizId);
+  if (!original) return null;
+
+  const duplicated = {
+    ...JSON.parse(JSON.stringify(original)),
+    id: `quiz-${Date.now()}`,
+    title: `${original.title} (คัดลอก)`,
+    questions: (original.questions || []).map((q, qIdx) => ({
+      ...q,
+      id: `q-${Date.now()}-${qIdx + 1}`,
+      options: (q.options || []).map((opt, optIdx) => ({
+        ...opt,
+        id: `opt${optIdx + 1}`
+      }))
+    }))
+  };
+
+  quizStore.push(duplicated);
+  return duplicated;
+}
+
 module.exports = {
   defaultQuizSets: quizStore,
   getAllQuizzes,
   saveQuiz,
-  deleteQuiz
+  deleteQuiz,
+  duplicateQuiz
 };

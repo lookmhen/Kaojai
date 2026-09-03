@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { Users, Play, Activity, LogOut } from 'lucide-react';
+import { SoundToggle } from '../common/SoundToggle';
 
 export const HostHeader = ({ pin, mode, counts, onSwitchMode, onLeave }) => {
   return (
@@ -80,6 +81,8 @@ export const HostHeader = ({ pin, mode, counts, onSwitchMode, onLeave }) => {
             {counts?.totalPlayers || 0} คน
           </span>
         </div>
+
+        <SoundToggle />
 
         <button
           type="button"

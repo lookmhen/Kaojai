@@ -283,7 +283,9 @@ export function AppContent() {
             />
           ) : status === 'LEADERBOARD' || status === 'ENDED' ? (
             <HostLeaderboard
+              pin={pin}
               leaderboard={leaderboard}
+              pulseVotes={pulseVotes}
               isEnded={status === 'ENDED'}
               onNextQuestion={handleNextQuestion}
               onResetToLobby={() => setStatus('LOBBY')}

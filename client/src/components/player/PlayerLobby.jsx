@@ -1,10 +1,14 @@
 import React from 'react';
 import { Users, Clock } from 'lucide-react';
+import { SoundToggle } from '../common/SoundToggle';
 
 export const PlayerLobby = ({ player, totalPlayers, mode }) => {
   return (
     <div style={{ maxWidth: '440px', margin: '60px auto', padding: '0 16px', textAlign: 'center' }}>
-      <div className="glass-card animate-pop">
+      <div className="glass-card animate-pop" style={{ position: 'relative' }}>
+        <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
+          <SoundToggle size={16} style={{ width: '34px', height: '34px' }} />
+        </div>
         <div style={{ margin: '20px auto', width: '100px', height: '100px', borderRadius: '50%', background: '#F8FAFC', padding: '6px', border: '3px solid var(--accent-earth-blue)' }}>
           <img
             src={`/avatars/${player.avatar || '0291dcc0ce.svg'}`}

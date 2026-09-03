@@ -73,6 +73,12 @@ async function testApiEndpoints() {
     const saved = saveQuiz(quiz);
     res.json({ success: true, quiz: saved });
   });
+  app.post('/api/quizzes/:id/duplicate', (req, res) => {
+    const { duplicateQuiz } = require('../src/quizData');
+    const duplicated = duplicateQuiz(req.params.id);
+    if (!duplicated) return res.status(404).json({ success: false, message: 'ไม่พบชุดคำถาม' });
+    res.json({ success: true, quiz: duplicated });
+  });
   app.post('/api/upload', (req, res) => {
     const { imageData } = req.body;
     if (!imageData) return res.status(400).json({ success: false, message: 'ไม่พบข้อมูลรูปภาพ' });
@@ -106,6 +112,14 @@ async function testApiEndpoints() {
     assert.strictEqual(resPostQuiz.body.success, true);
     assert.strictEqual(resPostQuiz.body.quiz.title, 'Automated Test Quiz Set');
     console.log('    ✓ POST /api/quizzes passed');
+
+    console.log('  Testing POST /api/quizzes/:id/duplicate...');
+    const resDup = await httpPost(`http://localhost:${port}/api/quizzes/quiz-1/duplicate`, {});
+    assert.strictEqual(resDup.statusCode, 200);
+    assert.strictEqual(resDup.body.success, true);
+    assert.ok(resDup.body.quiz.title.includes('(คัดลอก)'));
+    assert.notStrictEqual(resDup.body.quiz.id, 'quiz-1');
+    console.log('    ✓ POST /api/quizzes/:id/duplicate passed');
 
     console.log('  Testing POST /api/upload...');
     const resUpload = await httpPost(`http://localhost:${port}/api/upload`, { imageData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==' });

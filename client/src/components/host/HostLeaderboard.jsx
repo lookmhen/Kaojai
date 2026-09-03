@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
-import { Trophy, ArrowRight, Flag, RotateCcw } from 'lucide-react';
+import { Trophy, ArrowRight, Flag, RotateCcw, FileSpreadsheet } from 'lucide-react';
+import { exportGameReportCSV } from '../../utils/exportReport';
 
-export const HostLeaderboard = ({ leaderboard, isEnded, onNextQuestion, onResetToLobby }) => {
+export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, isEnded, onNextQuestion, onResetToLobby }) => {
   const [animatedScores, setAnimatedScores] = useState({});
 
   useEffect(() => {
@@ -175,23 +176,46 @@ export const HostLeaderboard = ({ leaderboard, isEnded, onNextQuestion, onResetT
         </div>
       </div>
 
-      {/* Control Button */}
-      <div style={{ textAlign: 'center' }}>
+      {/* Control Buttons */}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={() => exportGameReportCSV({ pin, leaderboard, pulseVotes })}
+          style={{
+            padding: '16px 32px',
+            borderRadius: '50px',
+            background: '#138808',
+            color: '#FFFFFF',
+            fontSize: '1.1rem',
+            fontWeight: 800,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '10px',
+            boxShadow: '0 4px 14px rgba(19, 136, 8, 0.35)',
+            borderBottom: '3px solid #0B5605',
+            cursor: 'pointer'
+          }}
+        >
+          <FileSpreadsheet size={20} /> ดาวน์โหลดรายงานสรุปผลคะแนน (CSV)
+        </button>
+
         {isEnded ? (
           <button
             type="button"
             onClick={onResetToLobby}
             style={{
-              padding: '16px 44px',
+              padding: '16px 36px',
               borderRadius: '50px',
               background: 'var(--accent-earth-blue)',
               color: '#FFFFFF',
-              fontSize: '1.15rem',
+              fontSize: '1.1rem',
               fontWeight: 800,
               display: 'inline-flex',
               alignItems: 'center',
               gap: '10px',
-              boxShadow: '0 4px 14px rgba(30, 58, 138, 0.2)'
+              boxShadow: '0 4px 14px rgba(30, 58, 138, 0.25)',
+              borderBottom: '3px solid #172554',
+              cursor: 'pointer'
             }}
           >
             <RotateCcw size={20} /> จบเกม / กลับสู่หน้า Lobby
@@ -201,16 +225,18 @@ export const HostLeaderboard = ({ leaderboard, isEnded, onNextQuestion, onResetT
             type="button"
             onClick={onNextQuestion}
             style={{
-              padding: '16px 44px',
+              padding: '16px 36px',
               borderRadius: '50px',
               background: 'var(--accent-earth-blue)',
               color: '#FFFFFF',
-              fontSize: '1.15rem',
+              fontSize: '1.1rem',
               fontWeight: 800,
               display: 'inline-flex',
               alignItems: 'center',
               gap: '10px',
-              boxShadow: '0 4px 14px rgba(30, 58, 138, 0.2)'
+              boxShadow: '0 4px 14px rgba(30, 58, 138, 0.25)',
+              borderBottom: '3px solid #172554',
+              cursor: 'pointer'
             }}
           >
             ลุยคำถามถัดไป <ArrowRight size={20} />

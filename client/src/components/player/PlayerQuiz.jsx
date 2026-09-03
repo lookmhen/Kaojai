@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { sfx } from '../../utils/audioSFX';
 import { CheckCircle2, XCircle, Users, Clock } from 'lucide-react';
+import { SoundToggle } from '../common/SoundToggle';
 
 const OPTION_STYLES = [
   { bg: 'var(--choice-red-gradient)', symbol: '▲' },
@@ -97,10 +98,13 @@ export const PlayerQuiz = ({ question, pin, player, answeredCount, totalPlayers 
           </span>
         </div>
 
-        {/* Counter Badge */}
-        <div className="counter-badge" style={{ padding: '6px 12px', fontSize: '0.9rem' }}>
-          <Users size={14} color="var(--accent-earth-orange)" />
-          <span><span className="highlight" style={{ fontSize: '1.1rem' }}>{answeredCount}</span>/{totalPlayers}</span>
+        {/* Counter Badge & Sound Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="counter-badge" style={{ padding: '6px 12px', fontSize: '0.9rem' }}>
+            <Users size={14} color="var(--accent-earth-orange)" />
+            <span><span className="highlight" style={{ fontSize: '1.1rem' }}>{answeredCount}</span>/{totalPlayers}</span>
+          </div>
+          <SoundToggle size={15} style={{ width: '32px', height: '32px' }} />
         </div>
       </div>
 
