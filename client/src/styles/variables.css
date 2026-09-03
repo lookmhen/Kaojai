@@ -1,15 +1,15 @@
 :root {
-  /* Color Tokens */
-  --bg-dark-gradient: linear-gradient(135deg, #0f0c29 0%, #201435 50%, #111d4e 100%);
-  --bg-light-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  /* Color Tokens - Bright & Vibrant Gamified Palette */
+  --bg-dark-gradient: linear-gradient(135deg, #311b92 0%, #512da8 40%, #283593 75%, #1565c0 100%);
+  --bg-light-gradient: linear-gradient(135deg, #e8eaf6 0%, #c5cae9 100%);
   
-  --primary-purple: #6C5CE7;
-  --primary-purple-hover: #5b4cc4;
-  --primary-purple-glow: rgba(108, 92, 231, 0.4);
+  --primary-purple: #7c4dff;
+  --primary-purple-hover: #651fff;
+  --primary-purple-glow: rgba(124, 77, 255, 0.5);
   
-  --accent-pink: #FF7675;
-  --accent-cyan: #00CEC9;
-  --accent-yellow: #FDCB6E;
+  --accent-pink: #ff4081;
+  --accent-cyan: #00e5ff;
+  --accent-yellow: #ffd600;
   
   /* Quiz Choice Colors */
   --choice-red: #e74c3c;
@@ -17,22 +17,22 @@
   --choice-yellow: #f39c12;
   --choice-green: #27ae60;
   
-  --choice-red-gradient: linear-gradient(135deg, #ff4e50 0%, #f9d423 100%);
-  --choice-blue-gradient: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
-  --choice-yellow-gradient: linear-gradient(135deg, #f83600 0%, #fe8c00 100%);
-  --choice-green-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  --choice-red-gradient: linear-gradient(135deg, #ff5252 0%, #ff1744 100%);
+  --choice-blue-gradient: linear-gradient(135deg, #448aff 0%, #2979ff 100%);
+  --choice-yellow-gradient: linear-gradient(135deg, #ffd740 0%, #ffab00 100%);
+  --choice-green-gradient: linear-gradient(135deg, #69f0ae 0%, #00e676 100%);
 
   /* Pulse Colors */
-  --pulse-green: #2ecc71;
-  --pulse-yellow: #f1c40f;
-  --pulse-red: #e74c3c;
+  --pulse-green: #00e676;
+  --pulse-yellow: #ffd600;
+  --pulse-red: #ff5252;
 
   /* Glassmorphism Surface Tokens */
-  --glass-bg: rgba(255, 255, 255, 0.08);
-  --glass-border: rgba(255, 255, 255, 0.15);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --glass-bg: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.25);
+  --glass-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25);
 
-  --glass-card-light: rgba(255, 255, 255, 0.9);
+  --glass-card-light: rgba(255, 255, 255, 0.95);
   --glass-border-light: rgba(255, 255, 255, 0.4);
 
   /* Typography */
@@ -40,9 +40,9 @@
   
   /* Radii & Elevation */
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-lg: 28px;
   --radius-full: 9999px;
   
-  --shadow-glow: 0 0 20px rgba(108, 92, 231, 0.5);
+  --shadow-glow: 0 0 25px rgba(124, 77, 255, 0.6);
 }
