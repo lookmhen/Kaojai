@@ -13,8 +13,11 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers }) =
     if (!socket) return;
 
     const handlePulseNudge = (data) => {
+      // Ignore nudge if this player has already submitted a pulse vote
+      if (activeChoice) return;
+
       sfx.playCuteChime();
-      setNudgeAlert(data.message || '🔔 วิทยากรกำลังรอผลตอบรับจากคุณอยู่นะครับ! ✨');
+      setNudgeAlert(data.message || '🔔 วิทยากรกำลังรอสัญญาณตอบรับจากคุณอยู่นะครับ! ✨');
     };
 
     socket.on('pulse_nudge_alert', handlePulseNudge);
@@ -22,10 +25,11 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers }) =
     return () => {
       socket.off('pulse_nudge_alert', handlePulseNudge);
     };
-  }, [socket]);
+  }, [socket, activeChoice]);
 
   const handleSendPulse = (choice) => {
     setActiveChoice(choice);
+    setNudgeAlert(null); // Dismiss nudge popup if open
     if (socket) {
       socket.emit('submit_pulse', {
         pin,
@@ -37,59 +41,108 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers }) =
 
   return (
     <div style={{ maxWidth: '440px', margin: '30px auto', padding: '0 16px', textAlign: 'center' }}>
-      {/* Cute Nudge Floating Modal */}
+      {/* Centered Modal Popup for Trainer Nudge */}
       {nudgeAlert && (
         <div
-          className="animate-pop"
           style={{
             position: 'fixed',
-            top: '24px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '90%',
-            maxWidth: '400px',
-            background: '#FEF3C7',
-            border: '2px solid #F59E0B',
-            borderRadius: '20px',
-            padding: '16px 20px',
-            boxShadow: '0 10px 30px rgba(245, 158, 11, 0.35)',
-            zIndex: 1200,
-            color: '#92400E',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '12px'
+            justifyContent: 'center',
+            zIndex: 2500,
+            padding: '20px'
           }}
+          onClick={() => setNudgeAlert(null)}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
-            <Bell size={26} color="#D97706" className="animate-bounce" />
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#92400E' }}>
-                ส่งสัญญาณเรียกจากวิทยากร
-              </div>
-              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#B45309' }}>
-                {nudgeAlert}
-              </div>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setNudgeAlert(null)}
+          <div
+            className="animate-pop"
+            onClick={(e) => e.stopPropagation()}
             style={{
-              background: '#FDE68A',
-              border: 'none',
-              borderRadius: '50%',
-              width: '28px',
-              height: '28px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: '#92400E'
+              background: '#FFFFFF',
+              border: '3px solid #F59E0B',
+              borderRadius: '24px',
+              padding: '32px 24px',
+              maxWidth: '380px',
+              width: '100%',
+              textAlign: 'center',
+              boxShadow: '0 20px 50px rgba(245, 158, 11, 0.35)',
+              position: 'relative'
             }}
           >
-            <X size={16} />
-          </button>
+            {/* Close Button in top-right */}
+            <button
+              type="button"
+              onClick={() => setNudgeAlert(null)}
+              style={{
+                position: 'absolute',
+                top: '14px',
+                right: '14px',
+                background: '#FEF3C7',
+                border: 'none',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#92400E'
+              }}
+            >
+              <X size={18} />
+            </button>
+
+            {/* Bouncing Bell Icon */}
+            <div
+              style={{
+                width: '72px',
+                height: '72px',
+                borderRadius: '50%',
+                background: '#FEF3C7',
+                border: '2px solid #FDE68A',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px auto'
+              }}
+            >
+              <Bell size={36} color="#D97706" className="animate-bounce" />
+            </div>
+
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#92400E', marginBottom: '8px' }}>
+              วิทยากรส่งสัญญาณเรียก!
+            </h3>
+
+            <p style={{ fontSize: '0.95rem', fontWeight: 600, color: '#B45309', lineHeight: 1.5, marginBottom: '24px' }}>
+              {nudgeAlert}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setNudgeAlert(null)}
+              style={{
+                width: '100%',
+                padding: '12px 20px',
+                borderRadius: '14px',
+                background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                color: '#FFFFFF',
+                fontWeight: 800,
+                fontSize: '1rem',
+                boxShadow: '0 4px 12px rgba(217, 119, 6, 0.3)',
+                cursor: 'pointer',
+                border: 'none'
+              }}
+            >
+              รับทราบ / ตอบสัญญาณตอนนี้ 🚀
+            </button>
+          </div>
         </div>
       )}
 

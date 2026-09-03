@@ -238,9 +238,17 @@ module.exports = function setupSocketHandlers(io) {
         const room = roomManager.getRoom(pin);
         if (!room) return socket.emit('error_message', { message: 'ไม่พบห้องดังกล่าว' });
 
-        io.to(pin).emit('pulse_nudge_alert', {
-          message: '🔔 วิทยากรกำลังรอผลตอบรับจากคุณอยู่นะครับ! ✨',
-          timestamp: Date.now()
+        const unvotedPlayers = Array.from(room.players.values()).filter(
+          p => p.isConnected && !room.votedPulseUsers.has(p.playerId)
+        );
+
+        unvotedPlayers.forEach(p => {
+          if (p.socketId) {
+            io.to(p.socketId).emit('pulse_nudge_alert', {
+              message: '🔔 วิทยากรกำลังรอสัญญาณตอบรับจากคุณอยู่นะครับ! ✨',
+              timestamp: Date.now()
+            });
+          }
         });
       } catch (err) {
         console.error('[Socket Error] send_pulse_nudge:', err);

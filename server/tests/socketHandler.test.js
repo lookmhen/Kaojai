@@ -6,6 +6,7 @@ const roomManager = require('../src/roomManager');
 // Helper to create mock io and socket
 function createMockSocketEnvironment() {
   const rooms = new Map(); // roomPin -> Set of socket instances
+  const allSockets = new Map(); // socketId -> socket
   const broadcasts = []; // captured broadcasts: { room, event, payload }
 
   let connectionListener = null;
@@ -16,19 +17,24 @@ function createMockSocketEnvironment() {
         connectionListener = handler;
       }
     },
-    to(roomPin) {
+    to(target) {
       return {
         emit(event, payload) {
-          broadcasts.push({ roomPin, event, payload });
-          const roomSockets = rooms.get(roomPin) || new Set();
+          broadcasts.push({ roomPin: target, event, payload });
+          const roomSockets = rooms.get(target) || new Set();
           for (const socket of roomSockets) {
             socket.emit(event, payload);
+          }
+          const directSocket = allSockets.get(target);
+          if (directSocket) {
+            directSocket.emit(event, payload);
           }
         }
       };
     },
     connectSocket(socketId) {
       const socket = createMockSocket(socketId, rooms);
+      allSockets.set(socketId, socket);
       if (connectionListener) {
         connectionListener(socket);
       }
@@ -196,7 +202,14 @@ async function testSocketHandlers() {
   assert.strictEqual(modeSwitched.payload.mode, 'PULSE');
   console.log('    ✓ switch_mode passed');
 
-  // Test 7: submit_pulse handler (Player)
+  // Test 7: send_pulse_nudge & submit_pulse handler (Player)
+  console.log('  Testing send_pulse_nudge targeting unvoted players...');
+  // 1. Player 1 has NOT voted yet -> Should receive nudge
+  await hostSocket.fire('send_pulse_nudge', { pin: roomPin });
+  const initialNudge = player1Socket.getLastEmitted('pulse_nudge_alert');
+  assert.ok(initialNudge, 'Unvoted player should receive pulse_nudge_alert');
+
+  // 2. Player 1 submits vote
   console.log('  Testing submit_pulse event...');
   await player1Socket.fire('submit_pulse', { pin: roomPin, playerId: p1Ack.player.playerId, choice: 'green' });
 
@@ -208,7 +221,14 @@ async function testSocketHandlers() {
   const pulseUpdated = broadcasts.find(b => b.roomPin === roomPin && b.event === 'pulse_updated');
   assert.ok(pulseUpdated, 'pulse_updated broadcast should be emitted');
   assert.deepStrictEqual(pulseUpdated.payload.pulseVotes, { green: 1, yellow: 0, red: 0 });
-  console.log('    ✓ submit_pulse passed');
+
+  // 3. Clear player1 emitted list to verify re-nudge
+  player1Socket.emitted.length = 0;
+  // Host nudges again -> Player 1 has ALREADY voted -> Should NOT receive nudge!
+  await hostSocket.fire('send_pulse_nudge', { pin: roomPin });
+  const postVoteNudge = player1Socket.getLastEmitted('pulse_nudge_alert');
+  assert.strictEqual(postVoteNudge, undefined, 'Already voted player should NOT receive pulse_nudge_alert');
+  console.log('    ✓ submit_pulse & send_pulse_nudge targeting passed');
 
   // Test 8: show_leaderboard handler (Host)
   console.log('  Testing show_leaderboard event...');
