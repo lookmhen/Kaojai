@@ -1,5 +1,8 @@
 # 💖 KaoJai (เข้าใจ) - Real-time Interactive Quiz & Training Pulse Platform
 
+<img width="902" height="619" alt="image" src="https://github.com/user-attachments/assets/f54c9d5a-4c0b-464e-ac2e-745f5647d651" />
+
+
 > **KaoJai** เป็นเว็บแอปพลิเคชันสำหรับการถาม-ตอบและสำรวจความเข้าใจแบบเรียลไทม์ (Interactive Response System) ที่ผสมผสานระหว่าง **เกมตอบคำถาม (Gamified Quiz สไตล์ Kahoot)** และ **การประเมินความเข้าใจระหว่างอบรม (Training Pulse 3 ระดับ 🟢 🟡 🔴)** ออกแบบตามหลัก Earth Tone UI, Cognitive Ergonomics และรองรับการใช้งานบนทุกอุปกรณ์
 
 ---
