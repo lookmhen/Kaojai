@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { sfx } from '../../utils/audioSFX';
 import { Users, Clock, ArrowRight, Trophy, BarChart3, Check, ListOrdered, Sparkles, CheckCircle2 } from 'lucide-react';
+import { getSequenceTheme } from '../../utils/sequenceThemes';
 
 const OPTION_STYLES = [
   { bg: 'var(--choice-red-gradient)', color: '#991B1B', symbol: '▲' },
@@ -98,50 +99,73 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
             </div>
 
             {/* Step-by-Step Flowchart Cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '820px', margin: '0 auto' }}>
-              {(result.correctSequence || question.sequenceItems || []).map((step, sIdx) => (
-                <div
-                  key={step.id || sIdx}
-                  className="animate-pop"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    background: '#FFFFFF',
-                    border: '2px solid #10B981',
-                    borderRadius: '16px',
-                    padding: '16px 20px',
-                    boxShadow: '0 4px 14px rgba(16, 185, 129, 0.12)'
-                  }}
-                >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '840px', margin: '0 auto' }}>
+              {(result.correctSequence || question.sequenceItems || []).map((step, sIdx) => {
+                const theme = getSequenceTheme(step, question.sequenceItems || result.correctSequence);
+                return (
                   <div
+                    key={step.id || sIdx}
+                    className="animate-pop"
                     style={{
-                      width: '42px',
-                      height: '42px',
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                      color: '#FFFFFF',
-                      fontWeight: 900,
-                      fontSize: '1.2rem',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      boxShadow: '0 4px 10px rgba(16, 185, 129, 0.3)'
+                      gap: '16px',
+                      background: theme.cardBg,
+                      border: '2px solid #10B981',
+                      borderLeft: `8px solid ${theme.accentBar}`,
+                      borderRadius: '16px',
+                      padding: '16px 20px',
+                      boxShadow: `0 4px 16px ${theme.glowColor}`
                     }}
                   >
-                    {sIdx + 1}
-                  </div>
+                    <div
+                      style={{
+                        minWidth: '48px',
+                        height: '48px',
+                        borderRadius: '14px',
+                        background: theme.badgeBg,
+                        color: '#FFFFFF',
+                        fontWeight: 900,
+                        fontSize: '1.25rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        boxShadow: `0 4px 10px ${theme.glowColor}`,
+                        border: '2px solid rgba(255, 255, 255, 0.75)'
+                      }}
+                    >
+                      <span style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.9, lineHeight: 1 }}>ลำดับ</span>
+                      <span style={{ lineHeight: 1.1 }}>{sIdx + 1}</span>
+                    </div>
 
-                  <div style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', textAlign: 'left' }}>
-                    {step.text}
-                  </div>
+                    <span
+                      style={{
+                        background: '#FFFFFF',
+                        border: `1px solid ${theme.borderColor}`,
+                        color: theme.subText,
+                        fontSize: '0.8rem',
+                        fontWeight: 800,
+                        padding: '2px 8px',
+                        borderRadius: '8px',
+                        flexShrink: 0,
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                      }}
+                    >
+                      {theme.symbol} ขั้นตอน {theme.label}
+                    </span>
 
-                  <div style={{ flexShrink: 0, background: '#DCFCE7', borderRadius: '50%', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Check size={20} color="#166534" strokeWidth={3} />
+                    <div style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', textAlign: 'left' }}>
+                      {step.text}
+                    </div>
+
+                    <div style={{ flexShrink: 0, background: '#DCFCE7', borderRadius: '50%', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Check size={20} color="#166534" strokeWidth={3} />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ) : (
@@ -159,30 +183,55 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
               สังเกตและพิจารณาขั้นตอนทั้งหมดอย่างรอบคอบ ยิ่งเรียงถูกต้องครบทุกขั้นตอนและส่งคำตอบเร็ว ยิ่งได้คะแนนสูง!
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', maxWidth: '820px', margin: '0 auto' }}>
-              {(question.sequenceItems || []).map((step, idx) => (
-                <div
-                  key={step.id || idx}
-                  style={{
-                    background: '#F8FAFC',
-                    border: '1.5px dashed #CBD5E1',
-                    borderRadius: '14px',
-                    padding: '16px',
-                    fontSize: '0.95rem',
-                    fontWeight: 600,
-                    color: 'var(--text-main)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    textAlign: 'left'
-                  }}
-                >
-                  <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#E2E8F0', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800, flexShrink: 0 }}>
-                    ?
-                  </span>
-                  <span>{step.text}</span>
-                </div>
-              ))}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', maxWidth: '840px', margin: '0 auto' }}>
+              {(question.sequenceItems || []).map((step, idx) => {
+                const theme = getSequenceTheme(step, question.sequenceItems);
+                return (
+                  <div
+                    key={step.id || idx}
+                    style={{
+                      background: theme.cardBg,
+                      border: `1.5px solid ${theme.borderColor}`,
+                      borderLeft: `6px solid ${theme.accentBar}`,
+                      borderRadius: '16px',
+                      padding: '16px 18px',
+                      fontSize: '1rem',
+                      fontWeight: 700,
+                      color: 'var(--text-main)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      textAlign: 'left',
+                      boxShadow: `0 4px 14px ${theme.glowColor}`
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
+                        background: theme.badgeBg,
+                        color: '#FFFFFF',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1rem',
+                        fontWeight: 900,
+                        flexShrink: 0,
+                        boxShadow: `0 2px 8px ${theme.glowColor}`
+                      }}
+                    >
+                      {theme.symbol}
+                    </span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '0.72rem', color: theme.subText, fontWeight: 800, textTransform: 'uppercase', marginBottom: '2px' }}>
+                        ขั้นตอน {theme.label}
+                      </div>
+                      <div style={{ lineHeight: 1.35 }}>{step.text}</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )

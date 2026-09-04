@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GripVertical, ArrowUp, ArrowDown, Check, Send, Sparkles, CheckCircle2, XCircle } from 'lucide-react';
 import { sfx } from '../../utils/audioSFX';
+import { getSequenceTheme } from '../../utils/sequenceThemes';
 
 export const PlayerSequence = ({
   question,
@@ -118,11 +119,12 @@ export const PlayerSequence = ({
       </div>
 
       {/* Sequence Items List */}
-      <div ref={listRef} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div ref={listRef} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {items.map((item, idx) => {
           const isCorrectPosition = result && correctIds[idx] === item.id;
           const isWrongPosition = result && correctIds[idx] !== item.id;
           const isCurrentDragged = draggedIdx === idx;
+          const theme = getSequenceTheme(item, question?.sequenceItems || items);
 
           return (
             <div
@@ -131,28 +133,33 @@ export const PlayerSequence = ({
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
+                gap: '12px',
                 background: isCorrectPosition
                   ? '#ECFDF5'
                   : isWrongPosition
                   ? '#FEF2F2'
                   : isCurrentDragged
-                  ? '#F8FAFC'
-                  : '#FFFFFF',
+                  ? '#FFFFFF'
+                  : theme.cardBg,
                 border: isCorrectPosition
                   ? '2px solid #10B981'
                   : isWrongPosition
                   ? '2px solid #EF4444'
                   : isCurrentDragged
-                  ? '2px solid var(--accent-earth-blue)'
-                  : '1.5px solid #E2E8F0',
+                  ? `2.5px solid ${theme.accentBar}`
+                  : `1.5px solid ${theme.borderColor}`,
+                borderLeft: isCorrectPosition
+                  ? '7px solid #10B981'
+                  : isWrongPosition
+                  ? '7px solid #EF4444'
+                  : `7px solid ${theme.accentBar}`,
                 borderRadius: '16px',
                 padding: '12px 14px',
                 boxShadow: isCurrentDragged
-                  ? '0 12px 28px rgba(30, 58, 138, 0.22)'
-                  : '0 2px 8px rgba(15, 23, 42, 0.04)',
-                transform: isCurrentDragged ? 'scale(1.02)' : 'none',
-                opacity: isCurrentDragged ? 0.9 : 1,
+                  ? `0 14px 30px ${theme.glowColor}`
+                  : '0 3px 10px rgba(15, 23, 42, 0.05)',
+                transform: isCurrentDragged ? 'scale(1.025)' : 'none',
+                opacity: isCurrentDragged ? 0.96 : 1,
                 position: 'relative',
                 zIndex: isCurrentDragged ? 10 : 1,
                 transition: isCurrentDragged ? 'none' : 'all 0.18s ease',
@@ -160,80 +167,111 @@ export const PlayerSequence = ({
                 WebkitUserSelect: 'none'
               }}
             >
-              {/* Step Number Badge */}
+              {/* Step Slot Number Badge (High Contrast & Clear) */}
               <div
                 onPointerDown={!isSubmitted ? (e) => handlePointerDown(e, idx) : undefined}
                 style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
+                  minWidth: '46px',
+                  height: '46px',
+                  borderRadius: '14px',
                   background: isCorrectPosition
-                    ? '#10B981'
+                    ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
                     : isWrongPosition
-                    ? '#EF4444'
-                    : 'var(--accent-earth-blue)',
+                    ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
+                    : theme.badgeBg,
                   color: '#FFFFFF',
-                  fontWeight: 900,
-                  fontSize: '0.9rem',
+                  boxShadow: isCorrectPosition
+                    ? '0 4px 12px rgba(16, 185, 129, 0.4)'
+                    : isWrongPosition
+                    ? '0 4px 12px rgba(239, 68, 68, 0.4)'
+                    : `0 4px 12px ${theme.glowColor}`,
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                   cursor: !isSubmitted ? 'grab' : 'default',
-                  touchAction: 'none'
+                  touchAction: 'none',
+                  border: '2px solid rgba(255, 255, 255, 0.75)'
                 }}
                 title="แตะค้างแล้วลากสลับตำแหน่ง"
               >
-                {idx + 1}
+                <span style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.92, lineHeight: 1, letterSpacing: '0.5px' }}>
+                  ลำดับ
+                </span>
+                <span style={{ fontSize: '1.25rem', fontWeight: 900, lineHeight: 1.1 }}>
+                  {idx + 1}
+                </span>
               </div>
 
-              {/* Step Text Content */}
-              <div
-                style={{
-                  flex: 1,
-                  textAlign: 'left',
-                  fontSize: '0.92rem',
-                  fontWeight: 600,
-                  color: 'var(--text-main)',
-                  lineHeight: 1.4
-                }}
-              >
-                {item.text}
+              {/* Step Text Content with Distinct Choice Tag */}
+              <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: '#FFFFFF',
+                      border: `1px solid ${theme.borderColor}`,
+                      color: theme.subText,
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      padding: '1px 8px',
+                      borderRadius: '6px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                    }}
+                  >
+                    <span style={{ fontSize: '0.8rem' }}>{theme.symbol}</span> ขั้นตอน {theme.label}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: '0.96rem',
+                    fontWeight: 700,
+                    color: 'var(--text-main)',
+                    lineHeight: 1.4,
+                    wordBreak: 'break-word'
+                  }}
+                >
+                  {item.text}
+                </div>
               </div>
 
               {/* Status indicator after result */}
               {result && (
                 <div style={{ flexShrink: 0 }}>
                   {isCorrectPosition ? (
-                    <CheckCircle2 size={20} color="#10B981" />
+                    <CheckCircle2 size={24} color="#10B981" />
                   ) : (
-                    <XCircle size={20} color="#EF4444" />
+                    <XCircle size={24} color="#EF4444" />
                   )}
                 </div>
               )}
 
               {/* Reordering Controls (Up / Down Arrows + Drag Grip) */}
               {!isSubmitted && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
                   <button
                     type="button"
                     disabled={idx === 0}
                     onClick={() => handleMove(idx, -1)}
                     style={{
-                      background: idx === 0 ? '#F1F5F9' : '#E2E8F0',
-                      color: idx === 0 ? '#94A3B8' : 'var(--text-main)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      width: '30px',
-                      height: '30px',
+                      background: idx === 0 ? '#F1F5F9' : '#FFFFFF',
+                      color: idx === 0 ? '#94A3B8' : theme.accentBar,
+                      border: idx === 0 ? '1px solid #E2E8F0' : `1.5px solid ${theme.borderColor}`,
+                      borderRadius: '10px',
+                      width: '32px',
+                      height: '32px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      cursor: idx === 0 ? 'not-allowed' : 'pointer'
+                      cursor: idx === 0 ? 'not-allowed' : 'pointer',
+                      boxShadow: idx === 0 ? 'none' : '0 2px 5px rgba(0,0,0,0.04)'
                     }}
                     title="เลื่อนขึ้น"
                   >
-                    <ArrowUp size={16} />
+                    <ArrowUp size={17} strokeWidth={2.5} />
                   </button>
 
                   <button
@@ -241,26 +279,27 @@ export const PlayerSequence = ({
                     disabled={idx === items.length - 1}
                     onClick={() => handleMove(idx, 1)}
                     style={{
-                      background: idx === items.length - 1 ? '#F1F5F9' : '#E2E8F0',
-                      color: idx === items.length - 1 ? '#94A3B8' : 'var(--text-main)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      width: '30px',
-                      height: '30px',
+                      background: idx === items.length - 1 ? '#F1F5F9' : '#FFFFFF',
+                      color: idx === items.length - 1 ? '#94A3B8' : theme.accentBar,
+                      border: idx === items.length - 1 ? '1px solid #E2E8F0' : `1.5px solid ${theme.borderColor}`,
+                      borderRadius: '10px',
+                      width: '32px',
+                      height: '32px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      cursor: idx === items.length - 1 ? 'not-allowed' : 'pointer'
+                      cursor: idx === items.length - 1 ? 'not-allowed' : 'pointer',
+                      boxShadow: idx === items.length - 1 ? 'none' : '0 2px 5px rgba(0,0,0,0.04)'
                     }}
                     title="เลื่อนลง"
                   >
-                    <ArrowDown size={16} />
+                    <ArrowDown size={17} strokeWidth={2.5} />
                   </button>
 
                   <div
                     onPointerDown={(e) => handlePointerDown(e, idx)}
                     style={{
-                      color: isCurrentDragged ? 'var(--accent-earth-blue)' : '#64748B',
+                      color: isCurrentDragged ? theme.accentBar : '#64748B',
                       cursor: isCurrentDragged ? 'grabbing' : 'grab',
                       padding: '6px 4px',
                       display: 'flex',
@@ -271,7 +310,7 @@ export const PlayerSequence = ({
                     }}
                     title="แตะค้างแล้วลากสลับตำแหน่ง (Drag to reorder)"
                   >
-                    <GripVertical size={20} />
+                    <GripVertical size={22} />
                   </div>
                 </div>
               )}
@@ -335,43 +374,63 @@ export const PlayerSequence = ({
           <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={16} color="var(--accent-earth-orange)" /> เฉลยลำดับขั้นตอนที่ถูกต้อง:
           </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {result.correctSequence.map((step, sIdx) => (
-              <div
-                key={step.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  color: '#1E293B',
-                  background: '#F8FAFC',
-                  padding: '8px 12px',
-                  borderRadius: '10px',
-                  border: '1px solid #E2E8F0'
-                }}
-              >
-                <span
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {result.correctSequence.map((step, sIdx) => {
+              const stepTheme = getSequenceTheme(step, question?.sequenceItems || result.correctSequence);
+              return (
+                <div
+                  key={step.id}
                   style={{
-                    background: '#138808',
-                    color: '#FFFFFF',
-                    width: '22px',
-                    height: '22px',
-                    borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.75rem',
-                    fontWeight: 900,
-                    flexShrink: 0
+                    gap: '12px',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    color: '#1E293B',
+                    background: stepTheme.cardBg,
+                    padding: '10px 14px',
+                    borderRadius: '14px',
+                    border: `1.5px solid ${stepTheme.borderColor}`,
+                    borderLeft: `6px solid ${stepTheme.accentBar}`,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
                   }}
                 >
-                  {sIdx + 1}
-                </span>
-                <span>{step.text}</span>
-              </div>
-            ))}
+                  <span
+                    style={{
+                      background: stepTheme.badgeBg,
+                      color: '#FFFFFF',
+                      width: '30px',
+                      height: '30px',
+                      borderRadius: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.95rem',
+                      fontWeight: 900,
+                      flexShrink: 0,
+                      boxShadow: `0 2px 6px ${stepTheme.glowColor}`
+                    }}
+                  >
+                    {sIdx + 1}
+                  </span>
+                  <span
+                    style={{
+                      background: '#FFFFFF',
+                      border: `1px solid ${stepTheme.borderColor}`,
+                      color: stepTheme.subText,
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      padding: '1px 6px',
+                      borderRadius: '6px',
+                      flexShrink: 0
+                    }}
+                  >
+                    {stepTheme.symbol} {stepTheme.label}
+                  </span>
+                  <span style={{ flex: 1, lineHeight: 1.4 }}>{step.text}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
