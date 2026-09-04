@@ -1,7 +1,24 @@
-import { defineConfig } from 'vite';
+import { defineConfig, createLogger } from 'vite';
 import react from '@vitejs/plugin-react';
 
+const logger = createLogger();
+const originalLoggerError = logger.error;
+
+logger.error = (msg, options) => {
+  if (
+    options?.error?.code === 'ECONNABORTED' ||
+    options?.error?.code === 'ECONNRESET' ||
+    msg.includes('ECONNABORTED') ||
+    msg.includes('ECONNRESET') ||
+    (msg.includes('ws proxy socket error') && (msg.includes('ECONNABORTED') || msg.includes('ECONNRESET')))
+  ) {
+    return;
+  }
+  originalLoggerError(msg, options);
+};
+
 export default defineConfig({
+  customLogger: logger,
   plugins: [react()],
   server: {
     port: 3000,
