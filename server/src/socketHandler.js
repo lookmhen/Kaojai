@@ -360,6 +360,19 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
+    socket.on('send_pulse_reaction', ({ pin, emoji, playerId }) => {
+      try {
+        if (!pin || !emoji) return;
+        io.to(pin).emit('pulse_reaction_received', {
+          emoji,
+          playerId,
+          id: `${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
+        });
+      } catch (err) {
+        console.error('[Socket Error] send_pulse_reaction:', err);
+      }
+    });
+
     // --- DISCONNECT ---
     socket.on('disconnect', () => {
       console.log(`[Socket Disconnected] ID: ${socket.id}`);

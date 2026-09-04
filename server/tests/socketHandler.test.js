@@ -228,7 +228,16 @@ async function testSocketHandlers() {
   await hostSocket.fire('send_pulse_nudge', { pin: roomPin });
   const postVoteNudge = player1Socket.getLastEmitted('pulse_nudge_alert');
   assert.strictEqual(postVoteNudge, undefined, 'Already voted player should NOT receive pulse_nudge_alert');
-  console.log('    ✓ submit_pulse & send_pulse_nudge targeting passed');
+
+  // Test 7b: send_pulse_reaction handler
+  console.log('  Testing send_pulse_reaction event...');
+  const testP1Id = p1Ack.player.playerId;
+  await player1Socket.fire('send_pulse_reaction', { pin: roomPin, emoji: '🔥', playerId: testP1Id });
+  const reactionBroadcast = broadcasts.find(b => b.roomPin === roomPin && b.event === 'pulse_reaction_received');
+  assert.ok(reactionBroadcast, 'pulse_reaction_received broadcast should be emitted');
+  assert.strictEqual(reactionBroadcast.payload.emoji, '🔥');
+  assert.strictEqual(reactionBroadcast.payload.playerId, testP1Id);
+  console.log('    ✓ submit_pulse & send_pulse_reaction passed');
 
   // Test 8: show_leaderboard handler (Host)
   console.log('  Testing show_leaderboard event...');
