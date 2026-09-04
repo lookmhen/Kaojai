@@ -248,6 +248,39 @@ async function testSocketHandlers() {
   assert.strictEqual(afterUpdatesCount, initialUpdatesCount + 1, 'room_updated broadcast on disconnect');
   console.log('    ✓ disconnect handler passed');
 
+  // Test 10: Sequence Race submit_answer handler with orderedItemIds
+  console.log('  Testing Sequence Race submit_answer with orderedItemIds...');
+  const seqHostSocket = mockIo.connectSocket('host-seq-sock');
+  let seqRoomPin = null;
+  await seqHostSocket.fire('create_room', null, (res) => {
+    seqRoomPin = res.pin;
+  });
+
+  const seqPlayerSocket = mockIo.connectSocket('player-seq-sock');
+  let seqPlayerId = null;
+  await seqPlayerSocket.fire('join_room', { pin: seqRoomPin, name: 'SeqRacer', avatar: '/avatars/avatar-1.svg' }, (res) => {
+    seqPlayerId = res.player.playerId;
+  });
+
+  // Start question index 2 (which is the SEQUENCE question in quiz-1)
+  roomManager.startQuestion(seqRoomPin, 2);
+  const correctSeqIds = ['seq1', 'seq2', 'seq3', 'seq4', 'seq5'];
+
+  await seqPlayerSocket.fire('submit_answer', {
+    pin: seqRoomPin,
+    playerId: seqPlayerId,
+    orderedItemIds: correctSeqIds
+  });
+
+  const seqFeedback = seqPlayerSocket.getLastEmitted('answer_feedback');
+  assert.ok(seqFeedback, 'answer_feedback should be emitted for sequence answer');
+  assert.strictEqual(seqFeedback.isCorrect, true);
+  assert.strictEqual(seqFeedback.details.questionType, 'SEQUENCE');
+  assert.strictEqual(seqFeedback.details.isPerfect, true);
+  assert.strictEqual(seqFeedback.details.correctPositions, 5);
+  assert.ok(seqFeedback.pointsEarned > 0);
+  console.log('    ✓ Sequence Race submit_answer passed');
+
   console.log('✅ socketHandler tests passed cleanly!');
 }
 

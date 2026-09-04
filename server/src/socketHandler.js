@@ -308,15 +308,17 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('submit_answer', ({ pin, playerId, optionId }) => {
+    socket.on('submit_answer', ({ pin, playerId, optionId, orderedItemIds }) => {
       try {
-        const result = roomManager.submitAnswer(pin, playerId, optionId);
+        const answerPayload = orderedItemIds ? { orderedItemIds } : { optionId };
+        const result = roomManager.submitAnswer(pin, playerId, answerPayload);
         
         socket.emit('answer_feedback', {
           isCorrect: result.isCorrect,
           pointsEarned: result.pointsEarned,
           totalScore: result.totalScore,
-          alreadyAnswered: result.alreadyAnswered
+          alreadyAnswered: result.alreadyAnswered,
+          details: result.details
         });
 
         io.to(pin).emit('answered_count_update', {

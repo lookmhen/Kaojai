@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { sfx } from '../../utils/audioSFX';
-import { Users, Clock, ArrowRight, Trophy, BarChart3, Check } from 'lucide-react';
+import { Users, Clock, ArrowRight, Trophy, BarChart3, Check, ListOrdered, Sparkles, CheckCircle2 } from 'lucide-react';
 
 const OPTION_STYLES = [
   { bg: 'var(--choice-red-gradient)', color: '#991B1B', symbol: '▲' },
@@ -11,6 +11,7 @@ const OPTION_STYLES = [
 
 export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNextQuestion, onShowLeaderboard }) => {
   const [timeLeft, setTimeLeft] = useState(question.timeLimitSeconds);
+  const isSequence = question?.questionType === 'SEQUENCE' || Boolean(question?.sequenceItems?.length);
 
   useEffect(() => {
     setTimeLeft(question.timeLimitSeconds);
@@ -30,7 +31,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
     return () => clearInterval(interval);
   }, [question?.id]);
 
-  const maxCount = Math.max(...question.options.map(opt => result?.optionCounts?.[opt.id] || 0), 1);
+  const maxCount = Math.max(...(question.options?.map(opt => result?.optionCounts?.[opt.id] || 0) || [1]), 1);
 
   return (
     <div style={{ maxWidth: '1000px', margin: '30px auto', padding: '0 24px' }}>
@@ -72,8 +73,121 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
         </h1>
       </div>
 
-      {/* Options Presentation: Vertical Bar Chart when result is present */}
-      {result ? (
+      {/* Options / Sequence Presentation */}
+      {isSequence ? (
+        result ? (
+          /* Sequence Race Result Phase: Step-by-Step Flowchart Cards */
+          <div className="glass-card animate-pop" style={{ padding: '32px 28px', marginBottom: '32px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(30, 58, 138, 0.1)', color: 'var(--accent-earth-blue)', padding: '6px 16px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 800, marginBottom: '10px' }}>
+                <ListOrdered size={18} /> เฉลยลำดับขั้นตอนที่ถูกต้อง (Sequence Race Results)
+              </div>
+              <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                กระบวนการและลำดับขั้นตอนมาตรฐาน
+              </h2>
+
+              {/* Perfect vs Partial Stats Badges */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginTop: '12px', flexWrap: 'wrap' }}>
+                <span style={{ background: '#DCFCE7', color: '#166534', border: '1px solid #86EFAC', borderRadius: '16px', padding: '6px 16px', fontSize: '0.9rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <CheckCircle2 size={16} color="#166534" /> เรียงถูกต้องครบ 100%: <strong>{result.perfectCount || 0} คน</strong>
+                </span>
+                <span style={{ background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A', borderRadius: '16px', padding: '6px 16px', fontSize: '0.9rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Sparkles size={16} color="#D97706" /> เรียงถูกบางส่วน: <strong>{result.partialCount || 0} คน</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Step-by-Step Flowchart Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '820px', margin: '0 auto' }}>
+              {(result.correctSequence || question.sequenceItems || []).map((step, sIdx) => (
+                <div
+                  key={step.id || sIdx}
+                  className="animate-pop"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    background: '#FFFFFF',
+                    border: '2px solid #10B981',
+                    borderRadius: '16px',
+                    padding: '16px 20px',
+                    boxShadow: '0 4px 14px rgba(16, 185, 129, 0.12)'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                      color: '#FFFFFF',
+                      fontWeight: 900,
+                      fontSize: '1.2rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      boxShadow: '0 4px 10px rgba(16, 185, 129, 0.3)'
+                    }}
+                  >
+                    {sIdx + 1}
+                  </div>
+
+                  <div style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', textAlign: 'left' }}>
+                    {step.text}
+                  </div>
+
+                  <div style={{ flexShrink: 0, background: '#DCFCE7', borderRadius: '50%', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Check size={20} color="#166534" strokeWidth={3} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* Sequence Race Active Phase */
+          <div className="glass-card animate-pop" style={{ padding: '40px 24px', textAlign: 'center', marginBottom: '32px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'rgba(217, 119, 6, 0.1)', color: '#B45309', padding: '8px 20px', borderRadius: '30px', fontSize: '1rem', fontWeight: 800, marginBottom: '20px' }}>
+              <ListOrdered size={20} /> โหมด Sequence Race (เกมเรียงลำดับขั้นตอน)
+            </div>
+
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '12px' }}>
+              ผู้เรียนกำลังจัดเรียงลำดับขั้นตอนบนหน้าจอมือถือ...
+            </h3>
+
+            <p style={{ fontSize: '1.05rem', color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto 28px auto', lineHeight: 1.5 }}>
+              สังเกตและพิจารณาขั้นตอนทั้งหมดอย่างรอบคอบ ยิ่งเรียงถูกต้องครบทุกขั้นตอนและส่งคำตอบเร็ว ยิ่งได้คะแนนสูง!
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', maxWidth: '820px', margin: '0 auto' }}>
+              {(question.sequenceItems || []).map((step, idx) => (
+                <div
+                  key={step.id || idx}
+                  style={{
+                    background: '#F8FAFC',
+                    border: '1.5px dashed #CBD5E1',
+                    borderRadius: '14px',
+                    padding: '16px',
+                    fontSize: '0.95rem',
+                    fontWeight: 600,
+                    color: 'var(--text-main)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    textAlign: 'left'
+                  }}
+                >
+                  <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#E2E8F0', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800, flexShrink: 0 }}>
+                    ?
+                  </span>
+                  <span>{step.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      ) : result ? (
+        /* Regular Choice Results: Vertical Bar Chart */
         <div className="glass-card animate-pop" style={{ padding: '30px 24px', marginBottom: '32px' }}>
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-main)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
@@ -88,7 +202,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: `repeat(${question.options.length}, 1fr)`,
+              gridTemplateColumns: `repeat(${question.options?.length || 4}, 1fr)`,
               gap: '16px',
               alignItems: 'flex-end',
               height: '270px',
@@ -97,7 +211,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
               marginBottom: '18px'
             }}
           >
-            {question.options.map((opt, idx) => {
+            {question.options?.map((opt, idx) => {
               const styleObj = OPTION_STYLES[idx % OPTION_STYLES.length];
               const isCorrect = result.correctOptionId === opt.id;
               const count = result.optionCounts?.[opt.id] || 0;
@@ -138,39 +252,39 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      transition: 'height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                      color: '#FFFFFF'
                     }}
                   >
-                    <span style={{ fontSize: '2.2rem', color: '#FFFFFF', textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                      {styleObj.symbol}
-                    </span>
+                    <span style={{ fontSize: '2rem' }}>{styleObj.symbol}</span>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Option Label Row below chart */}
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${question.options.length}, 1fr)`, gap: '16px' }}>
-            {question.options.map((opt, idx) => {
-              const isCorrect = result.correctOptionId === opt.id;
+          {/* Option Answer Details Cards below the bar chart */}
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${question.options?.length || 4}, 1fr)`, gap: '12px' }}>
+            {question.options?.map((opt, idx) => {
               const styleObj = OPTION_STYLES[idx % OPTION_STYLES.length];
+              const isCorrect = result.correctOptionId === opt.id;
+
               return (
                 <div
                   key={opt.id}
                   style={{
-                    textAlign: 'center',
-                    padding: '12px 10px',
-                    borderRadius: '14px',
                     background: isCorrect ? '#F0FDF4' : '#F8FAFC',
-                    border: isCorrect ? '2px solid #86EFAC' : '1px solid #E2E8F0',
-                    boxShadow: isCorrect ? '0 2px 8px rgba(34, 197, 94, 0.15)' : 'none'
+                    border: isCorrect ? '2px solid #22C55E' : '1px solid #E2E8F0',
+                    borderRadius: '12px',
+                    padding: '12px 10px',
+                    textAlign: 'center',
+                    boxShadow: isCorrect ? '0 2px 10px rgba(34, 197, 94, 0.15)' : 'none'
                   }}
                 >
-                  <div style={{ fontWeight: 800, fontSize: '1rem', color: isCorrect ? '#166534' : 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                    <span>{styleObj.symbol}</span> ข้อ {idx + 1}
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 800, fontSize: '0.85rem', color: isCorrect ? '#166534' : styleObj.color, marginBottom: '4px' }}>
+                    <span>{styleObj.symbol}</span>
+                    <span>ข้อ {idx + 1}</span>
                   </div>
-                  <div style={{ fontSize: '0.9rem', color: isCorrect ? '#166534' : 'var(--text-muted)', marginTop: '4px', wordBreak: 'break-word', fontWeight: 600 }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', lineHeight: 1.3 }}>
                     {opt.text}
                   </div>
                 </div>
@@ -181,7 +295,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
       ) : (
         /* Regular Choice Grid while question is active */
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-          {question.options.map((opt, idx) => {
+          {question.options?.map((opt, idx) => {
             const styleObj = OPTION_STYLES[idx % OPTION_STYLES.length];
             return (
               <div

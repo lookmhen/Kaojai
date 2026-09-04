@@ -3,6 +3,7 @@ import { useSocket } from '../../context/SocketContext';
 import { sfx } from '../../utils/audioSFX';
 import { CheckCircle2, XCircle, Users, Clock, BarChart3 } from 'lucide-react';
 import { SoundToggle } from '../common/SoundToggle';
+import { PlayerSequence } from './PlayerSequence';
 
 const OPTION_STYLES = [
   { bg: 'var(--choice-red-gradient)', symbol: '▲' },
@@ -17,6 +18,18 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
   const [feedback, setFeedback] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(question.timeLimitSeconds);
+
+  const handleSubmitSequence = (orderedItemIds) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    if (socket) {
+      socket.emit('submit_answer', {
+        pin,
+        playerId: player.playerId,
+        orderedItemIds
+      });
+    }
+  };
 
   useEffect(() => {
     setSelectedOptionId(null);
@@ -125,7 +138,15 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
         </h2>
       </div>
 
-      {feedback ? (
+      {question.questionType === 'SEQUENCE' ? (
+        <PlayerSequence
+          question={question}
+          onSubmitOrder={handleSubmitSequence}
+          isSubmitting={isSubmitting}
+          feedback={feedback}
+          result={result}
+        />
+      ) : feedback ? (
         <div
           className="glass-card animate-pop"
           style={{
@@ -161,7 +182,7 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: `repeat(${question.options.length}, 1fr)`,
+                  gridTemplateColumns: `repeat(${question.options?.length || 4}, 1fr)`,
                   gap: '8px',
                   alignItems: 'flex-end',
                   height: '160px',
@@ -170,11 +191,11 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
                   marginBottom: '10px'
                 }}
               >
-                {question.options.map((opt, idx) => {
+                {question.options?.map((opt, idx) => {
                   const styleObj = OPTION_STYLES[idx % OPTION_STYLES.length];
                   const isCorrect = result.correctOptionId === opt.id;
                   const count = result.optionCounts?.[opt.id] || 0;
-                  const barHeight = Math.max(16, Math.round((count / Math.max(...question.options.map(o => result?.optionCounts?.[o.id] || 0), 1)) * 115));
+                  const barHeight = Math.max(16, Math.round((count / Math.max(...(question.options?.map(o => result?.optionCounts?.[o.id] || 0) || [1]), 1)) * 115));
 
                   return (
                     <div key={opt.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
@@ -204,8 +225,8 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
                 })}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${question.options.length}, 1fr)`, gap: '6px' }}>
-                {question.options.map((opt, idx) => {
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${question.options?.length || 4}, 1fr)`, gap: '6px' }}>
+                {question.options?.map((opt, idx) => {
                   const isCorrect = result.correctOptionId === opt.id;
                   const styleObj = OPTION_STYLES[idx % OPTION_STYLES.length];
                   return (
@@ -220,7 +241,7 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          {question.options.map((opt, idx) => {
+          {question.options?.map((opt, idx) => {
             const styleObj = OPTION_STYLES[idx % OPTION_STYLES.length];
             const isChosen = selectedOptionId === opt.id;
 

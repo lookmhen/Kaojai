@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Save, ArrowLeft, Image as ImageIcon, Clock, CheckCircle2, Upload, X, Copy } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, Image as ImageIcon, Clock, CheckCircle2, Upload, X, Copy, ListOrdered, ArrowUp, ArrowDown } from 'lucide-react';
 
 export const TeacherBackoffice = ({ onBack }) => {
   const [quizzes, setQuizzes] = useState([]);
@@ -138,6 +138,32 @@ export const TeacherBackoffice = ({ onBack }) => {
     if (!activeQuiz || !activeQuiz.title.trim()) {
       alert('กรุณากรอกชื่อชุดคำถาม');
       return;
+    }
+
+    // Question validation
+    for (let i = 0; i < activeQuiz.questions.length; i++) {
+      const q = activeQuiz.questions[i];
+      if (!q.questionText || !q.questionText.trim()) {
+        alert(`ข้อที่ ${i + 1} ยังไม่ได้กรอกโจทย์คำถาม`);
+        return;
+      }
+      if (q.questionType === 'SEQUENCE') {
+        if (!q.sequenceItems || q.sequenceItems.length < 3) {
+          alert(`ข้อที่ ${i + 1} ต้องมีขั้นตอนอย่างน้อย 3 ขั้นตอน`);
+          return;
+        }
+        for (let j = 0; j < q.sequenceItems.length; j++) {
+          if (!q.sequenceItems[j].text || !q.sequenceItems[j].text.trim()) {
+            alert(`ข้อที่ ${i + 1} ขั้นตอนที่ ${j + 1} ยังไม่ได้กรอกคำอธิบาย`);
+            return;
+          }
+        }
+      } else {
+        if (!q.options || !q.options.some(opt => opt.isCorrect)) {
+          alert(`ข้อที่ ${i + 1} ยังไม่ได้เลือกคำตอบที่ถูกต้อง`);
+          return;
+        }
+      }
     }
 
     fetch('/api/quizzes', {
@@ -358,7 +384,79 @@ export const TeacherBackoffice = ({ onBack }) => {
               {activeQuiz.questions.map((q, qIdx) => (
                 <div key={q.id || qIdx} style={{ background: '#F8FAFC', padding: '20px', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <h4 style={{ fontWeight: 800, color: 'var(--accent-earth-blue)', fontSize: '1.05rem' }}>ข้อที่ {qIdx + 1}</h4>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <h4 style={{ fontWeight: 800, color: 'var(--accent-earth-blue)', fontSize: '1.05rem' }}>ข้อที่ {qIdx + 1}</h4>
+                      {/* Question Type Selector */}
+                      <div style={{ display: 'inline-flex', background: '#E2E8F0', borderRadius: '10px', padding: '3px' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = [...activeQuiz.questions];
+                            updated[qIdx].questionType = 'CHOICE';
+                            if (!updated[qIdx].options || updated[qIdx].options.length === 0) {
+                              updated[qIdx].options = [
+                                { id: 'opt1', text: 'ตัวเลือก A', isCorrect: true },
+                                { id: 'opt2', text: 'ตัวเลือก B', isCorrect: false },
+                                { id: 'opt3', text: 'ตัวเลือก C', isCorrect: false },
+                                { id: 'opt4', text: 'ตัวเลือก D', isCorrect: false }
+                              ];
+                            }
+                            setActiveQuiz({ ...activeQuiz, questions: updated });
+                          }}
+                          style={{
+                            padding: '4px 12px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: (!q.questionType || q.questionType === 'CHOICE') ? 'var(--accent-earth-blue)' : 'transparent',
+                            color: (!q.questionType || q.questionType === 'CHOICE') ? '#FFFFFF' : 'var(--text-main)',
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          🔘 ปรนัย (Choice)
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = [...activeQuiz.questions];
+                            updated[qIdx].questionType = 'SEQUENCE';
+                            if (!updated[qIdx].sequenceItems || updated[qIdx].sequenceItems.length === 0) {
+                              updated[qIdx].sequenceItems = [
+                                { id: `seq1-${Date.now()}`, text: 'ขั้นตอนที่ 1' },
+                                { id: `seq2-${Date.now()}`, text: 'ขั้นตอนที่ 2' },
+                                { id: `seq3-${Date.now()}`, text: 'ขั้นตอนที่ 3' },
+                                { id: `seq4-${Date.now()}`, text: 'ขั้นตอนที่ 4' }
+                              ];
+                            }
+                            if (updated[qIdx].timeLimitSeconds < 30) {
+                              updated[qIdx].timeLimitSeconds = 30;
+                            }
+                            setActiveQuiz({ ...activeQuiz, questions: updated });
+                          }}
+                          style={{
+                            padding: '4px 12px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: q.questionType === 'SEQUENCE' ? 'var(--accent-earth-orange)' : 'transparent',
+                            color: q.questionType === 'SEQUENCE' ? '#FFFFFF' : 'var(--text-main)',
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <ListOrdered size={14} /> Sequence Race (เรียงลำดับ)
+                        </button>
+                      </div>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => handleRemoveQuestion(qIdx)}
@@ -488,43 +586,223 @@ export const TeacherBackoffice = ({ onBack }) => {
                     </div>
                   )}
 
-                  <div style={{ marginTop: '12px' }}>
-                    <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>ตัวเลือก 4 ข้อ (คลิกเลือกปุ่มถูกสำหรับข้อที่ถูกต้อง):</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                      {q.options.map((opt, optIdx) => (
-                        <div key={opt.id || optIdx} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {q.questionType === 'SEQUENCE' ? (
+                    <div style={{ marginTop: '14px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                          กำหนดขั้นตอนตามลำดับที่ถูกต้อง (จากบนลงล่าง 1 ➔ 2 ➔ 3...):
+                        </label>
+                        {(!q.sequenceItems || q.sequenceItems.length < 6) && (
                           <button
                             type="button"
                             onClick={() => {
                               const updated = [...activeQuiz.questions];
-                              updated[qIdx].options.forEach((o, i) => o.isCorrect = (i === optIdx));
+                              const curItems = updated[qIdx].sequenceItems || [];
+                              updated[qIdx].sequenceItems = [
+                                ...curItems,
+                                { id: `seq-${Date.now()}-${curItems.length + 1}`, text: `ขั้นตอนที่ ${curItems.length + 1}` }
+                              ];
                               setActiveQuiz({ ...activeQuiz, questions: updated });
                             }}
                             style={{
-                              background: opt.isCorrect ? 'var(--pulse-green)' : '#E2E8F0',
-                              color: opt.isCorrect ? '#FFFFFF' : '#475569',
-                              borderRadius: '6px',
-                              padding: '6px 10px',
+                              background: '#EFF6FF',
+                              border: '1px solid #BFDBFE',
+                              color: 'var(--accent-earth-blue)',
+                              padding: '4px 10px',
+                              borderRadius: '8px',
+                              fontSize: '0.8rem',
                               fontWeight: 700,
-                              fontSize: '0.8rem'
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              cursor: 'pointer'
                             }}
                           >
-                            <CheckCircle2 size={14} /> {opt.isCorrect ? 'ถูก' : 'ผิด'}
+                            <Plus size={14} /> เพิ่มขั้นตอน
                           </button>
-                          <input
-                            type="text"
-                            value={opt.text}
-                            onChange={(e) => {
-                              const updated = [...activeQuiz.questions];
-                              updated[qIdx].options[optIdx].text = e.target.value;
-                              setActiveQuiz({ ...activeQuiz, questions: updated });
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {(q.sequenceItems || []).map((step, sIdx) => (
+                          <div
+                            key={step.id || sIdx}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              background: '#FFFFFF',
+                              border: '1px solid #CBD5E1',
+                              borderRadius: '10px',
+                              padding: '8px 12px'
                             }}
-                            style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', background: '#FFFFFF', color: 'var(--text-main)', border: '1px solid #CBD5E1', fontSize: '0.9rem' }}
-                          />
-                        </div>
-                      ))}
+                          >
+                            <span
+                              style={{
+                                width: '28px',
+                                height: '28px',
+                                borderRadius: '50%',
+                                background: 'var(--accent-earth-orange)',
+                                color: '#FFFFFF',
+                                fontWeight: 800,
+                                fontSize: '0.85rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                              }}
+                            >
+                              {sIdx + 1}
+                            </span>
+
+                            <input
+                              type="text"
+                              value={step.text}
+                              onChange={(e) => {
+                                const updated = [...activeQuiz.questions];
+                                updated[qIdx].sequenceItems[sIdx].text = e.target.value;
+                                setActiveQuiz({ ...activeQuiz, questions: updated });
+                              }}
+                              placeholder={`ระบุคำอธิบายขั้นตอนที่ ${sIdx + 1}...`}
+                              style={{
+                                flex: 1,
+                                padding: '6px 10px',
+                                borderRadius: '6px',
+                                border: '1px solid #E2E8F0',
+                                fontSize: '0.9rem',
+                                color: 'var(--text-main)'
+                              }}
+                            />
+
+                            {/* Move Up Button */}
+                            <button
+                              type="button"
+                              disabled={sIdx === 0}
+                              onClick={() => {
+                                const updated = [...activeQuiz.questions];
+                                const items = [...updated[qIdx].sequenceItems];
+                                const [moved] = items.splice(sIdx, 1);
+                                items.splice(sIdx - 1, 0, moved);
+                                updated[qIdx].sequenceItems = items;
+                                setActiveQuiz({ ...activeQuiz, questions: updated });
+                              }}
+                              style={{
+                                background: sIdx === 0 ? '#F1F5F9' : '#E2E8F0',
+                                color: sIdx === 0 ? '#94A3B8' : 'var(--text-main)',
+                                border: 'none',
+                                borderRadius: '6px',
+                                width: '28px',
+                                height: '28px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: sIdx === 0 ? 'not-allowed' : 'pointer'
+                              }}
+                              title="สลับขึ้น"
+                            >
+                              <ArrowUp size={14} />
+                            </button>
+
+                            {/* Move Down Button */}
+                            <button
+                              type="button"
+                              disabled={sIdx === q.sequenceItems.length - 1}
+                              onClick={() => {
+                                const updated = [...activeQuiz.questions];
+                                const items = [...updated[qIdx].sequenceItems];
+                                const [moved] = items.splice(sIdx, 1);
+                                items.splice(sIdx + 1, 0, moved);
+                                updated[qIdx].sequenceItems = items;
+                                setActiveQuiz({ ...activeQuiz, questions: updated });
+                              }}
+                              style={{
+                                background: sIdx === q.sequenceItems.length - 1 ? '#F1F5F9' : '#E2E8F0',
+                                color: sIdx === q.sequenceItems.length - 1 ? '#94A3B8' : 'var(--text-main)',
+                                border: 'none',
+                                borderRadius: '6px',
+                                width: '28px',
+                                height: '28px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: sIdx === q.sequenceItems.length - 1 ? 'not-allowed' : 'pointer'
+                              }}
+                              title="สลับลง"
+                            >
+                              <ArrowDown size={14} />
+                            </button>
+
+                            {/* Delete Step Button (minimum 3 steps) */}
+                            <button
+                              type="button"
+                              disabled={q.sequenceItems.length <= 3}
+                              onClick={() => {
+                                const updated = [...activeQuiz.questions];
+                                updated[qIdx].sequenceItems = updated[qIdx].sequenceItems.filter((_, i) => i !== sIdx);
+                                setActiveQuiz({ ...activeQuiz, questions: updated });
+                              }}
+                              style={{
+                                background: q.sequenceItems.length <= 3 ? '#F1F5F9' : '#FEF2F2',
+                                color: q.sequenceItems.length <= 3 ? '#CBD5E1' : '#991B1B',
+                                border: '1px solid',
+                                borderColor: q.sequenceItems.length <= 3 ? '#E2E8F0' : '#FCA5A5',
+                                borderRadius: '6px',
+                                width: '28px',
+                                height: '28px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: q.sequenceItems.length <= 3 ? 'not-allowed' : 'pointer'
+                              }}
+                              title="ลบขั้นตอนนี้"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div style={{ marginTop: '12px' }}>
+                      <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>
+                        ตัวเลือก 4 ข้อ (คลิกเลือกปุ่มถูกสำหรับข้อที่ถูกต้อง):
+                      </label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        {(q.options || []).map((opt, optIdx) => (
+                          <div key={opt.id || optIdx} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = [...activeQuiz.questions];
+                                updated[qIdx].options.forEach((o, i) => o.isCorrect = (i === optIdx));
+                                setActiveQuiz({ ...activeQuiz, questions: updated });
+                              }}
+                              style={{
+                                background: opt.isCorrect ? 'var(--pulse-green)' : '#E2E8F0',
+                                color: opt.isCorrect ? '#FFFFFF' : '#475569',
+                                borderRadius: '6px',
+                                padding: '6px 10px',
+                                fontWeight: 700,
+                                fontSize: '0.8rem'
+                              }}
+                            >
+                              <CheckCircle2 size={14} /> {opt.isCorrect ? 'ถูก' : 'ผิด'}
+                            </button>
+                            <input
+                              type="text"
+                              value={opt.text}
+                              onChange={(e) => {
+                                const updated = [...activeQuiz.questions];
+                                updated[qIdx].options[optIdx].text = e.target.value;
+                                setActiveQuiz({ ...activeQuiz, questions: updated });
+                              }}
+                              style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', background: '#FFFFFF', color: 'var(--text-main)', border: '1px solid #CBD5E1', fontSize: '0.9rem' }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
 

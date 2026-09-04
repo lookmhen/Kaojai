@@ -336,6 +336,61 @@ async function testRoomManager() {
     console.log('    ✓ Question results, leaderboard, and end quiz passed');
   }
 
+  // Test 11: Sequence Race Question Shuffling, Evaluation, and Scoring
+  {
+    console.log('  Testing Sequence Race Question Shuffling, Evaluation, and Scoring...');
+    const rm = new RoomManager();
+    const customQuiz = {
+      id: 'quiz-seq-test',
+      title: 'Sequence Test Quiz',
+      questions: [
+        {
+          id: 'q-seq',
+          questionType: 'SEQUENCE',
+          questionText: 'Order the steps 1-4',
+          timeLimitSeconds: 20,
+          sequenceItems: [
+            { id: 's1', text: 'Step 1' },
+            { id: 's2', text: 'Step 2' },
+            { id: 's3', text: 'Step 3' },
+            { id: 's4', text: 'Step 4' }
+          ]
+        }
+      ]
+    };
+
+    const room = rm.createRoom('host-seq', customQuiz);
+    const p1 = rm.joinPlayer(room.pin, 's1', { name: 'Player Perfect' }).player;
+    const p2 = rm.joinPlayer(room.pin, 's2', { name: 'Player Partial' }).player;
+
+    const startInfo = rm.startQuestion(room.pin, 0);
+    assert.strictEqual(startInfo.question.questionType, 'SEQUENCE');
+    assert.strictEqual(startInfo.question.sequenceItems.length, 4);
+
+    // Player 1 submits 100% correct order
+    const p1Ans = rm.submitAnswer(room.pin, p1.playerId, { orderedItemIds: ['s1', 's2', 's3', 's4'] });
+    assert.strictEqual(p1Ans.isCorrect, true);
+    assert.strictEqual(p1Ans.details.isPerfect, true);
+    assert.strictEqual(p1Ans.details.correctPositions, 4);
+    assert.ok(p1Ans.pointsEarned >= 900, 'Perfect sequence with fast speed earns near 1000 points');
+
+    // Player 2 submits partial correct order (e.g. s1 and s4 in correct spots, s3 and s2 swapped)
+    const p2Ans = rm.submitAnswer(room.pin, p2.playerId, { orderedItemIds: ['s1', 's3', 's2', 's4'] });
+    assert.strictEqual(p2Ans.isCorrect, false);
+    assert.strictEqual(p2Ans.details.isPerfect, false);
+    assert.strictEqual(p2Ans.details.correctPositions, 2);
+    assert.ok(p2Ans.pointsEarned > 0, 'Partial sequence earns proportional points');
+    assert.ok(p2Ans.pointsEarned < p1Ans.pointsEarned, 'Partial earns less than perfect');
+
+    // Check Question Results
+    const res = rm.getQuestionResult(room.pin);
+    assert.strictEqual(res.questionType, 'SEQUENCE');
+    assert.strictEqual(res.perfectCount, 1);
+    assert.strictEqual(res.partialCount, 1);
+    assert.deepStrictEqual(res.correctSequence.map(s => s.id), ['s1', 's2', 's3', 's4']);
+    console.log('    ✓ Sequence Race question shuffling, evaluation, and scoring passed');
+  }
+
   console.log('✅ RoomManager tests passed cleanly!');
 }
 
