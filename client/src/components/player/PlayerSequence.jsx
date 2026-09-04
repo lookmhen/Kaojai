@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GripVertical, ArrowUp, ArrowDown, Check, Send, Sparkles, CheckCircle2, XCircle } from 'lucide-react';
 import { sfx } from '../../utils/audioSFX';
 
@@ -12,6 +12,8 @@ export const PlayerSequence = ({
   const [items, setItems] = useState([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [draggedIdx, setDraggedIdx] = useState(null);
+  const listRef = useRef(null);
+  const draggedIdxRef = useRef(null);
 
   useEffect(() => {
     if (question?.sequenceItems) {
@@ -33,25 +35,56 @@ export const PlayerSequence = ({
     setItems(updated);
   };
 
-  const handleDragStart = (e, index) => {
+  const handlePointerDown = (e, index) => {
     if (isSubmitted || isSubmitting) return;
-    setDraggedIdx(index);
-    e.dataTransfer.effectAllowed = 'move';
-  };
+    if (e.button !== undefined && e.button !== 0) return;
 
-  const handleDragOver = (e, index) => {
+    // Prevent default touch gestures (page scroll) while dragging
     e.preventDefault();
-    if (draggedIdx === null || draggedIdx === index) return;
 
-    const updated = [...items];
-    const [draggedItem] = updated.splice(draggedIdx, 1);
-    updated.splice(index, 0, draggedItem);
+    draggedIdxRef.current = index;
     setDraggedIdx(index);
-    setItems(updated);
-  };
 
-  const handleDragEnd = () => {
-    setDraggedIdx(null);
+    const onPointerMove = (moveEvent) => {
+      if (draggedIdxRef.current === null) return;
+      const currentIdx = draggedIdxRef.current;
+
+      if (!listRef.current) return;
+      const nodes = listRef.current.querySelectorAll('[data-seq-index]');
+      for (const node of nodes) {
+        const rect = node.getBoundingClientRect();
+        const targetIdx = parseInt(node.dataset.seqIndex, 10);
+        if (moveEvent.clientY >= rect.top && moveEvent.clientY <= rect.bottom) {
+          if (!isNaN(targetIdx) && targetIdx !== currentIdx) {
+            setItems(prevItems => {
+              const updated = [...prevItems];
+              const [moved] = updated.splice(currentIdx, 1);
+              updated.splice(targetIdx, 0, moved);
+              return updated;
+            });
+            draggedIdxRef.current = targetIdx;
+            setDraggedIdx(targetIdx);
+            sfx.playCuteChime();
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+              navigator.vibrate(25);
+            }
+            break;
+          }
+        }
+      }
+    };
+
+    const onPointerUp = () => {
+      draggedIdxRef.current = null;
+      setDraggedIdx(null);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
+    };
+
+    window.addEventListener('pointermove', onPointerMove, { passive: false });
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
   };
 
   const handleSubmit = () => {
@@ -85,18 +118,16 @@ export const PlayerSequence = ({
       </div>
 
       {/* Sequence Items List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div ref={listRef} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {items.map((item, idx) => {
           const isCorrectPosition = result && correctIds[idx] === item.id;
           const isWrongPosition = result && correctIds[idx] !== item.id;
+          const isCurrentDragged = draggedIdx === idx;
 
           return (
             <div
               key={item.id}
-              draggable={!isSubmitted}
-              onDragStart={(e) => handleDragStart(e, idx)}
-              onDragOver={(e) => handleDragOver(e, idx)}
-              onDragEnd={handleDragEnd}
+              data-seq-index={idx}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -105,24 +136,33 @@ export const PlayerSequence = ({
                   ? '#ECFDF5'
                   : isWrongPosition
                   ? '#FEF2F2'
+                  : isCurrentDragged
+                  ? '#F8FAFC'
                   : '#FFFFFF',
                 border: isCorrectPosition
                   ? '2px solid #10B981'
                   : isWrongPosition
                   ? '2px solid #EF4444'
+                  : isCurrentDragged
+                  ? '2px solid var(--accent-earth-blue)'
                   : '1.5px solid #E2E8F0',
                 borderRadius: '16px',
                 padding: '12px 14px',
-                boxShadow: draggedIdx === idx
-                  ? '0 12px 24px rgba(30, 58, 138, 0.18)'
+                boxShadow: isCurrentDragged
+                  ? '0 12px 28px rgba(30, 58, 138, 0.22)'
                   : '0 2px 8px rgba(15, 23, 42, 0.04)',
-                transform: draggedIdx === idx ? 'scale(1.02)' : 'none',
-                opacity: draggedIdx === idx ? 0.8 : 1,
-                transition: 'all 0.15s ease'
+                transform: isCurrentDragged ? 'scale(1.02)' : 'none',
+                opacity: isCurrentDragged ? 0.9 : 1,
+                position: 'relative',
+                zIndex: isCurrentDragged ? 10 : 1,
+                transition: isCurrentDragged ? 'none' : 'all 0.18s ease',
+                userSelect: 'none',
+                WebkitUserSelect: 'none'
               }}
             >
               {/* Step Number Badge */}
               <div
+                onPointerDown={!isSubmitted ? (e) => handlePointerDown(e, idx) : undefined}
                 style={{
                   width: '32px',
                   height: '32px',
@@ -138,8 +178,11 @@ export const PlayerSequence = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  flexShrink: 0
+                  flexShrink: 0,
+                  cursor: !isSubmitted ? 'grab' : 'default',
+                  touchAction: 'none'
                 }}
+                title="แตะค้างแล้วลากสลับตำแหน่ง"
               >
                 {idx + 1}
               </div>
@@ -215,16 +258,20 @@ export const PlayerSequence = ({
                   </button>
 
                   <div
+                    onPointerDown={(e) => handlePointerDown(e, idx)}
                     style={{
-                      color: '#94A3B8',
-                      cursor: 'grab',
-                      padding: '2px',
+                      color: isCurrentDragged ? 'var(--accent-earth-blue)' : '#64748B',
+                      cursor: isCurrentDragged ? 'grabbing' : 'grab',
+                      padding: '6px 4px',
                       display: 'flex',
-                      alignItems: 'center'
+                      alignItems: 'center',
+                      touchAction: 'none',
+                      userSelect: 'none',
+                      WebkitUserSelect: 'none'
                     }}
-                    title="ลากสลับตำแหน่ง"
+                    title="แตะค้างแล้วลากสลับตำแหน่ง (Drag to reorder)"
                   >
-                    <GripVertical size={18} />
+                    <GripVertical size={20} />
                   </div>
                 </div>
               )}
