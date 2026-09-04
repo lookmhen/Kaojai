@@ -445,7 +445,7 @@ class RoomManager {
     }));
 
     playerList.sort((a, b) => b.score - a.score);
-    return playerList.slice(0, 10);
+    return playerList;
   }
 
   submitPulse(pin, playerId, choice) {

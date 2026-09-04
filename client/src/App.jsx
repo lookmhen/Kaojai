@@ -131,9 +131,20 @@ export function AppContent() {
       }
     };
 
+    const onAnswerFeedback = (data) => {
+      if (data && data.totalScore !== undefined) {
+        setPlayerData(prev => ({ ...prev, score: data.totalScore }));
+      }
+    };
+
     const onShowLeaderboard = (data) => {
       setPrepareData(null);
-      setLeaderboard(data.leaderboard || []);
+      const list = data.leaderboard || [];
+      setLeaderboard(list);
+      setPlayerData(prev => {
+        const me = list.find(p => p.playerId === prev.playerId);
+        return me ? { ...prev, score: me.score } : prev;
+      });
       if (data.status === 'ENDED' || data.isEnded) {
         setStatus('ENDED');
       } else {
@@ -143,7 +154,12 @@ export function AppContent() {
 
     const onQuizEnded = (data) => {
       setPrepareData(null);
-      if (data.leaderboard) setLeaderboard(data.leaderboard);
+      const list = data.leaderboard || [];
+      setLeaderboard(list);
+      setPlayerData(prev => {
+        const me = list.find(p => p.playerId === prev.playerId);
+        return me ? { ...prev, score: me.score } : prev;
+      });
       setStatus('ENDED');
     };
 
@@ -179,6 +195,7 @@ export function AppContent() {
     socket.on('question_prepare', onQuestionPrepare);
     socket.on('question_start', onQuestionStart);
     socket.on('answered_count_update', onAnsweredCountUpdate);
+    socket.on('answer_feedback', onAnswerFeedback);
     socket.on('question_result', onQuestionResult);
     socket.on('show_leaderboard', onShowLeaderboard);
     socket.on('quiz_ended', onQuizEnded);
@@ -194,6 +211,7 @@ export function AppContent() {
       socket.off('question_prepare', onQuestionPrepare);
       socket.off('question_start', onQuestionStart);
       socket.off('answered_count_update', onAnsweredCountUpdate);
+      socket.off('answer_feedback', onAnswerFeedback);
       socket.off('question_result', onQuestionResult);
       socket.off('show_leaderboard', onShowLeaderboard);
       socket.off('quiz_ended', onQuizEnded);

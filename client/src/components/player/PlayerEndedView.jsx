@@ -9,9 +9,10 @@ export const PlayerEndedView = ({ player, leaderboard }) => {
     sfx.playFanfare();
   }, []);
 
-  const myRankIdx = leaderboard.findIndex(p => p.playerId === player.playerId);
+  const myEntry = leaderboard?.find(p => p.playerId === player?.playerId);
+  const myRankIdx = leaderboard ? leaderboard.findIndex(p => p.playerId === player?.playerId) : -1;
   const myRank = myRankIdx >= 0 ? myRankIdx + 1 : null;
-  const myScore = player.score || 0;
+  const myScore = myEntry?.score !== undefined ? myEntry.score : (player?.score || 0);
 
   return (
     <div style={{ maxWidth: '440px', margin: '40px auto', padding: '0 16px', textAlign: 'center' }}>
@@ -21,7 +22,7 @@ export const PlayerEndedView = ({ player, leaderboard }) => {
           จบกิจกรรมตอบคำถามแล้ว!
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '4px', marginBottom: '24px' }}>
-          ขอบคุณสำหรับการมีส่วนร่วมสุดยอดเยี่ยม ✨
+          ขอบคุณสำหรับการมีส่วนร่วม ✨
         </p>
 
         <div style={{ background: '#F8FAFC', borderRadius: '16px', padding: '20px', border: '1px solid #E2E8F0', marginBottom: '24px' }}>
