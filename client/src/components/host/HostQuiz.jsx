@@ -145,15 +145,18 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
                         background: '#FFFFFF',
                         border: `1px solid ${theme.borderColor}`,
                         color: theme.subText,
-                        fontSize: '0.8rem',
+                        fontSize: '0.85rem',
                         fontWeight: 800,
-                        padding: '2px 8px',
+                        padding: '3px 10px',
                         borderRadius: '8px',
                         flexShrink: 0,
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
                       }}
                     >
-                      {theme.symbol} ขั้นตอน {theme.label}
+                      <span style={{ fontSize: '0.85rem' }}>{theme.symbol}</span> {theme.label}
                     </span>
 
                     <div style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', textAlign: 'left' }}>
@@ -228,15 +231,18 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
                         background: '#FFFFFF',
                         border: `1px solid ${theme.borderColor}`,
                         color: theme.subText,
-                        fontSize: '0.8rem',
+                        fontSize: '0.85rem',
                         fontWeight: 800,
-                        padding: '2px 8px',
+                        padding: '3px 10px',
                         borderRadius: '8px',
                         flexShrink: 0,
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
                       }}
                     >
-                      {theme.symbol} ขั้นตอน {theme.label}
+                      <span style={{ fontSize: '0.85rem' }}>{theme.symbol}</span> {theme.label}
                     </span>
 
                     <div style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', textAlign: 'left' }}>

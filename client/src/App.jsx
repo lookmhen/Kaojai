@@ -55,6 +55,8 @@ export function AppContent() {
       setRoomMode(data.mode || 'QUIZ');
       setPlayers(data.players || []);
       setCounts(data.counts || { totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 });
+      if (data.teamsEnabled !== undefined) setTeamsEnabled(data.teamsEnabled);
+      if (data.teams) setTeams(data.teams);
       setStatus('LOBBY');
       setViewMode('HOST_GAME');
       saveSessionData({ pin: data.pin, isHost: true });
@@ -91,6 +93,8 @@ export function AppContent() {
       if (data.questionResult) setQuestionResult(data.questionResult);
       if (data.pulseVotes) setPulseVotes(data.pulseVotes);
       if (data.leaderboard) setLeaderboard(data.leaderboard);
+      if (data.teamsEnabled !== undefined) setTeamsEnabled(data.teamsEnabled);
+      if (data.teams) setTeams(data.teams);
       
       saveSessionData({
         pin: data.pin,
@@ -199,11 +203,21 @@ export function AppContent() {
       setTeamsEnabled(data.teamsEnabled);
       setTeams(data.teams || []);
       setPlayers(data.players || []);
+      setPlayerData(prev => {
+        if (!prev?.playerId) return prev;
+        const me = (data.players || []).find(p => p.playerId === prev.playerId);
+        return me ? { ...prev, teamId: me.teamId || null } : prev;
+      });
     };
 
     const onTeamsUpdated = (data) => {
       setTeams(data.teams || []);
       setPlayers(data.players || []);
+      setPlayerData(prev => {
+        if (!prev?.playerId) return prev;
+        const me = (data.players || []).find(p => p.playerId === prev.playerId);
+        return me ? { ...prev, teamId: me.teamId || null } : prev;
+      });
     };
 
     socket.on('room_created', onRoomCreated);
@@ -296,6 +310,11 @@ export function AppContent() {
     socket.emit('remove_team', { pin, teamId });
   };
 
+  const handleAssignTeam = (playerId, teamId) => {
+    if (!socket) return;
+    socket.emit('assign_team', { pin, playerId, teamId });
+  };
+
   return (
     <div className="app-container">
       {/* Connection Indicator Banner */}
@@ -359,6 +378,7 @@ export function AppContent() {
               onAutoAssignTeams={handleAutoAssignTeams}
               onCreateTeam={handleCreateTeam}
               onRemoveTeam={handleRemoveTeam}
+              onAssignTeam={handleAssignTeam}
             />
           ) : status === 'LEADERBOARD' || status === 'ENDED' ? (
             <HostLeaderboard
@@ -393,6 +413,8 @@ export function AppContent() {
             if (joinRes?.currentQuestion) setCurrentQuestion(joinRes.currentQuestion);
             if (joinRes?.leaderboard) setLeaderboard(joinRes.leaderboard);
             if (joinRes?.counts) setCounts(joinRes.counts);
+            if (joinRes?.teamsEnabled !== undefined) setTeamsEnabled(joinRes.teamsEnabled);
+            if (joinRes?.teams) setTeams(joinRes.teams);
             setViewMode('PLAYER_GAME');
           }}
           onSwitchToHost={handleCreateRoom}
@@ -411,9 +433,13 @@ export function AppContent() {
             />
           ) : status === 'LOBBY' ? (
             <PlayerLobby
+              pin={pin}
               player={playerData}
               totalPlayers={counts.totalPlayers}
               mode={roomMode}
+              teamsEnabled={teamsEnabled}
+              teams={teams}
+              onAssignTeam={handleAssignTeam}
             />
           ) : status === 'ENDED' ? (
             <PlayerEndedView

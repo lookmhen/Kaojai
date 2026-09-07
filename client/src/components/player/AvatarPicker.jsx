@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Shuffle } from 'lucide-react';
 
-const AVATAR_FILES = [
+export const AVATAR_FILES = [
   "0291dcc0ce.svg", "06f3612482.svg", "0adc20e92f.svg", "0edec8cc96.svg",
   "1b9deba696.svg", "3094e5a2c3.svg", "39d6a77f5a.svg", "3c19656c71.svg",
   "3fcf70a78d.svg", "4b725f1ca0.svg", "502e86048c.svg", "55d297f826.svg",
@@ -12,12 +12,16 @@ const AVATAR_FILES = [
   "f5934d163b.svg", "f8a959b165.svg"
 ];
 
+export const getRandomAvatar = () => {
+  const randomIdx = Math.floor(Math.random() * AVATAR_FILES.length);
+  return AVATAR_FILES[randomIdx];
+};
+
 export const AvatarPicker = ({ selectedAvatar, onSelectAvatar }) => {
   const [avatars] = useState(AVATAR_FILES);
 
   const handleRandomize = () => {
-    const randomIdx = Math.floor(Math.random() * avatars.length);
-    onSelectAvatar(avatars[randomIdx]);
+    onSelectAvatar(getRandomAvatar());
   };
 
   return (

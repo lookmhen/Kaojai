@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { generateQRCodeSVG } from '../../utils/qrcode';
-import { Play, Users, BookOpen, QrCode, Shuffle, Plus, Trash2, UsersRound, ToggleLeft, ToggleRight, X } from 'lucide-react';
+import { Play, Users, BookOpen, QrCode, Shuffle, Plus, Trash2, UsersRound, ToggleLeft, ToggleRight, X, UserMinus, Hand } from 'lucide-react';
 
 const TEAM_COLOR_PRESETS = [
   '#E11D48', '#2563EB', '#D97706', '#059669', '#7C3AED', '#0891B2'
@@ -9,13 +9,15 @@ const TEAM_COLOR_PRESETS = [
 export const HostLobby = ({
   pin, players, counts, onStartQuiz,
   teamsEnabled = false, teams = [],
-  onToggleTeams, onAutoAssignTeams, onCreateTeam, onRemoveTeam
+  onToggleTeams, onAutoAssignTeams, onCreateTeam, onRemoveTeam, onAssignTeam
 }) => {
   const [quizzes, setQuizzes] = useState([]);
   const [selectedQuizId, setSelectedQuizId] = useState('');
   const [showCreateTeam, setShowCreateTeam] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamColor, setNewTeamColor] = useState(TEAM_COLOR_PRESETS[0]);
+  const [dragOverTeamId, setDragOverTeamId] = useState(null);
+  const [isDragOverUnassign, setIsDragOverUnassign] = useState(false);
 
   useEffect(() => {
     fetch('/api/quizzes')
@@ -116,7 +118,7 @@ export const HostLobby = ({
             <div>
               <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)' }}>โหมดทีม (Team Mode)</div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                {teamsEnabled ? `เปิดอยู่ · ${teams.length} ทีม` : 'ปิดอยู่ · ทุกคนแข่งแบบเดี่ยว'}
+                {teamsEnabled ? `เปิดอยู่ · ${teams.length} ทีม (ลากหรือกดเลือกย้ายทีมได้)` : 'ปิดอยู่ · ทุกคนแข่งแบบเดี่ยว'}
               </div>
             </div>
           </div>
@@ -145,7 +147,7 @@ export const HostLobby = ({
         {teamsEnabled && (
           <div>
             {/* Action Row */}
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
               <button
                 type="button"
                 onClick={() => onAutoAssignTeams(teams.length || 2)}
@@ -169,6 +171,11 @@ export const HostLobby = ({
               >
                 <Plus size={16} /> สร้างทีมใหม่
               </button>
+
+              {/* Drag instruction notice */}
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#64748B', background: '#F8FAFC', padding: '6px 12px', borderRadius: '20px', border: '1px solid #E2E8F0' }}>
+                <Hand size={14} color="#7C3AED" /> สามารถลาก Avatar ผู้เล่นมาหย่อนใส่กล่องทีม หรือกดเลือกจากเมนูได้
+              </div>
             </div>
 
             {/* Create Team Form */}
@@ -216,55 +223,135 @@ export const HostLobby = ({
               </div>
             )}
 
-            {/* Team Cards */}
+            {/* Team Cards (Drop Zones) */}
             {teams.length > 0 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
-                {teams.map(team => (
-                  <div
-                    key={team.id}
-                    style={{
-                      background: '#FFFFFF', borderRadius: '14px', padding: '14px 16px',
-                      border: `1.5px solid ${team.color}22`,
-                      borderLeft: `5px solid ${team.color}`,
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: team.color, flexShrink: 0 }} />
-                        <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-main)' }}>{team.name}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => onRemoveTeam(team.id)}
-                        title="ลบทีม"
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: '2px' }}
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                    {/* Member avatars */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {(team.members || []).map(m => (
-                        <div key={m.playerId} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: `${team.color}18`, borderRadius: '20px', padding: '3px 8px 3px 3px' }}>
-                          <img
-                            src={`/avatars/${m.avatar || '0291dcc0ce.svg'}`}
-                            alt={m.name}
-                            onError={e => { e.target.src = '/avatars/0291dcc0ce.svg'; }}
-                            style={{ width: '22px', height: '22px', borderRadius: '50%', border: `1.5px solid ${team.color}` }}
-                          />
-                          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-main)' }}>{m.name}</span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '12px' }}>
+                {teams.map(team => {
+                  const isOver = dragOverTeamId === team.id;
+                  return (
+                    <div
+                      key={team.id}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragOverTeamId(team.id);
+                      }}
+                      onDragLeave={() => setDragOverTeamId(null)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragOverTeamId(null);
+                        const pId = e.dataTransfer.getData('text/plain');
+                        if (pId && onAssignTeam) {
+                          onAssignTeam(pId, team.id);
+                        }
+                      }}
+                      style={{
+                        background: isOver ? `${team.color}15` : '#FFFFFF',
+                        borderRadius: '14px',
+                        padding: '14px 16px',
+                        border: isOver ? `2.5px dashed ${team.color}` : `1.5px solid ${team.color}33`,
+                        borderLeft: `5px solid ${team.color}`,
+                        boxShadow: isOver ? `0 6px 18px ${team.color}33` : '0 2px 8px rgba(0,0,0,0.04)',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: team.color, flexShrink: 0 }} />
+                          <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-main)' }}>{team.name}</span>
                         </div>
-                      ))}
-                      {(team.members || []).length === 0 && (
-                        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>ยังไม่มีสมาชิก</span>
-                      )}
+                        <button
+                          type="button"
+                          onClick={() => onRemoveTeam(team.id)}
+                          title="ลบทีม"
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: '2px' }}
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+
+                      {/* Member avatars */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', minHeight: '36px', alignItems: 'center' }}>
+                        {(team.members || []).map(m => (
+                          <div
+                            key={m.playerId}
+                            draggable
+                            onDragStart={(e) => e.dataTransfer.setData('text/plain', m.playerId)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '4px',
+                              background: `${team.color}18`, borderRadius: '20px', padding: '3px 8px 3px 3px',
+                              cursor: 'grab'
+                            }}
+                            title="ลากไปทีมอื่นได้"
+                          >
+                            <img
+                              src={`/avatars/${m.avatar || '0291dcc0ce.svg'}`}
+                              alt={m.name}
+                              onError={e => { e.target.src = '/avatars/0291dcc0ce.svg'; }}
+                              style={{ width: '22px', height: '22px', borderRadius: '50%', border: `1.5px solid ${team.color}` }}
+                            />
+                            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-main)' }}>{m.name}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (onAssignTeam) onAssignTeam(m.playerId, null);
+                              }}
+                              title="นำออกจากทีม"
+                              style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#94A3B8', display: 'flex', alignItems: 'center' }}
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))}
+                        {(team.members || []).length === 0 && (
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '4px 0' }}>
+                            {isOver ? 'ปล่อยเพื่อเพิ่มลงทีมนี้' : 'ลากผู้เล่นมาวางที่นี่'}
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                        {(team.members || []).length} คน
+                      </div>
                     </div>
-                    <div style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                      {(team.members || []).length} คน
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
+
+                {/* Dropzone for Unassign (Remove from team) */}
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragOverUnassign(true);
+                  }}
+                  onDragLeave={() => setIsDragOverUnassign(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragOverUnassign(false);
+                    const pId = e.dataTransfer.getData('text/plain');
+                    if (pId && onAssignTeam) {
+                      onAssignTeam(pId, null);
+                    }
+                  }}
+                  style={{
+                    background: isDragOverUnassign ? '#FEF2F2' : '#F8FAFC',
+                    borderRadius: '14px',
+                    padding: '14px 16px',
+                    border: isDragOverUnassign ? '2px dashed #EF4444' : '1.5px dashed #CBD5E1',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    gap: '6px',
+                    color: isDragOverUnassign ? '#EF4444' : '#94A3B8',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <UserMinus size={22} />
+                  <span style={{ fontSize: '0.82rem', fontWeight: 700 }}>
+                    {isDragOverUnassign ? 'ปล่อยเพื่อนำออกจากทีม' : 'ลากมาที่นี่เพื่อนำออกจากทีม'}
+                  </span>
+                </div>
               </div>
             ) : (
               <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
@@ -282,22 +369,30 @@ export const HostLobby = ({
             <Users color="var(--accent-earth-blue)" /> ผู้เข้าร่วมกิจกรรม ({connectedPlayers.length} คน)
           </h3>
           <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            รูป Avatar และชื่อจะแสดงผลทันทีเมื่อ Join
+            {teamsEnabled ? 'ลากการ์ดผู้เล่นไปวางในทีม หรือเลือกทีมจากเมนูด้านล่าง' : 'รูป Avatar และชื่อจะแสดงผลทันทีเมื่อ Join'}
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '14px' }}>
           {connectedPlayers.map((p) => {
             const team = teamsEnabled && p.teamId ? teamMap[p.teamId] : null;
             return (
               <div
                 key={p.playerId}
+                draggable={teamsEnabled}
+                onDragStart={(e) => {
+                  if (teamsEnabled) {
+                    e.dataTransfer.setData('text/plain', p.playerId);
+                  }
+                }}
                 className="glass-card animate-pop"
                 style={{
                   textAlign: 'center', padding: '14px 10px',
                   border: team ? `1.5px solid ${team.color}44` : '1px solid #E2E8F0',
                   borderTop: team ? `4px solid ${team.color}` : '1px solid #E2E8F0',
-                  background: '#FFFFFF'
+                  background: '#FFFFFF',
+                  cursor: teamsEnabled ? 'grab' : 'default',
+                  userSelect: 'none'
                 }}
               >
                 <img
@@ -310,13 +405,39 @@ export const HostLobby = ({
                     background: '#F8FAFC'
                   }}
                 />
-                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)', wordBreak: 'break-word' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)', wordBreak: 'break-word', marginBottom: '4px' }}>
                   {p.name}
                 </div>
-                {team && (
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '5px', background: `${team.color}18`, borderRadius: '10px', padding: '2px 8px' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: team.color, flexShrink: 0 }} />
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: team.color }}>{team.name}</span>
+
+                {/* Team Assignment Selector / Badge */}
+                {teamsEnabled && (
+                  <div style={{ marginTop: '6px' }}>
+                    <select
+                      value={p.teamId || ''}
+                      onChange={(e) => {
+                        const targetTeamId = e.target.value || null;
+                        if (onAssignTeam) {
+                          onAssignTeam(p.playerId, targetTeamId);
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        fontSize: '0.74rem',
+                        fontWeight: 700,
+                        padding: '4px 6px',
+                        borderRadius: '8px',
+                        border: team ? `1.5px solid ${team.color}` : '1px solid #CBD5E1',
+                        background: team ? `${team.color}14` : '#F8FAFC',
+                        color: team ? team.color : '#64748B',
+                        cursor: 'pointer',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <option value="">— ไม่มีทีม —</option>
+                      {teams.map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
                   </div>
                 )}
               </div>

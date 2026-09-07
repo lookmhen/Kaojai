@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
-import { AvatarPicker } from './AvatarPicker';
+import { AvatarPicker, getRandomAvatar } from './AvatarPicker';
 import { LogIn, Crown, BookOpen, Gamepad2, MonitorPlay, ArrowLeft, Rocket, Sparkles, Tv, Users } from 'lucide-react';
 
 export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) => {
@@ -11,7 +11,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
 
   const [pin, setPin] = useState('');
   const [name, setName] = useState('');
-  const [selectedAvatar, setSelectedAvatar] = useState('0291dcc0ce.svg');
+  const [selectedAvatar, setSelectedAvatar] = useState(() => getRandomAvatar());
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 

@@ -17,7 +17,9 @@ module.exports = function setupSocketHandlers(io) {
           status: room.status,
           quizSet: room.quizSet,
           players: roomManager.getPlayerList(room.pin),
-          counts: roomManager.getPlayerCounts(room.pin)
+          counts: roomManager.getPlayerCounts(room.pin),
+          teamsEnabled: room.teamsEnabled,
+          teams: roomManager.getTeamList(room.pin)
         };
 
         if (typeof ackCallback === 'function') {
@@ -278,7 +280,8 @@ module.exports = function setupSocketHandlers(io) {
             playerId: joinData.player.playerId,
             name: joinData.player.name,
             avatar: joinData.player.avatar,
-            score: joinData.player.score
+            score: joinData.player.score,
+            teamId: joinData.player.teamId || null
           },
           mode: joinData.mode,
           status: joinData.status,
@@ -287,7 +290,9 @@ module.exports = function setupSocketHandlers(io) {
           pulseVotes: joinData.pulseVotes,
           leaderboard: joinData.leaderboard,
           isReconnect: joinData.isReconnect,
-          counts: joinData.counts
+          counts: joinData.counts,
+          teamsEnabled: joinData.room.teamsEnabled,
+          teams: roomManager.getTeamList(cleanPin)
         };
 
         if (typeof ackCallback === 'function') {
