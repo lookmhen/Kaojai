@@ -183,51 +183,82 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
               สังเกตและพิจารณาขั้นตอนทั้งหมดอย่างรอบคอบ ยิ่งเรียงถูกต้องครบทุกขั้นตอนและส่งคำตอบเร็ว ยิ่งได้คะแนนสูง!
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', maxWidth: '840px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '840px', margin: '0 auto' }}>
               {(question.sequenceItems || []).map((step, idx) => {
                 const theme = getSequenceTheme(step, question.sequenceItems);
                 return (
                   <div
                     key={step.id || idx}
                     style={{
-                      background: theme.cardBg,
-                      border: `1.5px solid ${theme.borderColor}`,
-                      borderLeft: `6px solid ${theme.accentBar}`,
-                      borderRadius: '16px',
-                      padding: '16px 18px',
-                      fontSize: '1rem',
-                      fontWeight: 700,
-                      color: 'var(--text-main)',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '12px',
-                      textAlign: 'left',
-                      boxShadow: `0 4px 14px ${theme.glowColor}`
+                      gap: '16px',
+                      background: theme.cardBg,
+                      border: `2px solid ${theme.borderColor}`,
+                      borderLeft: `8px solid ${theme.accentBar}`,
+                      borderRadius: '16px',
+                      padding: '16px 20px',
+                      boxShadow: `0 4px 16px ${theme.glowColor}`
                     }}
                   >
-                    <span
+                    <div
                       style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '10px',
+                        minWidth: '48px',
+                        height: '48px',
+                        borderRadius: '14px',
                         background: theme.badgeBg,
                         color: '#FFFFFF',
+                        fontWeight: 900,
+                        fontSize: '1.25rem',
                         display: 'flex',
+                        flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '1rem',
-                        fontWeight: 900,
                         flexShrink: 0,
-                        boxShadow: `0 2px 8px ${theme.glowColor}`
+                        boxShadow: `0 4px 10px ${theme.glowColor}`,
+                        border: '2px solid rgba(255, 255, 255, 0.75)'
                       }}
                     >
-                      {theme.symbol}
+                      <span style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.9, lineHeight: 1 }}>ลำดับ</span>
+                      <span style={{ lineHeight: 1.1 }}>?</span>
+                    </div>
+
+                    <span
+                      style={{
+                        background: '#FFFFFF',
+                        border: `1px solid ${theme.borderColor}`,
+                        color: theme.subText,
+                        fontSize: '0.8rem',
+                        fontWeight: 800,
+                        padding: '2px 8px',
+                        borderRadius: '8px',
+                        flexShrink: 0,
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                      }}
+                    >
+                      {theme.symbol} ขั้นตอน {theme.label}
                     </span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '0.72rem', color: theme.subText, fontWeight: 800, textTransform: 'uppercase', marginBottom: '2px' }}>
-                        ขั้นตอน {theme.label}
-                      </div>
-                      <div style={{ lineHeight: 1.35 }}>{step.text}</div>
+
+                    <div style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', textAlign: 'left' }}>
+                      {step.text}
+                    </div>
+
+                    <div
+                      style={{
+                        flexShrink: 0,
+                        fontSize: '0.82rem',
+                        color: 'var(--text-muted)',
+                        fontWeight: 700,
+                        background: '#FFFFFF',
+                        padding: '6px 12px',
+                        borderRadius: '20px',
+                        border: '1px solid #E2E8F0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <span>รอจัดเรียง</span> 📱
                     </div>
                   </div>
                 );

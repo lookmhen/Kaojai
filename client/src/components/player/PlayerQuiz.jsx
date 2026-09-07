@@ -17,7 +17,7 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
   const [selectedOptionId, setSelectedOptionId] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(question.timeLimitSeconds);
+  const [timeLeft, setTimeLeft] = useState(question?.timeLimitSeconds ?? 30);
 
   const handleSubmitSequence = (orderedItemIds) => {
     if (isSubmitting) return;
@@ -32,10 +32,11 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
   };
 
   useEffect(() => {
+    if (!question) return;
     setSelectedOptionId(null);
     setFeedback(null);
     setIsSubmitting(false);
-    setTimeLeft(question.timeLimitSeconds);
+    setTimeLeft(question.timeLimitSeconds ?? 30);
 
     const interval = setInterval(() => {
       setTimeLeft(prev => {
@@ -84,6 +85,22 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
       optionId
     });
   };
+
+  if (!question) {
+    return (
+      <div style={{ maxWidth: '440px', margin: '60px auto', padding: '0 16px', textAlign: 'center' }}>
+        <div className="glass-card animate-pop" style={{ padding: '36px 20px' }}>
+          <Clock size={40} color="var(--accent-earth-blue)" style={{ marginBottom: '14px' }} />
+          <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
+            กำลังรอคำถามถัดไปจากวิทยากร...
+          </h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: 1.5 }}>
+            เตรียมตัวให้พร้อมบนหน้าจอนี้ โจทย์จะแสดงให้อัตโนมัติเมื่อเริ่มข้อใหม่ ✨
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: '480px', margin: '20px auto', padding: '0 16px' }}>

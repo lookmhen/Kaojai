@@ -168,7 +168,7 @@ class RoomManager {
     };
   }
 
-  handleDisconnect(socketId, gracePeriodMs = 60000) {
+  handleDisconnect(socketId, gracePeriodMs = 60000, onExpired = null) {
     for (const room of this.rooms.values()) {
       if (room.hostSocketId === socketId) {
         console.log(`[Host Disconnected] Room PIN: ${room.pin}`);
@@ -182,6 +182,9 @@ class RoomManager {
             room.players.delete(playerId);
             room.currentAnswers.delete(playerId);
             room.votedPulseUsers.delete(playerId);
+            if (typeof onExpired === 'function') {
+              onExpired(room, playerId);
+            }
           }, gracePeriodMs);
           return { room, player };
         }

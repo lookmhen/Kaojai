@@ -104,7 +104,7 @@ export const HostLobby = ({ pin, players, counts, onStartQuiz }) => {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Users color="var(--accent-earth-blue)" /> ผู้เข้าร่วมกิจกรรม ({players.length} คน)
+            <Users color="var(--accent-earth-blue)" /> ผู้เข้าร่วมกิจกรรม ({players.filter(p => p.isConnected !== false).length} คน)
           </h3>
           <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             รูป Avatar และชื่อจะแสดงผลทันทีเมื่อ Join
@@ -112,7 +112,7 @@ export const HostLobby = ({ pin, players, counts, onStartQuiz }) => {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '14px' }}>
-          {players.map((p) => (
+          {players.filter(p => p.isConnected !== false).map((p) => (
             <div
               key={p.playerId}
               className="glass-card animate-pop"

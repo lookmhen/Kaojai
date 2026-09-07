@@ -4,7 +4,7 @@ import { AvatarPicker } from './AvatarPicker';
 import { LogIn, Crown, BookOpen, Gamepad2, MonitorPlay, ArrowLeft, Rocket, Sparkles, Tv, Users } from 'lucide-react';
 
 export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) => {
-  const { socket, saveSessionData } = useSocket();
+  const { socket, session, saveSessionData } = useSocket();
   
   // Internal Screen State: 'MODE_SELECT' or 'PLAYER_FORM'
   const [screen, setScreen] = useState('MODE_SELECT');
@@ -40,10 +40,13 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
 
     setIsLoading(true);
 
+    const existingPlayerId = (session?.pin === pin.trim() && session?.playerId) ? session.playerId : undefined;
+
     socket.emit('join_room', {
       pin: pin.trim(),
       name: name.trim().substring(0, 30),
-      avatar: selectedAvatar
+      avatar: selectedAvatar,
+      playerId: existingPlayerId
     }, (response) => {
       setIsLoading(false);
       if (response && response.success) {

@@ -376,7 +376,28 @@ module.exports = function setupSocketHandlers(io) {
     // --- DISCONNECT ---
     socket.on('disconnect', () => {
       console.log(`[Socket Disconnected] ID: ${socket.id}`);
-      const info = roomManager.handleDisconnect(socket.id);
+      const info = roomManager.handleDisconnect(socket.id, undefined, (expiredRoom, expiredPlayerId) => {
+        try {
+          const counts = roomManager.getPlayerCounts(expiredRoom.pin);
+          const playerList = roomManager.getPlayerList(expiredRoom.pin);
+          io.to(expiredRoom.pin).emit('room_updated', {
+            players: playerList,
+            counts
+          });
+          io.to(expiredRoom.pin).emit('answered_count_update', {
+            answeredCount: counts.answeredCount,
+            totalPlayers: counts.totalPlayers
+          });
+          io.to(expiredRoom.pin).emit('pulse_updated', {
+            pulseVotes: expiredRoom.pulseVotes,
+            pulseAnsweredCount: counts.pulseAnsweredCount,
+            totalPlayers: counts.totalPlayers
+          });
+        } catch (e) {
+          console.error('[Socket Cleanup Error]:', e);
+        }
+      });
+
       if (info && info.room) {
         const counts = roomManager.getPlayerCounts(info.room.pin);
         const playerList = roomManager.getPlayerList(info.room.pin);

@@ -5,6 +5,7 @@ import { PlayerLobby } from './components/player/PlayerLobby';
 import { PlayerQuiz } from './components/player/PlayerQuiz';
 import { PlayerPulse } from './components/player/PlayerPulse';
 import { PlayerEndedView } from './components/player/PlayerEndedView';
+import { PlayerLeaderboardView } from './components/player/PlayerLeaderboardView';
 import { HostHeader } from './components/host/HostHeader';
 import { HostLobby } from './components/host/HostLobby';
 import { HostQuiz } from './components/host/HostQuiz';
@@ -337,7 +338,16 @@ export function AppContent() {
       {/* PARTICIPANT VIEW ROUTING */}
       {viewMode === 'PLAYER_JOIN' && (
         <JoinRoom
-          onJoined={() => setViewMode('PLAYER_GAME')}
+          onJoined={(joinRes) => {
+            if (joinRes?.player) setPlayerData(joinRes.player);
+            if (joinRes?.pin) setPin(joinRes.pin);
+            if (joinRes?.status) setStatus(joinRes.status);
+            if (joinRes?.mode) setRoomMode(joinRes.mode);
+            if (joinRes?.currentQuestion) setCurrentQuestion(joinRes.currentQuestion);
+            if (joinRes?.leaderboard) setLeaderboard(joinRes.leaderboard);
+            if (joinRes?.counts) setCounts(joinRes.counts);
+            setViewMode('PLAYER_GAME');
+          }}
           onSwitchToHost={handleCreateRoom}
           onOpenTeacherBackoffice={() => setViewMode('TEACHER_BACKOFFICE')}
         />
@@ -360,6 +370,11 @@ export function AppContent() {
             />
           ) : status === 'ENDED' ? (
             <PlayerEndedView
+              player={playerData}
+              leaderboard={leaderboard}
+            />
+          ) : status === 'LEADERBOARD' ? (
+            <PlayerLeaderboardView
               player={playerData}
               leaderboard={leaderboard}
             />
