@@ -42,6 +42,10 @@ export function AppContent() {
   const [errorMessage, setErrorMessage] = useState('');
   const [prepareData, setPrepareData] = useState(null);
 
+  // Team State
+  const [teamsEnabled, setTeamsEnabled] = useState(false);
+  const [teams, setTeams] = useState([]);
+
   // Socket Listeners
   useEffect(() => {
     if (!socket) return;
@@ -66,6 +70,8 @@ export function AppContent() {
       if (data.questionResult) setQuestionResult(data.questionResult);
       if (data.pulseVotes) setPulseVotes(data.pulseVotes);
       if (data.leaderboard) setLeaderboard(data.leaderboard);
+      if (data.teamsEnabled !== undefined) setTeamsEnabled(data.teamsEnabled);
+      if (data.teams) setTeams(data.teams);
       setViewMode('HOST_GAME');
       saveSessionData({ pin: data.pin, isHost: true });
     };
@@ -189,6 +195,17 @@ export function AppContent() {
       setTimeout(() => setErrorMessage(''), 4000);
     };
 
+    const onTeamsToggled = (data) => {
+      setTeamsEnabled(data.teamsEnabled);
+      setTeams(data.teams || []);
+      setPlayers(data.players || []);
+    };
+
+    const onTeamsUpdated = (data) => {
+      setTeams(data.teams || []);
+      setPlayers(data.players || []);
+    };
+
     socket.on('room_created', onRoomCreated);
     socket.on('host_reconnected', onHostReconnected);
     socket.on('room_updated', onRoomUpdated);
@@ -203,6 +220,8 @@ export function AppContent() {
     socket.on('pulse_updated', onPulseUpdated);
     socket.on('mode_switched', onModeSwitched);
     socket.on('error_message', onErrorMessage);
+    socket.on('teams_toggled', onTeamsToggled);
+    socket.on('teams_updated', onTeamsUpdated);
 
     return () => {
       socket.off('room_created', onRoomCreated);
@@ -219,6 +238,8 @@ export function AppContent() {
       socket.off('pulse_updated', onPulseUpdated);
       socket.off('mode_switched', onModeSwitched);
       socket.off('error_message', onErrorMessage);
+      socket.off('teams_toggled', onTeamsToggled);
+      socket.off('teams_updated', onTeamsUpdated);
     };
   }, [socket]);
 
@@ -253,6 +274,26 @@ export function AppContent() {
     setViewMode('PLAYER_JOIN');
     setPin('');
     setStatus('LOBBY');
+  };
+
+  const handleToggleTeams = (enabled) => {
+    if (!socket) return;
+    socket.emit('toggle_teams', { pin, enabled });
+  };
+
+  const handleAutoAssignTeams = (teamCount) => {
+    if (!socket) return;
+    socket.emit('auto_assign_teams', { pin, teamCount });
+  };
+
+  const handleCreateTeam = (name, color) => {
+    if (!socket) return;
+    socket.emit('create_team', { pin, name, color });
+  };
+
+  const handleRemoveTeam = (teamId) => {
+    if (!socket) return;
+    socket.emit('remove_team', { pin, teamId });
   };
 
   return (
@@ -312,6 +353,12 @@ export function AppContent() {
               players={players}
               counts={counts}
               onStartQuiz={handleStartQuiz}
+              teamsEnabled={teamsEnabled}
+              teams={teams}
+              onToggleTeams={handleToggleTeams}
+              onAutoAssignTeams={handleAutoAssignTeams}
+              onCreateTeam={handleCreateTeam}
+              onRemoveTeam={handleRemoveTeam}
             />
           ) : status === 'LEADERBOARD' || status === 'ENDED' ? (
             <HostLeaderboard
