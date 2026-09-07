@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   server:
     build:
@@ -9,6 +7,9 @@ services:
       - "4000:4000"
     environment:
       - PORT=4000
+      - NODE_ENV=production
+    volumes:
+      - server_uploads:/app/public/uploads
     restart: always
 
   client:
@@ -20,3 +21,6 @@ services:
     depends_on:
       - server
     restart: always
+
+volumes:
+  server_uploads:
