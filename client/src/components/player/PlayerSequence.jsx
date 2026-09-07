@@ -204,27 +204,8 @@ export const PlayerSequence = ({
                 </span>
               </div>
 
-              {/* Step Text Content with Distinct Choice Tag */}
+              {/* Step Text Content */}
               <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      background: '#FFFFFF',
-                      border: `1px solid ${theme.borderColor}`,
-                      color: theme.subText,
-                      fontSize: '0.72rem',
-                      fontWeight: 800,
-                      padding: '1px 8px',
-                      borderRadius: '6px',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
-                    }}
-                  >
-                    <span style={{ fontSize: '0.8rem' }}>{theme.symbol}</span> ขั้นตอน {theme.label}
-                  </span>
-                </div>
                 <div
                   style={{
                     fontSize: '0.96rem',
@@ -412,20 +393,6 @@ export const PlayerSequence = ({
                     }}
                   >
                     {sIdx + 1}
-                  </span>
-                  <span
-                    style={{
-                      background: '#FFFFFF',
-                      border: `1px solid ${stepTheme.borderColor}`,
-                      color: stepTheme.subText,
-                      fontSize: '0.72rem',
-                      fontWeight: 800,
-                      padding: '1px 6px',
-                      borderRadius: '6px',
-                      flexShrink: 0
-                    }}
-                  >
-                    {stepTheme.symbol} {stepTheme.label}
                   </span>
                   <span style={{ flex: 1, lineHeight: 1.4 }}>{step.text}</span>
                 </div>

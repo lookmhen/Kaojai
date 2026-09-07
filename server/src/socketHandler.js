@@ -373,6 +373,76 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
+    // ─── TEAM HANDLERS (Host) ────────────────────────────────────────────────
+
+    socket.on('create_team', ({ pin, name, color }, ackCallback) => {
+      try {
+        const room = roomManager.getRoom(pin);
+        if (!room) return;
+        const team = roomManager.createTeam(pin, { name, color });
+        const teams = roomManager.getTeamList(pin);
+        const playerList = roomManager.getPlayerList(pin);
+        io.to(pin).emit('teams_updated', { teams, players: playerList });
+        if (typeof ackCallback === 'function') ackCallback({ success: true, team });
+      } catch (err) {
+        console.error('[Socket Error] create_team:', err);
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: err.message });
+      }
+    });
+
+    socket.on('remove_team', ({ pin, teamId }, ackCallback) => {
+      try {
+        const room = roomManager.getRoom(pin);
+        if (!room) return;
+        roomManager.removeTeam(pin, teamId);
+        const teams = roomManager.getTeamList(pin);
+        const playerList = roomManager.getPlayerList(pin);
+        io.to(pin).emit('teams_updated', { teams, players: playerList });
+        if (typeof ackCallback === 'function') ackCallback({ success: true });
+      } catch (err) {
+        console.error('[Socket Error] remove_team:', err);
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: err.message });
+      }
+    });
+
+    socket.on('assign_team', ({ pin, playerId, teamId }, ackCallback) => {
+      try {
+        const room = roomManager.getRoom(pin);
+        if (!room) return;
+        roomManager.assignPlayerToTeam(pin, playerId, teamId);
+        const teams = roomManager.getTeamList(pin);
+        const playerList = roomManager.getPlayerList(pin);
+        io.to(pin).emit('teams_updated', { teams, players: playerList });
+        if (typeof ackCallback === 'function') ackCallback({ success: true });
+      } catch (err) {
+        console.error('[Socket Error] assign_team:', err);
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: err.message });
+      }
+    });
+
+    socket.on('auto_assign_teams', ({ pin, teamCount }, ackCallback) => {
+      try {
+        const room = roomManager.getRoom(pin);
+        if (!room) return;
+        const teams = roomManager.autoAssignTeams(pin, teamCount || 2);
+        const playerList = roomManager.getPlayerList(pin);
+        io.to(pin).emit('teams_updated', { teams, players: playerList });
+        if (typeof ackCallback === 'function') ackCallback({ success: true, teams });
+      } catch (err) {
+        console.error('[Socket Error] auto_assign_teams:', err);
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: err.message });
+      }
+    });
+
+    socket.on('get_teams', ({ pin }, ackCallback) => {
+      try {
+        const teams = roomManager.getTeamList(pin);
+        if (typeof ackCallback === 'function') ackCallback({ success: true, teams });
+      } catch (err) {
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: err.message });
+      }
+    });
+
     // --- DISCONNECT ---
     socket.on('disconnect', () => {
       console.log(`[Socket Disconnected] ID: ${socket.id}`);

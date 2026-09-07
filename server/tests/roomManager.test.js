@@ -391,6 +391,92 @@ async function testRoomManager() {
     console.log('    ✓ Sequence Race question shuffling, evaluation, and scoring passed');
   }
 
+  // Test 12: Team Management — createTeam, assign, remove, autoAssign, leaderboard
+  {
+    console.log('  Testing Team Management...');
+    const rm = new RoomManager();
+    const room = rm.createRoom('host-team');
+    const p1 = rm.joinPlayer(room.pin, 's1', { name: 'Alice', playerId: 'p1' }).player;
+    const p2 = rm.joinPlayer(room.pin, 's2', { name: 'Bob',   playerId: 'p2' }).player;
+    const p3 = rm.joinPlayer(room.pin, 's3', { name: 'Carol', playerId: 'p3' }).player;
+
+    // createTeam
+    const teamA = rm.createTeam(room.pin, { name: 'ทีมแดง', color: '#E11D48' });
+    const teamB = rm.createTeam(room.pin, { name: 'ทีมน้ำเงิน', color: '#2563EB' });
+    assert.ok(teamA.id, 'Team A should have id');
+    assert.strictEqual(teamA.name, 'ทีมแดง');
+    assert.strictEqual(room.teams.size, 2, 'Room should have 2 teams');
+
+    // createTeam with invalid name throws
+    assert.throws(() => rm.createTeam(room.pin, { name: '' }), /ชื่อทีมไม่ถูกต้อง/);
+
+    // assignPlayerToTeam
+    rm.assignPlayerToTeam(room.pin, p1.playerId, teamA.id);
+    rm.assignPlayerToTeam(room.pin, p2.playerId, teamA.id);
+    rm.assignPlayerToTeam(room.pin, p3.playerId, teamB.id);
+    assert.strictEqual(p1.teamId, teamA.id);
+    assert.strictEqual(p3.teamId, teamB.id);
+    assert.strictEqual(teamA.memberIds.size, 2);
+    assert.strictEqual(teamB.memberIds.size, 1);
+
+    // Re-assign p2 to teamB (should move from A to B)
+    rm.assignPlayerToTeam(room.pin, p2.playerId, teamB.id);
+    assert.strictEqual(p2.teamId, teamB.id);
+    assert.strictEqual(teamA.memberIds.size, 1, 'Team A should have 1 member after p2 moved');
+    assert.strictEqual(teamB.memberIds.size, 2);
+
+    // Unassign p3
+    rm.assignPlayerToTeam(room.pin, p3.playerId, null);
+    assert.strictEqual(p3.teamId, null);
+    assert.strictEqual(teamB.memberIds.size, 1);
+
+    // assignPlayerToTeam with invalid playerId throws
+    assert.throws(() => rm.assignPlayerToTeam(room.pin, 'nonexistent', teamA.id), /ไม่พบผู้เล่นดังกล่าว/);
+
+    // getTeamList
+    const teamList = rm.getTeamList(room.pin);
+    assert.strictEqual(teamList.length, 2);
+    const tA = teamList.find(t => t.id === teamA.id);
+    assert.ok(tA);
+    assert.strictEqual(tA.members.length, 1);
+
+    // removeTeam — unassigns members
+    rm.removeTeam(room.pin, teamA.id);
+    assert.strictEqual(room.teams.size, 1, 'Room should have 1 team after removal');
+    assert.strictEqual(p1.teamId, null, 'p1 should be unassigned after team removal');
+
+    // removeTeam nonexistent throws
+    assert.throws(() => rm.removeTeam(room.pin, 'fake-team-id'), /ไม่พบทีมดังกล่าว/);
+
+    // autoAssignTeams — creates teams and distributes players evenly
+    const rm2 = new RoomManager();
+    const room2 = rm2.createRoom('host-auto');
+    for (let i = 1; i <= 5; i++) {
+      rm2.joinPlayer(room2.pin, `s${i}`, { name: `Player${i}` });
+    }
+    const autoTeams = rm2.autoAssignTeams(room2.pin, 2);
+    assert.strictEqual(autoTeams.length, 2, 'Should create 2 teams');
+    const totalAssigned = autoTeams.reduce((sum, t) => sum + t.memberIds.length, 0);
+    assert.strictEqual(totalAssigned, 5, 'All 5 players should be assigned');
+    // Each team should have 2 or 3 members (evenly distributed)
+    autoTeams.forEach(t => {
+      assert.ok(t.memberIds.length >= 2 && t.memberIds.length <= 3, `Team ${t.name} should have 2-3 members, got ${t.memberIds.length}`);
+    });
+
+    // getTeamLeaderboard — sorted by totalScore desc
+    const lb = rm2.getTeamLeaderboard(room2.pin);
+    assert.ok(Array.isArray(lb));
+    if (lb.length > 1) {
+      assert.ok(lb[0].totalScore >= lb[1].totalScore, 'Leaderboard should be sorted by totalScore desc');
+    }
+
+    // getPlayerList includes teamId
+    const playerList = rm2.getPlayerList(room2.pin);
+    assert.ok(playerList.every(p => 'teamId' in p), 'getPlayerList should include teamId for all players');
+
+    console.log('    ✓ Team management passed');
+  }
+
   console.log('✅ RoomManager tests passed cleanly!');
 }
 

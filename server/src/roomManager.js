@@ -27,6 +27,7 @@ class RoomManager {
       questionStartTime: null,
       questionTimer: null,
       players: new Map(), // playerId -> playerData
+      teams: new Map(),   // teamId -> { id, name, color, memberIds: Set }
       votedPulseUsers: new Set(),
       pulseVotes: { green: 0, yellow: 0, red: 0 },
       status: 'LOBBY', // 'LOBBY', 'QUESTION', 'QUESTION_RESULT', 'LEADERBOARD', 'ENDED'
@@ -136,7 +137,8 @@ class RoomManager {
         lastPointsEarned: 0,
         isConnected: true,
         disconnectTimeout: null,
-        pulseChoice: null
+        pulseChoice: null,
+        teamId: null   // set by host via assign_team or auto_assign_teams
       };
       room.players.set(playerId, existingPlayer);
     }
@@ -493,8 +495,144 @@ class RoomManager {
       name: p.name,
       avatar: p.avatar,
       score: p.score,
-      isConnected: p.isConnected
+      isConnected: p.isConnected,
+      teamId: p.teamId || null
     }));
+  }
+
+  // ─── Team Management ───────────────────────────────────────────────────────
+
+  /**
+   * Create a new team in the room.
+   * @param {string} pin
+   * @param {{ name: string, color: string }} options
+   * @returns {{ id, name, color, memberIds: Set }}
+   */
+  createTeam(pin, { name, color = '#6366F1' } = {}) {
+    const room = this.rooms.get(pin);
+    if (!room) throw new Error('Room not found');
+    if (!name || !name.trim()) throw new Error('ชื่อทีมไม่ถูกต้อง');
+
+    const teamId = `team_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const team = {
+      id: teamId,
+      name: name.trim().substring(0, 30),
+      color,
+      memberIds: new Set()
+    };
+    room.teams.set(teamId, team);
+    return team;
+  }
+
+  /**
+   * Remove a team and unassign all its members.
+   */
+  removeTeam(pin, teamId) {
+    const room = this.rooms.get(pin);
+    if (!room) throw new Error('Room not found');
+    const team = room.teams.get(teamId);
+    if (!team) throw new Error('ไม่พบทีมดังกล่าว');
+
+    // Unassign all members
+    for (const playerId of team.memberIds) {
+      const player = room.players.get(playerId);
+      if (player) player.teamId = null;
+    }
+    room.teams.delete(teamId);
+  }
+
+  /**
+   * Assign a player to a team (moves them from previous team if needed).
+   */
+  assignPlayerToTeam(pin, playerId, teamId) {
+    const room = this.rooms.get(pin);
+    if (!room) throw new Error('Room not found');
+    const player = room.players.get(playerId);
+    if (!player) throw new Error('ไม่พบผู้เล่นดังกล่าว');
+
+    // Remove from previous team
+    if (player.teamId) {
+      const prevTeam = room.teams.get(player.teamId);
+      if (prevTeam) prevTeam.memberIds.delete(playerId);
+    }
+
+    if (teamId === null) {
+      // Unassign
+      player.teamId = null;
+      return;
+    }
+
+    const team = room.teams.get(teamId);
+    if (!team) throw new Error('ไม่พบทีมดังกล่าว');
+
+    team.memberIds.add(playerId);
+    player.teamId = teamId;
+  }
+
+  /**
+   * Auto-distribute all connected players into existing teams as evenly as possible.
+   * If no teams exist, creates `teamCount` teams with default names/colors.
+   */
+  autoAssignTeams(pin, teamCount = 2) {
+    const room = this.rooms.get(pin);
+    if (!room) throw new Error('Room not found');
+
+    const DEFAULT_COLORS = ['#E11D48', '#2563EB', '#D97706', '#059669', '#7C3AED', '#0891B2'];
+    const DEFAULT_NAMES  = ['ทีม 1', 'ทีม 2', 'ทีม 3', 'ทีม 4', 'ทีม 5', 'ทีม 6'];
+
+    // Ensure we have enough teams
+    if (room.teams.size === 0) {
+      const count = Math.min(Math.max(teamCount, 2), 6);
+      for (let i = 0; i < count; i++) {
+        this.createTeam(pin, { name: DEFAULT_NAMES[i], color: DEFAULT_COLORS[i] });
+      }
+    }
+
+    // Clear current assignments
+    for (const team of room.teams.values()) team.memberIds.clear();
+    for (const player of room.players.values()) player.teamId = null;
+
+    const teamIds = Array.from(room.teams.keys());
+    const connectedPlayers = Array.from(room.players.values())
+      .filter(p => p.isConnected)
+      .sort(() => Math.random() - 0.5); // shuffle for random distribution
+
+    connectedPlayers.forEach((player, idx) => {
+      const teamId = teamIds[idx % teamIds.length];
+      player.teamId = teamId;
+      room.teams.get(teamId).memberIds.add(player.playerId);
+    });
+
+    return this.getTeamList(pin);
+  }
+
+  /**
+   * Get serializable team list with member details.
+   */
+  getTeamList(pin) {
+    const room = this.rooms.get(pin);
+    if (!room) return [];
+
+    return Array.from(room.teams.values()).map(team => ({
+      id: team.id,
+      name: team.name,
+      color: team.color,
+      memberIds: Array.from(team.memberIds),
+      members: Array.from(team.memberIds)
+        .map(pid => room.players.get(pid))
+        .filter(Boolean)
+        .map(p => ({ playerId: p.playerId, name: p.name, avatar: p.avatar, score: p.score })),
+      totalScore: Array.from(team.memberIds)
+        .map(pid => room.players.get(pid)?.score || 0)
+        .reduce((sum, s) => sum + s, 0)
+    }));
+  }
+
+  /**
+   * Get team leaderboard sorted by total score (sum of members).
+   */
+  getTeamLeaderboard(pin) {
+    return this.getTeamList(pin).sort((a, b) => b.totalScore - a.totalScore);
   }
 }
 
