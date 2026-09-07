@@ -375,6 +375,21 @@ module.exports = function setupSocketHandlers(io) {
 
     // ─── TEAM HANDLERS (Host) ────────────────────────────────────────────────
 
+    socket.on('toggle_teams', ({ pin, enabled }, ackCallback) => {
+      try {
+        const room = roomManager.getRoom(pin);
+        if (!room) return;
+        const teamsEnabled = roomManager.setTeamsEnabled(pin, enabled);
+        const teams = roomManager.getTeamList(pin);
+        const playerList = roomManager.getPlayerList(pin);
+        io.to(pin).emit('teams_toggled', { teamsEnabled, teams, players: playerList });
+        if (typeof ackCallback === 'function') ackCallback({ success: true, teamsEnabled });
+      } catch (err) {
+        console.error('[Socket Error] toggle_teams:', err);
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: err.message });
+      }
+    });
+
     socket.on('create_team', ({ pin, name, color }, ackCallback) => {
       try {
         const room = roomManager.getRoom(pin);

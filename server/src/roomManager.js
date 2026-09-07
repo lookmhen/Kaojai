@@ -28,6 +28,7 @@ class RoomManager {
       questionTimer: null,
       players: new Map(), // playerId -> playerData
       teams: new Map(),   // teamId -> { id, name, color, memberIds: Set }
+      teamsEnabled: false, // host toggles this on/off per session
       votedPulseUsers: new Set(),
       pulseVotes: { green: 0, yellow: 0, red: 0 },
       status: 'LOBBY', // 'LOBBY', 'QUESTION', 'QUESTION_RESULT', 'LEADERBOARD', 'ENDED'
@@ -89,7 +90,9 @@ class RoomManager {
       pulseVotes: room.pulseVotes,
       leaderboard,
       players,
-      counts
+      counts,
+      teamsEnabled: room.teamsEnabled,
+      teams: this.getTeamList(pin)
     };
   }
 
@@ -501,6 +504,17 @@ class RoomManager {
   }
 
   // ─── Team Management ───────────────────────────────────────────────────────
+
+  /**
+   * Toggle team mode on or off for a room.
+   * Assignments are preserved when disabled so re-enabling restores them.
+   */
+  setTeamsEnabled(pin, enabled) {
+    const room = this.rooms.get(pin);
+    if (!room) throw new Error('Room not found');
+    room.teamsEnabled = Boolean(enabled);
+    return room.teamsEnabled;
+  }
 
   /**
    * Create a new team in the room.

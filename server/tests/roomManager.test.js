@@ -391,7 +391,7 @@ async function testRoomManager() {
     console.log('    ✓ Sequence Race question shuffling, evaluation, and scoring passed');
   }
 
-  // Test 12: Team Management — createTeam, assign, remove, autoAssign, leaderboard
+  // Test 12: Team Management — createTeam, assign, remove, autoAssign, leaderboard, toggle
   {
     console.log('  Testing Team Management...');
     const rm = new RoomManager();
@@ -399,6 +399,14 @@ async function testRoomManager() {
     const p1 = rm.joinPlayer(room.pin, 's1', { name: 'Alice', playerId: 'p1' }).player;
     const p2 = rm.joinPlayer(room.pin, 's2', { name: 'Bob',   playerId: 'p2' }).player;
     const p3 = rm.joinPlayer(room.pin, 's3', { name: 'Carol', playerId: 'p3' }).player;
+
+    // teamsEnabled toggle
+    assert.strictEqual(room.teamsEnabled, false, 'Teams should be disabled by default');
+    rm.setTeamsEnabled(room.pin, true);
+    assert.strictEqual(room.teamsEnabled, true, 'Teams should be enabled after toggle on');
+    rm.setTeamsEnabled(room.pin, false);
+    assert.strictEqual(room.teamsEnabled, false, 'Teams should be disabled after toggle off');
+    rm.setTeamsEnabled(room.pin, true); // re-enable for rest of test
 
     // createTeam
     const teamA = rm.createTeam(room.pin, { name: 'ทีมแดง', color: '#E11D48' });
