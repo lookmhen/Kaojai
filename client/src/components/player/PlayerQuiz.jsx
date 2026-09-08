@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { sfx } from '../../utils/audioSFX';
-import { CheckCircle2, XCircle, Users, Clock, BarChart3 } from 'lucide-react';
+import { CheckCircle2, XCircle, Users, Clock, BarChart3, Flame, Zap } from 'lucide-react';
 import { SoundToggle } from '../common/SoundToggle';
 import { PlayerSequence } from './PlayerSequence';
 
@@ -60,7 +60,13 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
     const handleFeedback = (data) => {
       setFeedback(data);
       if (data.isCorrect) {
-        sfx.playCorrect();
+        if (data.streak >= 2) {
+          sfx.playStreak(data.streak);
+        } else if (data.isComeback) {
+          sfx.playComeback();
+        } else {
+          sfx.playCorrect();
+        }
       } else {
         sfx.playWrong();
       }
@@ -178,9 +184,74 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
               <>
                 <CheckCircle2 size={50} color="#166534" style={{ marginBottom: '10px' }} />
                 <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#166534' }}>ถูกต้องที่สุด! 🎉</h3>
-                <p style={{ fontSize: '1.15rem', marginTop: '6px', fontWeight: 700, color: '#15803D' }}>
+                <p style={{ fontSize: '1.25rem', marginTop: '6px', fontWeight: 800, color: '#15803D' }}>
                   +{feedback.pointsEarned} คะแนน!
                 </p>
+
+                {/* Streak Badge */}
+                {feedback.streak >= 2 && (
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      marginTop: '10px',
+                      padding: '6px 16px',
+                      borderRadius: '50px',
+                      background: feedback.streak >= 4
+                        ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
+                        : feedback.streak === 3
+                        ? 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)'
+                        : 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                      color: '#FFFFFF',
+                      fontWeight: 800,
+                      fontSize: '0.9rem',
+                      boxShadow: '0 4px 14px rgba(234, 88, 12, 0.35)',
+                      animation: 'pulse 1.5s infinite'
+                    }}
+                  >
+                    <Flame size={18} />
+                    <span>
+                      {feedback.streak >= 4
+                        ? `STREAK x${feedback.streak} UNSTOPPABLE! (+${feedback.streakBonus})`
+                        : feedback.streak === 3
+                        ? `STREAK x3 ON FIRE! (+${feedback.streakBonus})`
+                        : `STREAK x2 (+${feedback.streakBonus})`}
+                    </span>
+                  </div>
+                )}
+
+                {/* Comeback Boost Badge */}
+                {feedback.isComeback && (
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      marginTop: '8px',
+                      marginLeft: feedback.streak >= 2 ? '6px' : '0',
+                      padding: '6px 14px',
+                      borderRadius: '50px',
+                      background: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)',
+                      color: '#FFFFFF',
+                      fontWeight: 800,
+                      fontSize: '0.85rem',
+                      boxShadow: '0 4px 12px rgba(109, 40, 217, 0.3)'
+                    }}
+                  >
+                    <Zap size={16} />
+                    <span>Comeback Boost! +40 (กำลังใจคนสู้กลับ!)</span>
+                  </div>
+                )}
+
+                {/* Points Breakdown */}
+                {(feedback.streakBonus > 0 || feedback.comebackBonus > 0) && (
+                  <div style={{ fontSize: '0.78rem', color: '#15803D', marginTop: '8px', opacity: 0.9 }}>
+                    ฐานความเร็ว {feedback.basePoints || (feedback.pointsEarned - (feedback.streakBonus || 0) - (feedback.comebackBonus || 0))}
+                    {feedback.streakBonus > 0 && ` + โบนัสคอมโบ ${feedback.streakBonus}`}
+                    {feedback.comebackBonus > 0 && ` + สู้กลับ ${feedback.comebackBonus}`}
+                  </div>
+                )}
               </>
             ) : (
               <>

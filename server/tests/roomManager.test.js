@@ -485,6 +485,59 @@ async function testRoomManager() {
     console.log('    ✓ Team management passed');
   }
 
+  // Test 13: Answer Streak & Comeback Gamification
+  {
+    console.log('  Testing Answer Streak & Comeback Gamification...');
+    const rm = new RoomManager();
+    const room = rm.createRoom('host-gamify');
+    const p1 = rm.joinPlayer(room.pin, 's1', { name: 'Player 1' }).player;
+    const p2 = rm.joinPlayer(room.pin, 's2', { name: 'Player 2' }).player;
+
+    // Question 1
+    rm.startQuestion(room.pin, 0);
+    const q1 = room.quizSet.questions[0];
+    const correctOpt1 = q1.options.find(o => o.isCorrect).id;
+    const wrongOpt1 = q1.options.find(o => !o.isCorrect).id;
+
+    // P1 answers correct on Q1
+    const p1Ans1 = rm.submitAnswer(room.pin, p1.playerId, correctOpt1);
+    assert.strictEqual(p1Ans1.isCorrect, true);
+    assert.strictEqual(p1Ans1.streak, 1);
+    assert.strictEqual(p1Ans1.streakBonus, 0, 'Streak 1 has no bonus');
+    assert.strictEqual(p1Ans1.comebackBonus, 0, 'Q1 has no comeback bonus');
+
+    // P2 answers wrong on Q1
+    const p2Ans1 = rm.submitAnswer(room.pin, p2.playerId, wrongOpt1);
+    assert.strictEqual(p2Ans1.isCorrect, false);
+    assert.strictEqual(p2Ans1.streak, 0);
+
+    // Question 2
+    rm.startQuestion(room.pin, 1);
+    const q2 = room.quizSet.questions[1];
+    const correctOpt2 = q2.options.find(o => o.isCorrect).id;
+
+    // P1 answers correct again on Q2 -> Streak 2!
+    const p1Ans2 = rm.submitAnswer(room.pin, p1.playerId, correctOpt2);
+    assert.strictEqual(p1Ans2.isCorrect, true);
+    assert.strictEqual(p1Ans2.streak, 2);
+    assert.strictEqual(p1Ans2.streakBonus, 50, 'Streak 2 should receive +50 bonus');
+
+    // P2 answers correct on Q2 -> Was in bottom half prior to Q2 -> Comeback bonus!
+    const p2Ans2 = rm.submitAnswer(room.pin, p2.playerId, correctOpt2);
+    assert.strictEqual(p2Ans2.isCorrect, true);
+    assert.strictEqual(p2Ans2.streak, 1);
+    assert.strictEqual(p2Ans2.isComeback, true, 'P2 should receive comeback bonus');
+    assert.strictEqual(p2Ans2.comebackBonus, 40, 'Comeback bonus should be +40');
+
+    // Leaderboard contains streak info
+    const lb = rm.getLeaderboard(room.pin);
+    const lbP1 = lb.find(p => p.playerId === p1.playerId);
+    assert.strictEqual(lbP1.streak, 2);
+    assert.strictEqual(lbP1.highestStreak, 2);
+
+    console.log('    ✓ Answer streak & comeback gamification passed');
+  }
+
   console.log('✅ RoomManager tests passed cleanly!');
 }
 

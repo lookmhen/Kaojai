@@ -96,6 +96,11 @@ async function testApiEndpoints() {
     const updated = importQuizzes(quizzes);
     res.json({ success: true, count: quizzes.length, quizzes: updated });
   });
+  app.post('/api/quizzes/generate-ai', async (req, res) => {
+    const { generateAiQuiz } = require('../src/aiService');
+    const result = await generateAiQuiz(req.body);
+    res.json(result);
+  });
 
   const testServer = http.createServer(app);
   await new Promise(resolve => testServer.listen(0, resolve));
@@ -153,6 +158,19 @@ async function testApiEndpoints() {
     assert.strictEqual(resImport.statusCode, 200);
     assert.strictEqual(resImport.body.success, true);
     console.log('    ✓ POST /api/quizzes/import passed');
+
+    console.log('  Testing POST /api/quizzes/generate-ai (Smart Mock Fallback)...');
+    const resAiGen = await httpPost(`http://localhost:${port}/api/quizzes/generate-ai`, {
+      topic: 'การปฐมพยาบาลเบื้องต้น CPR',
+      questionCount: 3,
+      questionTypes: 'MIXED'
+    });
+    assert.strictEqual(resAiGen.statusCode, 200);
+    assert.strictEqual(resAiGen.body.success, true);
+    assert.ok(resAiGen.body.quiz);
+    assert.strictEqual(resAiGen.body.quiz.questions.length, 3);
+    assert.ok(resAiGen.body.quiz.title.includes('CPR'));
+    console.log('    ✓ POST /api/quizzes/generate-ai passed');
 
     // Clean up
     const { deleteQuiz } = require('../src/quizData');

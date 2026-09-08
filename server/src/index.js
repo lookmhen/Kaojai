@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -6,6 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const setupSocketHandlers = require('./socketHandler');
 const { getAllQuizzes, saveQuiz, deleteQuiz, duplicateQuiz, importQuizzes } = require('./quizData');
+const { generateAiQuiz } = require('./aiService');
 
 const app = express();
 app.use(cors());
@@ -100,6 +102,33 @@ app.post('/api/quizzes/import', (req, res) => {
     res.json({ success: true, count: Array.isArray(quizzes) ? quizzes.length : 0, quizzes: updated });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
+  }
+});
+
+// AI Quiz Generator Endpoint
+app.post('/api/quizzes/generate-ai', async (req, res) => {
+  try {
+    const { topic, textContent, questionCount, questionTypes, difficulty, language } = req.body;
+    if (!topic && !textContent) {
+      return res.status(400).json({
+        success: false,
+        message: 'กรุณาระบุหัวข้อ (Topic) หรือใส่เนื้อหาที่ต้องการนำมาสร้างข้อสอบ'
+      });
+    }
+
+    const result = await generateAiQuiz({
+      topic,
+      textContent,
+      questionCount: Number(questionCount) || 5,
+      questionTypes: questionTypes || 'MIXED',
+      difficulty: difficulty || 'medium',
+      language: language || 'th'
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('[API Error] generate-ai:', err);
+    res.status(500).json({ success: false, message: err.message || 'เกิดข้อผิดพลาดในการสร้างข้อสอบด้วย AI' });
   }
 });
 

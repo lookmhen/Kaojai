@@ -351,6 +351,12 @@ module.exports = function setupSocketHandlers(io) {
         socket.emit('answer_feedback', {
           isCorrect: result.isCorrect,
           pointsEarned: result.pointsEarned,
+          basePoints: result.basePoints,
+          streak: result.streak,
+          highestStreak: result.highestStreak,
+          streakBonus: result.streakBonus,
+          comebackBonus: result.comebackBonus,
+          isComeback: result.isComeback,
           totalScore: result.totalScore,
           alreadyAnswered: result.alreadyAnswered,
           details: result.details

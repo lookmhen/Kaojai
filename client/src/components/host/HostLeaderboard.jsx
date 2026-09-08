@@ -132,9 +132,29 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, isEnded, onNextQ
                 {/* Player Info & Animated Racing Bar */}
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)' }}>
-                      {player.name}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)' }}>
+                        {player.name}
+                      </span>
+                      {player.streak >= 2 && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            background: player.streak >= 4 ? '#EF4444' : '#F97316',
+                            color: '#FFFFFF',
+                            fontSize: '0.72rem',
+                            fontWeight: 900,
+                            padding: '2px 8px',
+                            borderRadius: '20px',
+                            boxShadow: '0 2px 6px rgba(249, 115, 22, 0.4)'
+                          }}
+                        >
+                          🔥 {player.streak}
+                        </span>
+                      )}
+                    </div>
                     <span style={{ fontWeight: 900, color: 'var(--accent-earth-orange)', fontSize: '1.15rem' }}>
                       {currentScore.toLocaleString()} Pts
                     </span>

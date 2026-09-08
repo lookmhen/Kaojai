@@ -155,6 +155,10 @@ class RoomManager {
         score: 0,
         previousScore: 0,
         lastPointsEarned: 0,
+        streak: 0,
+        highestStreak: 0,
+        streakBonus: 0,
+        comebackBonus: 0,
         isConnected: true,
         disconnectTimeout: null,
         pulseChoice: null,
@@ -308,10 +312,24 @@ class RoomManager {
       return { isEnded: true };
     }
 
-    // Save previous scores for racing leaderboard transition
+    // Save previous scores and identify bottom 50% for Comeback Bonus
+    const activePlayers = Array.from(room.players.values()).filter(p => p.isConnected);
+    activePlayers.sort((a, b) => b.score - a.score);
+    
+    // Bottom 50% of the room (excluding top half when >= 2 players)
+    room.bottomHalfPlayerIds = new Set();
+    if (activePlayers.length >= 2 && room.currentQuestionIndex >= 1) {
+      const cutoffIdx = Math.floor(activePlayers.length / 2);
+      for (let i = cutoffIdx; i < activePlayers.length; i++) {
+        room.bottomHalfPlayerIds.add(activePlayers[i].playerId);
+      }
+    }
+
     for (const player of room.players.values()) {
       player.previousScore = player.score;
       player.lastPointsEarned = 0;
+      player.streakBonus = 0;
+      player.comebackBonus = 0;
     }
 
     room.status = 'QUESTION';
@@ -393,7 +411,29 @@ class RoomManager {
     }
 
     const player = room.players.get(playerId);
+    let streakBonus = 0;
+    let comebackBonus = 0;
+
     if (player) {
+      if (isCorrect) {
+        player.streak = (player.streak || 0) + 1;
+        player.highestStreak = Math.max(player.highestStreak || 0, player.streak);
+        
+        // Tiered Capped Streak Bonus: Streak 2: +50, Streak 3: +100, Streak 4: +150, Streak 5+: +200
+        streakBonus = player.streak >= 2 ? Math.min((player.streak - 1) * 50, 200) : 0;
+
+        // Comeback Bonus: +40 pts if player was in bottom half prior to this question
+        const isBottomHalf = Boolean(room.bottomHalfPlayerIds && room.bottomHalfPlayerIds.has(playerId));
+        comebackBonus = isBottomHalf ? 40 : 0;
+      } else {
+        player.streak = 0;
+        streakBonus = 0;
+        comebackBonus = 0;
+      }
+
+      pointsEarned += (streakBonus + comebackBonus);
+      player.streakBonus = streakBonus;
+      player.comebackBonus = comebackBonus;
       player.lastPointsEarned = pointsEarned;
       player.score += pointsEarned;
     }
@@ -402,7 +442,9 @@ class RoomManager {
       ...details,
       isCorrect,
       timeUsedMs,
-      pointsEarned
+      pointsEarned,
+      streakBonus,
+      comebackBonus
     };
     room.currentAnswers.set(playerId, answerRecord);
 
@@ -413,6 +455,12 @@ class RoomManager {
       alreadyAnswered: false,
       isCorrect,
       pointsEarned,
+      basePoints: pointsEarned - streakBonus - comebackBonus,
+      streak: player ? player.streak : 0,
+      highestStreak: player ? player.highestStreak : 0,
+      streakBonus,
+      comebackBonus,
+      isComeback: comebackBonus > 0,
       totalScore: player ? player.score : 0,
       answeredCount: counts.answeredCount,
       totalPlayers: counts.totalPlayers,
@@ -470,6 +518,16 @@ class RoomManager {
       }
     }
 
+    // Reset streak for players who timed out or did not submit answer
+    for (const [pId, player] of room.players.entries()) {
+      if (!room.currentAnswers.has(pId)) {
+        player.streak = 0;
+        player.streakBonus = 0;
+        player.comebackBonus = 0;
+        player.lastPointsEarned = 0;
+      }
+    }
+
     return {
       questionId: currentQuestion ? currentQuestion.id : null,
       questionType: 'CHOICE',
@@ -493,6 +551,9 @@ class RoomManager {
       score: p.score,
       previousScore: p.previousScore || 0,
       lastPointsEarned: p.lastPointsEarned || 0,
+      streak: p.streak || 0,
+      highestStreak: p.highestStreak || 0,
+      streakBonus: p.streakBonus || 0,
       isConnected: p.isConnected
     }));
 

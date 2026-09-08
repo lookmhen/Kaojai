@@ -128,5 +128,405 @@
         ]
       }
     ]
+  },
+  {
+    "title": "Automated Test Quiz Set",
+    "description": "Automated Test Description",
+    "questions": [],
+    "id": "quiz-1788877491084"
+  },
+  {
+    "id": "quiz-1788877491090",
+    "title": "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review) (คัดลอก)",
+    "description": "ทดสอบความเข้าใจเกี่ยวกับกระบวนการทำงานและเป้าหมายองค์กร",
+    "questions": [
+      {
+        "id": "q-1788877491090-1",
+        "questionType": "CHOICE",
+        "questionText": "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "สะสาง (Sort)",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "สะดวก (Set in order)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "สะอาด (Shine)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "สร้างมาตรฐาน (Standardize)",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877491090-2",
+        "questionType": "CHOICE",
+        "questionText": "การสื่อสารที่ดีในการทำงานร่วมกันควรเน้นเรื่องใดมากที่สุด?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ความชัดเจนและความโปร่งใส",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "ความเร็วโดยไม่ตรวจทาน",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "การสั่งงานฝ่ายเดียว",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "การส่งอีเมลอย่างเดียว",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877491090-3",
+        "questionType": "SEQUENCE",
+        "questionText": "จงเรียงลำดับขั้นตอนมาตรฐานการแก้ปัญหา Network Incident (SOP)",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1788877491090-1",
+            "text": "รับแจ้งเหตุและระบุขอบเขตผลกระทบ (Triage & Assess)"
+          },
+          {
+            "id": "seq-1788877491090-2",
+            "text": "ตรวจสอบสถานะอุปกรณ์และวิเคราะห์ Logs (Diagnose)"
+          },
+          {
+            "id": "seq-1788877491090-3",
+            "text": "ดำเนินการแก้ไขหรือ Failover ระบบสำรอง (Mitigate)"
+          },
+          {
+            "id": "seq-1788877491090-4",
+            "text": "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)"
+          },
+          {
+            "id": "seq-1788877491090-5",
+            "text": "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Automated Test Quiz Set",
+    "description": "Automated Test Description",
+    "questions": [],
+    "id": "quiz-1788877549532"
+  },
+  {
+    "id": "quiz-1788877549537",
+    "title": "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review) (คัดลอก)",
+    "description": "ทดสอบความเข้าใจเกี่ยวกับกระบวนการทำงานและเป้าหมายองค์กร",
+    "questions": [
+      {
+        "id": "q-1788877549537-1",
+        "questionType": "CHOICE",
+        "questionText": "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "สะสาง (Sort)",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "สะดวก (Set in order)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "สะอาด (Shine)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "สร้างมาตรฐาน (Standardize)",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877549537-2",
+        "questionType": "CHOICE",
+        "questionText": "การสื่อสารที่ดีในการทำงานร่วมกันควรเน้นเรื่องใดมากที่สุด?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ความชัดเจนและความโปร่งใส",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "ความเร็วโดยไม่ตรวจทาน",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "การสั่งงานฝ่ายเดียว",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "การส่งอีเมลอย่างเดียว",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877549537-3",
+        "questionType": "SEQUENCE",
+        "questionText": "จงเรียงลำดับขั้นตอนมาตรฐานการแก้ปัญหา Network Incident (SOP)",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1788877549537-1",
+            "text": "รับแจ้งเหตุและระบุขอบเขตผลกระทบ (Triage & Assess)"
+          },
+          {
+            "id": "seq-1788877549537-2",
+            "text": "ตรวจสอบสถานะอุปกรณ์และวิเคราะห์ Logs (Diagnose)"
+          },
+          {
+            "id": "seq-1788877549537-3",
+            "text": "ดำเนินการแก้ไขหรือ Failover ระบบสำรอง (Mitigate)"
+          },
+          {
+            "id": "seq-1788877549537-4",
+            "text": "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)"
+          },
+          {
+            "id": "seq-1788877549537-5",
+            "text": "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Automated Test Quiz Set",
+    "description": "Automated Test Description",
+    "questions": [],
+    "id": "quiz-1788877700969"
+  },
+  {
+    "id": "quiz-1788877700976",
+    "title": "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review) (คัดลอก)",
+    "description": "ทดสอบความเข้าใจเกี่ยวกับกระบวนการทำงานและเป้าหมายองค์กร",
+    "questions": [
+      {
+        "id": "q-1788877700976-1",
+        "questionType": "CHOICE",
+        "questionText": "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "สะสาง (Sort)",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "สะดวก (Set in order)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "สะอาด (Shine)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "สร้างมาตรฐาน (Standardize)",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877700976-2",
+        "questionType": "CHOICE",
+        "questionText": "การสื่อสารที่ดีในการทำงานร่วมกันควรเน้นเรื่องใดมากที่สุด?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ความชัดเจนและความโปร่งใส",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "ความเร็วโดยไม่ตรวจทาน",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "การสั่งงานฝ่ายเดียว",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "การส่งอีเมลอย่างเดียว",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877700976-3",
+        "questionType": "SEQUENCE",
+        "questionText": "จงเรียงลำดับขั้นตอนมาตรฐานการแก้ปัญหา Network Incident (SOP)",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1788877700976-1",
+            "text": "รับแจ้งเหตุและระบุขอบเขตผลกระทบ (Triage & Assess)"
+          },
+          {
+            "id": "seq-1788877700976-2",
+            "text": "ตรวจสอบสถานะอุปกรณ์และวิเคราะห์ Logs (Diagnose)"
+          },
+          {
+            "id": "seq-1788877700976-3",
+            "text": "ดำเนินการแก้ไขหรือ Failover ระบบสำรอง (Mitigate)"
+          },
+          {
+            "id": "seq-1788877700976-4",
+            "text": "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)"
+          },
+          {
+            "id": "seq-1788877700976-5",
+            "text": "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Automated Test Quiz Set",
+    "description": "Automated Test Description",
+    "questions": [],
+    "id": "quiz-1788877714376"
+  },
+  {
+    "id": "quiz-1788877714381",
+    "title": "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review) (คัดลอก)",
+    "description": "ทดสอบความเข้าใจเกี่ยวกับกระบวนการทำงานและเป้าหมายองค์กร",
+    "questions": [
+      {
+        "id": "q-1788877714381-1",
+        "questionType": "CHOICE",
+        "questionText": "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "สะสาง (Sort)",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "สะดวก (Set in order)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "สะอาด (Shine)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "สร้างมาตรฐาน (Standardize)",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877714381-2",
+        "questionType": "CHOICE",
+        "questionText": "การสื่อสารที่ดีในการทำงานร่วมกันควรเน้นเรื่องใดมากที่สุด?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ความชัดเจนและความโปร่งใส",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "ความเร็วโดยไม่ตรวจทาน",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "การสั่งงานฝ่ายเดียว",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "การส่งอีเมลอย่างเดียว",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877714381-3",
+        "questionType": "SEQUENCE",
+        "questionText": "จงเรียงลำดับขั้นตอนมาตรฐานการแก้ปัญหา Network Incident (SOP)",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1788877714381-1",
+            "text": "รับแจ้งเหตุและระบุขอบเขตผลกระทบ (Triage & Assess)"
+          },
+          {
+            "id": "seq-1788877714381-2",
+            "text": "ตรวจสอบสถานะอุปกรณ์และวิเคราะห์ Logs (Diagnose)"
+          },
+          {
+            "id": "seq-1788877714381-3",
+            "text": "ดำเนินการแก้ไขหรือ Failover ระบบสำรอง (Mitigate)"
+          },
+          {
+            "id": "seq-1788877714381-4",
+            "text": "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)"
+          },
+          {
+            "id": "seq-1788877714381-5",
+            "text": "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)"
+          }
+        ]
+      }
+    ]
   }
 ]

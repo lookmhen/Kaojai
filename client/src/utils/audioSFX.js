@@ -253,6 +253,55 @@ class SoundEffects {
       osc.stop(now + 0.12);
     } catch (e) {}
   }
+
+  playStreak(streakCount) {
+    if (this.muted) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      const baseFreq = 523.25; // C5
+      const notes = streakCount >= 3
+        ? [baseFreq, baseFreq * 1.25, baseFreq * 1.5, baseFreq * 2]
+        : [baseFreq, baseFreq * 1.25, baseFreq * 1.5];
+
+      notes.forEach((freq, idx) => {
+        const t = now + idx * 0.08;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = streakCount >= 3 ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(freq, t);
+        gain.gain.setValueAtTime(0.22, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.3);
+      });
+    } catch (e) {}
+  }
+
+  playComeback() {
+    if (this.muted) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      [659.25, 880.00].forEach((freq, idx) => {
+        const t = now + idx * 0.1;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, t);
+        gain.gain.setValueAtTime(0.22, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.35);
+      });
+    } catch (e) {}
+  }
 }
 
 export const sfx = new SoundEffects();

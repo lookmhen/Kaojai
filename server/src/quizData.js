@@ -217,7 +217,7 @@ function importQuizzes(importedList, replaceAll = false) {
 }
 
 module.exports = {
-  defaultQuizSets: quizStore,
+  defaultQuizSets: INITIAL_SEED_QUIZZES,
   getAllQuizzes,
   saveQuiz,
   deleteQuiz,

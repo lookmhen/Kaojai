@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Save, ArrowLeft, Image as ImageIcon, Clock, CheckCircle2, Upload, X, Copy, ListOrdered, ArrowUp, ArrowDown, Download, FileUp } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, Image as ImageIcon, Clock, CheckCircle2, Upload, X, Copy, ListOrdered, ArrowUp, ArrowDown, Download, FileUp, Sparkles } from 'lucide-react';
+import { AiQuizGeneratorModal } from './AiQuizGeneratorModal';
 
 export const TeacherBackoffice = ({ onBack }) => {
   const [quizzes, setQuizzes] = useState([]);
@@ -7,7 +8,35 @@ export const TeacherBackoffice = ({ onBack }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [notification, setNotification] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const fileInputRef = useRef(null);
+
+  const handleAiQuizGenerated = (newAiQuiz) => {
+    // Save generated quiz to backend and open in editor
+    fetch('/api/quizzes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quiz: newAiQuiz })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setNotification('สร้างและบันทึกชุดข้อสอบด้วย AI สำเร็จเรียบร้อย! ✨🎉');
+          fetchQuizzes();
+          setActiveQuiz(data.quiz || newAiQuiz);
+          setIsEditing(true);
+          setTimeout(() => setNotification(''), 4000);
+        } else {
+          setActiveQuiz(newAiQuiz);
+          setIsEditing(true);
+        }
+      })
+      .catch(err => {
+        console.error('Save AI quiz error:', err);
+        setActiveQuiz(newAiQuiz);
+        setIsEditing(true);
+      });
+  };
 
   const handleExportQuizzes = () => {
     fetch('/api/quizzes/export')
@@ -371,6 +400,27 @@ export const TeacherBackoffice = ({ onBack }) => {
 
           <button
             type="button"
+            onClick={() => setIsAiModalOpen(true)}
+            title="สร้างคำถามและช้อยส์อัตโนมัติด้วย AI"
+            style={{
+              background: 'linear-gradient(135deg, #4F46E5 0%, #2563EB 100%)',
+              color: '#FFFFFF',
+              padding: '10px 20px',
+              borderRadius: '12px',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 14px rgba(79, 70, 229, 0.35)',
+              borderBottom: '3px solid #3730A3',
+              cursor: 'pointer'
+            }}
+          >
+            <Sparkles size={18} color="#FDE047" /> สร้างด้วย AI ✨
+          </button>
+
+          <button
+            type="button"
             onClick={handleCreateNewQuiz}
             style={{
               background: 'var(--accent-earth-blue)',
@@ -388,6 +438,12 @@ export const TeacherBackoffice = ({ onBack }) => {
           </button>
         </div>
       </div>
+
+      <AiQuizGeneratorModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        onQuizGenerated={handleAiQuizGenerated}
+      />
 
       {notification && (
         <div className="animate-pop" style={{ background: '#F0FDF4', border: '1px solid #86EFAC', color: '#166534', padding: '14px 20px', borderRadius: '12px', marginBottom: '20px', fontWeight: 800, textAlign: 'center', fontSize: '1.05rem' }}>
