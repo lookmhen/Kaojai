@@ -1227,7 +1227,7 @@ export const TeacherBackoffice = ({ onBack }) => {
                                     whiteSpace: 'nowrap'
                                   }}
                                 >
-                                  <CheckCircle2 size={13} /> {opt.isCorrect ? 'เฉลย' : 'เลือก'}
+                                  <CheckCircle2 size={13} /> {opt.isCorrect ? 'ถูกต้อง' : 'เลือก'}
                                 </button>
                               </div>
                             );
