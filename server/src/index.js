@@ -224,6 +224,11 @@ app.post('/api/upload', (req, res) => {
 setupSocketHandlers(io);
 
 const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => {
-  console.log(`🚀 KaoJai Server running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test' || require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`🚀 KaoJai Server running on port ${PORT}`);
+  });
+}
+
+module.exports = { app, server, getLocalIpAddress };
+

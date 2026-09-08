@@ -84,7 +84,7 @@ function buildUserPrompt(topic, textContent, questionCount) {
   return prompt;
 }
 
-async function callGeminiApi(systemPrompt, userPrompt, apiKey, timeoutMs = 30000) {
+async function callGeminiApi(systemPrompt, userPrompt, apiKey, timeoutMs = (process.env.NODE_ENV === 'test' ? 5000 : 30000)) {
   const payload = {
     contents: [
       { role: 'user', parts: [{ text: systemPrompt + '\n\n---\n' + userPrompt }] }

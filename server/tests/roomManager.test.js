@@ -647,6 +647,161 @@ async function testRoomManager() {
     console.log('    ✓ Remove Player & Delete Room passed');
   }
 
+  // 17. Sequence Race Partial Scoring Edge Cases
+  {
+    console.log('  Testing Sequence Race Partial Scoring & Input Edge Cases...');
+    const rm = new RoomManager();
+    const customSeqQuiz = {
+      id: 'seq-edge-quiz',
+      title: 'Sequence Edge Quiz',
+      questions: [
+        {
+          id: 'q-seq-1',
+          questionType: 'SEQUENCE',
+          questionText: 'Order 1 to 4',
+          timeLimitSeconds: 20,
+          sequenceItems: [
+            { id: 'item-1', text: 'Step 1' },
+            { id: 'item-2', text: 'Step 2' },
+            { id: 'item-3', text: 'Step 3' },
+            { id: 'item-4', text: 'Step 4' }
+          ]
+        }
+      ]
+    };
+    const room = rm.createRoom('host-seq-edge', customSeqQuiz);
+    const p1 = rm.joinPlayer(room.pin, 'sock-seq-1', { name: 'Player Zero Match' }).player;
+    const p2 = rm.joinPlayer(room.pin, 'sock-seq-2', { name: 'Player Duplicate IDs' }).player;
+    const p3 = rm.joinPlayer(room.pin, 'sock-seq-3', { name: 'Player Empty Array' }).player;
+
+    rm.startQuestion(room.pin, 0);
+
+    // p1 submits completely inverted order: ['item-4', 'item-3', 'item-2', 'item-1'] -> 0 correct positions
+    const resP1 = rm.submitAnswer(room.pin, p1.playerId, ['item-4', 'item-3', 'item-2', 'item-1']);
+    assert.strictEqual(resP1.isCorrect, false);
+    assert.strictEqual(resP1.details.correctPositions, 0);
+    assert.strictEqual(resP1.pointsEarned, 0, 'Zero correct positions should yield 0 points');
+
+    // p2 submits duplicates ['item-1', 'item-1', 'item-1', 'item-1'] -> only position 0 matches (1 correct)
+    const resP2 = rm.submitAnswer(room.pin, p2.playerId, { orderedItemIds: ['item-1', 'item-1', 'item-1', 'item-1'] });
+    assert.strictEqual(resP2.isCorrect, false);
+    assert.strictEqual(resP2.details.correctPositions, 1);
+    assert.ok(resP2.pointsEarned > 0, '1 of 4 matching should earn proportional points');
+
+    // p3 submits empty array []
+    const resP3 = rm.submitAnswer(room.pin, p3.playerId, []);
+    assert.strictEqual(resP3.isCorrect, false);
+    assert.strictEqual(resP3.details.correctPositions, 0);
+    assert.strictEqual(resP3.pointsEarned, 0);
+
+    const qResult = rm.getQuestionResult(room.pin);
+    assert.strictEqual(qResult.questionType, 'SEQUENCE');
+    assert.strictEqual(qResult.perfectCount, 0);
+    assert.strictEqual(qResult.partialCount, 1, 'Only p2 qualifies as partial');
+
+    console.log('    ✓ Sequence Race Partial Scoring & Input Edge Cases passed');
+  }
+
+  // 18. Streak Cap (+200 max) & Comeback Bonus Boundary & Timeout Reset
+  {
+    console.log('  Testing Streak Cap (+200 max) & Comeback Bonus Boundary & Timeout Reset...');
+    const rm = new RoomManager();
+    const streakQuiz = {
+      id: 'streak-quiz-7',
+      title: 'Streak Cap Quiz',
+      questions: Array.from({ length: 7 }, (_, i) => ({
+        id: `q-strk-${i}`,
+        questionText: `Question ${i + 1}`,
+        timeLimitSeconds: 15,
+        options: [
+          { id: `opt-${i}-corr`, text: 'Correct Option', isCorrect: true },
+          { id: `opt-${i}-wrong`, text: 'Wrong Option', isCorrect: false }
+        ]
+      }))
+    };
+    const room = rm.createRoom('host-streak-cap', streakQuiz);
+    const p1 = rm.joinPlayer(room.pin, 's-streak-1', { name: 'Top Player' }).player;
+    const p2 = rm.joinPlayer(room.pin, 's-streak-2', { name: 'Bottom Player' }).player;
+
+    // Advance 6 questions answering correctly to hit streak bonus cap
+    // Streak 1: bonus 0
+    // Streak 2: bonus 50
+    // Streak 3: bonus 100
+    // Streak 4: bonus 150
+    // Streak 5: bonus 200 (capped)
+    // Streak 6: bonus 200 (capped at 200)
+    for (let q = 0; q < 6; q++) {
+      rm.startQuestion(room.pin, q);
+      const optId = `opt-${q}-corr`;
+      const res = rm.submitAnswer(room.pin, p1.playerId, optId);
+      assert.strictEqual(res.isCorrect, true);
+      assert.strictEqual(p1.streak, q + 1);
+      if (q + 1 >= 5) {
+        assert.strictEqual(res.streakBonus, 200, `Streak >= 5 must be capped at 200 bonus pts, got ${res.streakBonus}`);
+      }
+    }
+
+    // Comeback Bonus: p2 is currently at 0 points while p1 has high points
+    // When question starts at index 6 (>= 1), p2 is in bottom half
+    rm.startQuestion(room.pin, 6);
+    assert.ok(room.bottomHalfPlayerIds.has(p2.playerId), 'p2 should be flagged as bottom half player');
+    assert.ok(!room.bottomHalfPlayerIds.has(p1.playerId), 'p1 (leader) should NOT be bottom half');
+
+    const optIdQ6 = `opt-6-corr`;
+    const p2Ans = rm.submitAnswer(room.pin, p2.playerId, optIdQ6);
+    assert.strictEqual(p2Ans.isComeback, true, 'p2 should receive comeback bonus');
+    assert.strictEqual(p2Ans.comebackBonus, 40, 'Comeback bonus must be +40 points');
+
+    // Timeout streak reset: p1 did NOT answer Q6. getQuestionResult should reset p1 streak to 0!
+    rm.getQuestionResult(room.pin);
+    assert.strictEqual(p1.streak, 0, 'Unanswered player must have streak reset to 0');
+    assert.strictEqual(p1.streakBonus, 0);
+    assert.ok(p1.highestStreak >= 6, 'highestStreak must be preserved');
+
+    console.log('    ✓ Streak Cap (+200 max) & Comeback Bonus Boundary & Timeout Reset passed');
+  }
+
+  // 19. Team Mode Dynamic Score Aggregation & Leaderboard
+  {
+    console.log('  Testing Team Mode Score Aggregation & Leaderboard...');
+    const rm = new RoomManager();
+    const room = rm.createRoom('host-team-score');
+    rm.setTeamsEnabled(room.pin, true);
+
+    const teamRed = rm.createTeam(room.pin, { name: 'Red Tigers', color: '#FF0000' });
+    const teamBlue = rm.createTeam(room.pin, { name: 'Blue Eagles', color: '#0000FF' });
+
+    const pA = rm.joinPlayer(room.pin, 's-tm-1', { name: 'Alpha' }).player;
+    const pB = rm.joinPlayer(room.pin, 's-tm-2', { name: 'Beta' }).player;
+    const pC = rm.joinPlayer(room.pin, 's-tm-3', { name: 'Gamma' }).player;
+
+    rm.assignPlayerToTeam(room.pin, pA.playerId, teamRed.id);
+    rm.assignPlayerToTeam(room.pin, pB.playerId, teamRed.id);
+    rm.assignPlayerToTeam(room.pin, pC.playerId, teamBlue.id);
+
+    // Initial team scores should be 0
+    let teamLb = rm.getTeamLeaderboard(room.pin);
+    assert.strictEqual(teamLb[0].totalScore, 0);
+    assert.strictEqual(teamLb[1].totalScore, 0);
+
+    // Answer Q0: pA gets 800, pB gets 600, pC gets 500
+    rm.startQuestion(room.pin, 0);
+    const correctOpt = room.quizSet.questions[0].options.find(o => o.isCorrect).id;
+    rm.submitAnswer(room.pin, pA.playerId, correctOpt);
+    rm.submitAnswer(room.pin, pB.playerId, correctOpt);
+    rm.submitAnswer(room.pin, pC.playerId, correctOpt);
+
+    teamLb = rm.getTeamLeaderboard(room.pin);
+    const redEntry = teamLb.find(t => t.id === teamRed.id);
+    const blueEntry = teamLb.find(t => t.id === teamBlue.id);
+
+    assert.strictEqual(redEntry.totalScore, pA.score + pB.score, 'Red team score must be sum of Alpha and Beta');
+    assert.strictEqual(blueEntry.totalScore, pC.score, 'Blue team score must equal Gamma score');
+    assert.ok(redEntry.totalScore > blueEntry.totalScore, 'Red team with 2 scoring players should lead');
+
+    console.log('    ✓ Team Mode Score Aggregation & Leaderboard passed');
+  }
+
   console.log('✅ RoomManager tests passed cleanly!');
 }
 
