@@ -133,7 +133,7 @@ function saveQuiz(quiz) {
     quiz.id = `quiz-${Date.now()}`;
   }
 
-  if (!quiz.description) {
+  if (quiz.description === undefined || quiz.description === null) {
     quiz.description = '';
   }
 

@@ -4,6 +4,14 @@ module.exports = function setupSocketHandlers(io) {
   io.on('connection', (socket) => {
     console.log(`[Socket Connected] ID: ${socket.id}`);
 
+    function verifyHost(pin, token = null) {
+      const room = roomManager.getRoom(pin);
+      if (!room) throw new Error('ไม่พบห้องดังกล่าว');
+      if (token && room.hostToken && token === room.hostToken) return room;
+      if (room.hostSocketId === socket.id) return room;
+      throw new Error('คุณไม่มีสิทธิ์ในการควบคุมห้องนี้ (Unauthorized Host Action)');
+    }
+
     // --- HOST HANDLERS ---
     socket.on('create_room', (customQuizSet, ackCallback) => {
       try {
@@ -13,6 +21,7 @@ module.exports = function setupSocketHandlers(io) {
         const response = {
           success: true,
           pin: room.pin,
+          hostToken: room.hostToken,
           mode: room.mode,
           status: room.status,
           quizSet: room.quizSet,
@@ -32,10 +41,10 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('reconnect_host', ({ pin }, ackCallback) => {
+    socket.on('reconnect_host', ({ pin, hostToken }, ackCallback) => {
       try {
         if (!pin) return;
-        const snapshot = roomManager.reconnectHost(pin, socket.id);
+        const snapshot = roomManager.reconnectHost(pin, socket.id, hostToken);
         socket.join(pin);
 
         if (typeof ackCallback === 'function') {
@@ -56,10 +65,9 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('start_quiz', ({ pin }) => {
+    socket.on('start_quiz', ({ pin, hostToken }) => {
       try {
-        const room = roomManager.getRoom(pin);
-        if (!room) return socket.emit('error_message', { message: 'ไม่พบห้อง' });
+        const room = verifyHost(pin, hostToken);
 
         if (room.questionTimer) {
           clearTimeout(room.questionTimer);
@@ -113,10 +121,9 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('next_question', ({ pin }) => {
+    socket.on('next_question', ({ pin, hostToken }) => {
       try {
-        const room = roomManager.getRoom(pin);
-        if (!room) return socket.emit('error_message', { message: 'ไม่พบห้อง' });
+        const room = verifyHost(pin, hostToken);
 
         if (room.status === 'ENDED') {
           const leaderboard = roomManager.getLeaderboard(pin);
@@ -181,14 +188,17 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('show_leaderboard', ({ pin }) => {
+    socket.on('show_leaderboard', ({ pin, hostToken }) => {
       try {
-        const room = roomManager.getRoom(pin);
-        if (!room) return socket.emit('error_message', { message: 'ไม่พบห้อง' });
+        const room = verifyHost(pin, hostToken);
 
         if (room.questionTimer) {
           clearTimeout(room.questionTimer);
           room.questionTimer = null;
+        }
+        if (room.prepareTimer) {
+          clearTimeout(room.prepareTimer);
+          room.prepareTimer = null;
         }
 
         const leaderboard = roomManager.getLeaderboard(pin);
@@ -205,10 +215,9 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('switch_mode', ({ pin, mode }) => {
+    socket.on('switch_mode', ({ pin, mode, hostToken }) => {
       try {
-        const room = roomManager.getRoom(pin);
-        if (!room) return socket.emit('error_message', { message: 'ไม่พบห้อง' });
+        const room = verifyHost(pin, hostToken);
 
         if (room.questionTimer) {
           clearTimeout(room.questionTimer);
@@ -235,10 +244,9 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('send_pulse_nudge', ({ pin }) => {
+    socket.on('send_pulse_nudge', ({ pin, hostToken }) => {
       try {
-        const room = roomManager.getRoom(pin);
-        if (!room) return socket.emit('error_message', { message: 'ไม่พบห้องดังกล่าว' });
+        const room = verifyHost(pin, hostToken);
 
         const unvotedPlayers = Array.from(room.players.values()).filter(
           p => p.isConnected && !room.votedPulseUsers.has(p.playerId)
@@ -253,7 +261,29 @@ module.exports = function setupSocketHandlers(io) {
           }
         });
       } catch (err) {
-        console.error('[Socket Error] send_pulse_nudge:', err);
+        socket.emit('error_message', { message: err.message });
+      }
+    });
+
+    socket.on('reset_to_lobby', ({ pin, hostToken }) => {
+      try {
+        const room = verifyHost(pin, hostToken);
+
+        if (room.questionTimer) {
+          clearTimeout(room.questionTimer);
+          room.questionTimer = null;
+        }
+        if (room.prepareTimer) {
+          clearTimeout(room.prepareTimer);
+          room.prepareTimer = null;
+        }
+
+        room.status = 'LOBBY';
+        room.currentAnswers.clear();
+        io.to(pin).emit('room_reset_to_lobby', { status: 'LOBBY' });
+      } catch (err) {
+        console.error('[Socket Error] reset_to_lobby:', err);
+        socket.emit('error_message', { message: err.message });
       }
     });
 

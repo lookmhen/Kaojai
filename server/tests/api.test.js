@@ -117,11 +117,12 @@ async function testApiEndpoints() {
     console.log('    ✓ GET /api/quizzes passed');
 
     console.log('  Testing POST /api/quizzes...');
-    const newQuiz = { title: 'Automated Test Quiz Set', questions: [] };
+    const newQuiz = { title: 'Automated Test Quiz Set', description: 'Automated Test Description', questions: [] };
     const resPostQuiz = await httpPost(`http://localhost:${port}/api/quizzes`, { quiz: newQuiz });
     assert.strictEqual(resPostQuiz.statusCode, 200);
     assert.strictEqual(resPostQuiz.body.success, true);
     assert.strictEqual(resPostQuiz.body.quiz.title, 'Automated Test Quiz Set');
+    const createdQuizId = resPostQuiz.body.quiz.id;
     console.log('    ✓ POST /api/quizzes passed');
 
     console.log('  Testing POST /api/quizzes/:id/duplicate...');
@@ -130,6 +131,7 @@ async function testApiEndpoints() {
     assert.strictEqual(resDup.body.success, true);
     assert.ok(resDup.body.quiz.title.includes('(คัดลอก)'));
     assert.notStrictEqual(resDup.body.quiz.id, 'quiz-1');
+    const dupQuizId = resDup.body.quiz.id;
     console.log('    ✓ POST /api/quizzes/:id/duplicate passed');
 
     console.log('  Testing POST /api/upload...');
@@ -155,6 +157,8 @@ async function testApiEndpoints() {
     // Clean up
     const { deleteQuiz } = require('../src/quizData');
     deleteQuiz('test-import-api');
+    if (createdQuizId) deleteQuiz(createdQuizId);
+    if (dupQuizId) deleteQuiz(dupQuizId);
 
   } finally {
     testServer.close();

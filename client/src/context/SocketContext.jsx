@@ -12,7 +12,8 @@ export const SocketProvider = ({ children }) => {
       playerId: sessionStorage.getItem('kaojai_playerId') || null,
       name: sessionStorage.getItem('kaojai_name') || null,
       avatar: sessionStorage.getItem('kaojai_avatar') || null,
-      isHost: sessionStorage.getItem('kaojai_isHost') === 'true'
+      isHost: sessionStorage.getItem('kaojai_isHost') === 'true',
+      hostToken: sessionStorage.getItem('kaojai_hostToken') || null
     };
   });
 
@@ -33,11 +34,12 @@ export const SocketProvider = ({ children }) => {
       const savedName = sessionStorage.getItem('kaojai_name');
       const savedAvatar = sessionStorage.getItem('kaojai_avatar');
       const isHost = sessionStorage.getItem('kaojai_isHost') === 'true';
+      const hostToken = sessionStorage.getItem('kaojai_hostToken');
 
       if (savedPin) {
         if (isHost) {
           console.log('Reconnecting as Host for PIN:', savedPin);
-          newSocket.emit('reconnect_host', { pin: savedPin }, (res) => {
+          newSocket.emit('reconnect_host', { pin: savedPin, hostToken }, (res) => {
             if (res && !res.success) {
               console.log('Stale host session expired, clearing session...');
               clearSession();
@@ -72,14 +74,15 @@ export const SocketProvider = ({ children }) => {
     };
   }, []);
 
-  const saveSessionData = ({ pin, playerId, name, avatar, isHost }) => {
+  const saveSessionData = ({ pin, playerId, name, avatar, isHost, hostToken }) => {
     if (pin) sessionStorage.setItem('kaojai_pin', pin);
     if (playerId) sessionStorage.setItem('kaojai_playerId', playerId);
     if (name) sessionStorage.setItem('kaojai_name', name);
     if (avatar) sessionStorage.setItem('kaojai_avatar', avatar);
     if (isHost !== undefined) sessionStorage.setItem('kaojai_isHost', String(isHost));
+    if (hostToken) sessionStorage.setItem('kaojai_hostToken', hostToken);
 
-    setSession({ pin, playerId, name, avatar, isHost });
+    setSession({ pin, playerId, name, avatar, isHost, hostToken });
   };
 
   const clearSession = () => {
@@ -88,7 +91,8 @@ export const SocketProvider = ({ children }) => {
     sessionStorage.removeItem('kaojai_name');
     sessionStorage.removeItem('kaojai_avatar');
     sessionStorage.removeItem('kaojai_isHost');
-    setSession({ pin: null, playerId: null, name: null, avatar: null, isHost: false });
+    sessionStorage.removeItem('kaojai_hostToken');
+    setSession({ pin: null, playerId: null, name: null, avatar: null, isHost: false, hostToken: null });
   };
 
   return (

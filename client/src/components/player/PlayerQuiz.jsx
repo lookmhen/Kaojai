@@ -163,30 +163,40 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
           feedback={feedback}
           result={result}
         />
-      ) : feedback ? (
+      ) : (feedback || result) ? (
         <div
           className="glass-card animate-pop"
           style={{
             textAlign: 'center',
             padding: '28px 20px',
-            background: feedback.isCorrect ? '#F0FDF4' : '#FEF2F2',
-            border: feedback.isCorrect ? '2px solid #166534' : '2px solid #991B1B'
+            background: feedback ? (feedback.isCorrect ? '#F0FDF4' : '#FEF2F2') : '#F8FAFC',
+            border: feedback ? (feedback.isCorrect ? '2px solid #166534' : '2px solid #991B1B') : '2px solid #CBD5E1'
           }}
         >
-          {feedback.isCorrect ? (
-            <>
-              <CheckCircle2 size={50} color="#166534" style={{ marginBottom: '10px' }} />
-              <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#166534' }}>ถูกต้องที่สุด! 🎉</h3>
-              <p style={{ fontSize: '1.15rem', marginTop: '6px', fontWeight: 700, color: '#15803D' }}>
-                +{feedback.pointsEarned} คะแนน!
-              </p>
-            </>
+          {feedback ? (
+            feedback.isCorrect ? (
+              <>
+                <CheckCircle2 size={50} color="#166534" style={{ marginBottom: '10px' }} />
+                <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#166534' }}>ถูกต้องที่สุด! 🎉</h3>
+                <p style={{ fontSize: '1.15rem', marginTop: '6px', fontWeight: 700, color: '#15803D' }}>
+                  +{feedback.pointsEarned} คะแนน!
+                </p>
+              </>
+            ) : (
+              <>
+                <XCircle size={50} color="#991B1B" style={{ marginBottom: '10px' }} />
+                <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#991B1B' }}>ยังไม่ถูกต้อง 😅</h3>
+                <p style={{ fontSize: '0.95rem', marginTop: '6px', color: 'var(--text-muted)' }}>
+                  ไม่ต้องเสียใจ สะสมความเข้าใจในข้อถัดไปกันนะ!
+                </p>
+              </>
+            )
           ) : (
             <>
-              <XCircle size={50} color="#991B1B" style={{ marginBottom: '10px' }} />
-              <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#991B1B' }}>ยังไม่ถูกต้อง 😅</h3>
+              <Clock size={50} color="#D97706" style={{ marginBottom: '10px' }} />
+              <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#B45309' }}>หมดเวลาตอบคำถาม ⏳</h3>
               <p style={{ fontSize: '0.95rem', marginTop: '6px', color: 'var(--text-muted)' }}>
-                ไม่ต้องเสียใจ สะสมความเข้าใจในข้อถัดไปกันนะ!
+                ไม่ได้ส่งคำตอบทันในรอบนี้ ลุยต่อในข้อถัดไปนะ!
               </p>
             </>
           )}

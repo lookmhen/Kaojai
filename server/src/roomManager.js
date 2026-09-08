@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { defaultQuizSets } = require('./quizData');
 
 class RoomManager {
@@ -17,10 +18,12 @@ class RoomManager {
   createRoom(hostSocketId, customQuizSet = null) {
     const pin = this.generatePin();
     const quizSet = customQuizSet || this.quizSets[0];
+    const hostToken = crypto.randomUUID();
     
     const room = {
       pin,
       hostSocketId,
+      hostToken,
       mode: 'QUIZ', // 'QUIZ' or 'PULSE'
       quizSet,
       currentQuestionIndex: -1,
@@ -52,10 +55,14 @@ class RoomManager {
     return null;
   }
 
-  reconnectHost(pin, hostSocketId) {
+  reconnectHost(pin, hostSocketId, hostToken = null) {
     const room = this.rooms.get(pin);
     if (!room) {
       throw new Error('ไม่พบห้องหรือเซสชันของคุณหมดอายุแล้ว');
+    }
+
+    if (room.hostToken && hostToken && room.hostToken !== hostToken) {
+      throw new Error('รหัสยืนยันผู้สอนไม่ถูกต้อง คุณไม่มีสิทธิ์เข้าถึงห้องนี้');
     }
 
     room.hostSocketId = hostSocketId;
@@ -77,6 +84,7 @@ class RoomManager {
     return {
       success: true,
       pin: room.pin,
+      hostToken: room.hostToken,
       mode: room.mode,
       status: room.status,
       quizSet: room.quizSet,
@@ -89,6 +97,20 @@ class RoomManager {
       teamsEnabled: room.teamsEnabled,
       teams: this.getTeamList(pin)
     };
+  }
+
+  deleteRoom(pin) {
+    const room = this.rooms.get(pin);
+    if (!room) return false;
+
+    if (room.questionTimer) clearTimeout(room.questionTimer);
+    if (room.prepareTimer) clearTimeout(room.prepareTimer);
+    for (const player of room.players.values()) {
+      if (player.disconnectTimeout) clearTimeout(player.disconnectTimeout);
+    }
+    this.rooms.delete(pin);
+    console.log(`[Room Cleaned] Deleted room ${pin}`);
+    return true;
   }
 
   joinPlayer(pin, socketId, { name, avatar, playerId: clientPlayerId }) {
@@ -179,6 +201,12 @@ class RoomManager {
           player.isConnected = false;
           if (player.disconnectTimeout) clearTimeout(player.disconnectTimeout);
           player.disconnectTimeout = setTimeout(() => {
+            if (player.teamId && room.teams.has(player.teamId)) {
+              room.teams.get(player.teamId).memberIds.delete(playerId);
+            }
+            if (player.pulseChoice && room.pulseVotes[player.pulseChoice] !== undefined) {
+              room.pulseVotes[player.pulseChoice] = Math.max(0, room.pulseVotes[player.pulseChoice] - 1);
+            }
             room.players.delete(playerId);
             room.currentAnswers.delete(playerId);
             room.votedPulseUsers.delete(playerId);

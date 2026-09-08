@@ -31,12 +31,7 @@ const io = new Server(server, {
   }
 });
 
-// Static uploads serving
-const uploadsDir = path.join(__dirname, '../public/uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-app.use('/uploads', express.static(uploadsDir));
+
 
 // REST Health Check & Quiz CRUD Endpoints
 app.get('/api/health', (req, res) => {
@@ -108,21 +103,49 @@ app.post('/api/quizzes/import', (req, res) => {
   }
 });
 
-// Image Upload Endpoint
+const ALLOWED_MIME_TYPES = {
+  'image/jpeg': 'jpg',
+  'image/jpg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif'
+};
+
+// Static uploads serving with security headers
+const uploadsDir = path.join(__dirname, '../public/uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  next();
+}, express.static(uploadsDir));
+
+// Image Upload Endpoint with Strict MIME Whitelist and 5MB Limit
 app.post('/api/upload', (req, res) => {
   try {
-    const { imageData, fileName } = req.body;
-    if (!imageData) {
+    const { imageData } = req.body;
+    if (!imageData || typeof imageData !== 'string') {
       return res.status(400).json({ success: false, message: 'ไม่มีข้อมูลรูปภาพ' });
     }
 
-    const matches = imageData.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
+    const matches = imageData.match(/^data:(image\/[a-zA-Z0-9.-]+);base64,(.+)$/);
     if (!matches) {
-      return res.json({ success: true, imageUrl: imageData });
+      return res.status(400).json({ success: false, message: 'รูปแบบ Base64 รูปภาพไม่ถูกต้อง' });
     }
 
-    const ext = matches[1] || 'png';
+    const mimeType = matches[1].toLowerCase();
+    const ext = ALLOWED_MIME_TYPES[mimeType];
+    if (!ext) {
+      return res.status(400).json({ success: false, message: 'รองรับเฉพาะไฟล์ JPG, PNG, WEBP, GIF เท่านั้น' });
+    }
+
     const base64Data = matches[2];
+    const byteLength = Buffer.byteLength(base64Data, 'base64');
+    if (byteLength > 5 * 1024 * 1024) {
+      return res.status(400).json({ success: false, message: 'ขนาดรูปภาพต้องไม่เกิน 5MB' });
+    }
+
     const safeFileName = `img_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
     const filePath = path.join(uploadsDir, safeFileName);
 

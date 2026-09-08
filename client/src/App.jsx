@@ -59,7 +59,7 @@ export function AppContent() {
       if (data.teams) setTeams(data.teams);
       setStatus('LOBBY');
       setViewMode('HOST_GAME');
-      saveSessionData({ pin: data.pin, isHost: true });
+      saveSessionData({ pin: data.pin, isHost: true, hostToken: data.hostToken });
     };
 
     const onHostReconnected = (data) => {
@@ -75,7 +75,7 @@ export function AppContent() {
       if (data.teamsEnabled !== undefined) setTeamsEnabled(data.teamsEnabled);
       if (data.teams) setTeams(data.teams);
       setViewMode('HOST_GAME');
-      saveSessionData({ pin: data.pin, isHost: true });
+      saveSessionData({ pin: data.pin, isHost: true, hostToken: data.hostToken || session.hostToken });
     };
 
     const onRoomUpdated = (data) => {
@@ -220,6 +220,13 @@ export function AppContent() {
       });
     };
 
+    const onRoomResetToLobby = (data) => {
+      setPrepareData(null);
+      setCurrentQuestion(null);
+      setQuestionResult(null);
+      setStatus('LOBBY');
+    };
+
     socket.on('room_created', onRoomCreated);
     socket.on('host_reconnected', onHostReconnected);
     socket.on('room_updated', onRoomUpdated);
@@ -236,6 +243,7 @@ export function AppContent() {
     socket.on('error_message', onErrorMessage);
     socket.on('teams_toggled', onTeamsToggled);
     socket.on('teams_updated', onTeamsUpdated);
+    socket.on('room_reset_to_lobby', onRoomResetToLobby);
 
     return () => {
       socket.off('room_created', onRoomCreated);
@@ -254,8 +262,9 @@ export function AppContent() {
       socket.off('error_message', onErrorMessage);
       socket.off('teams_toggled', onTeamsToggled);
       socket.off('teams_updated', onTeamsUpdated);
+      socket.off('room_reset_to_lobby', onRoomResetToLobby);
     };
-  }, [socket]);
+  }, [socket, session.hostToken]);
 
   // Host Action Handlers
   const handleCreateRoom = (customQuizId) => {
@@ -265,22 +274,27 @@ export function AppContent() {
 
   const handleStartQuiz = (quizId) => {
     if (!socket) return;
-    socket.emit('start_quiz', { pin });
+    socket.emit('start_quiz', { pin, hostToken: session.hostToken });
   };
 
   const handleNextQuestion = () => {
     if (!socket || status === 'ENDED') return;
-    socket.emit('next_question', { pin });
+    socket.emit('next_question', { pin, hostToken: session.hostToken });
   };
 
   const handleShowLeaderboard = () => {
     if (!socket) return;
-    socket.emit('show_leaderboard', { pin });
+    socket.emit('show_leaderboard', { pin, hostToken: session.hostToken });
   };
 
   const handleSwitchMode = (targetMode) => {
     if (!socket) return;
-    socket.emit('switch_mode', { pin, mode: targetMode });
+    socket.emit('switch_mode', { pin, mode: targetMode, hostToken: session.hostToken });
+  };
+
+  const handleResetToLobby = () => {
+    if (!socket) return;
+    socket.emit('reset_to_lobby', { pin, hostToken: session.hostToken });
   };
 
   const handleLeaveSession = () => {
@@ -387,7 +401,7 @@ export function AppContent() {
               pulseVotes={pulseVotes}
               isEnded={status === 'ENDED'}
               onNextQuestion={handleNextQuestion}
-              onResetToLobby={() => setStatus('LOBBY')}
+              onResetToLobby={handleResetToLobby}
             />
           ) : (
             <HostQuiz
