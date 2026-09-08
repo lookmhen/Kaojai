@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { sfx } from '../../utils/audioSFX';
-import { Users, Smile, Meh, Frown, Activity, Bell, Sparkles, Zap, Flame, Lightbulb, Heart, CheckCircle2, AlertTriangle, HelpCircle } from 'lucide-react';
+import { Users, Smile, Meh, Frown, Activity, Bell, Sparkles, Zap, Flame, Heart, HelpCircle } from 'lucide-react';
 
 export const HostPulse = ({ pin, pulseVotes, pulseAnsweredCount, totalPlayers }) => {
   const { socket } = useSocket();
@@ -62,30 +62,6 @@ export const HostPulse = ({ pin, pulseVotes, pulseAnsweredCount, totalPlayers })
     setIsNudged(true);
     setTimeout(() => setIsNudged(false), 3000);
   };
-
-  // Determine Smart Trainer Advice
-  let adviceColor = '#10B981';
-  let adviceBg = '#ECFDF5';
-  let adviceBorder = '#A7F3D0';
-  let adviceTitle = 'ห้องเรียนพลังงานยอดเยี่ยม & เข้าใจชัดเจน 🚀';
-  let adviceText = 'ผู้เรียนส่วนใหญ่เข้าใจเนื้อหาเป็นอย่างดี วิทยากรสามารถลุยต่อหรือเพิ่มหัวข้อเจาะลึกได้เลยครับ';
-  let adviceIcon = <CheckCircle2 size={24} color="#059669" />;
-
-  if (redPct >= 25) {
-    adviceColor = '#EF4444';
-    adviceBg = '#FEF2F2';
-    adviceBorder = '#FECDD3';
-    adviceTitle = 'มีผู้เรียนสะดุดในเนื้อหานี้ (Need Recap) ⚠️';
-    adviceText = 'มีผู้เรียนมากกว่า 25% ขอให้สรุปซ้ำ แนะนำให้หยุดถามคำถามสั้นๆ หรือให้เพื่อนช่วยแชร์ความเข้าใจก่อนไปต่อครับ';
-    adviceIcon = <AlertTriangle size={24} color="#DC2626" />;
-  } else if (yellowPct >= 30) {
-    adviceColor = '#D97706';
-    adviceBg = '#FFFBEB';
-    adviceBorder = '#FDE68A';
-    adviceTitle = 'ผู้เรียนกำลังต้องการตัวอย่างจริง (Need Case Study) 💡';
-    adviceText = 'ผู้เรียนอยากเห็นตัวอย่างการนำไปใช้จริง แนะนำให้เปิดภาพ Case Study หรือเล่าสถานการณ์ตัวอย่างประกอบครับ';
-    adviceIcon = <Lightbulb size={24} color="#D97706" />;
-  }
 
   return (
     <div style={{ maxWidth: '1020px', margin: '24px auto', padding: '0 24px', position: 'relative' }}>
@@ -376,45 +352,6 @@ export const HostPulse = ({ pin, pulseVotes, pulseAnsweredCount, totalPlayers })
                 }}
               />
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Smart Trainer Insights & Dynamic Advice Banner */}
-      <div
-        className="glass-card animate-pop"
-        style={{
-          padding: '20px 24px',
-          background: adviceBg,
-          border: `2px solid ${adviceBorder}`,
-          borderRadius: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '18px',
-          boxShadow: '0 6px 18px rgba(15, 23, 42, 0.04)'
-        }}
-      >
-        <div
-          style={{
-            width: '52px',
-            height: '52px',
-            borderRadius: '16px',
-            background: '#FFFFFF',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-          }}
-        >
-          {adviceIcon}
-        </div>
-        <div style={{ flex: 1, textAlign: 'left' }}>
-          <div style={{ fontSize: '1.1rem', fontWeight: 900, color: adviceColor, marginBottom: '2px' }}>
-            {adviceTitle}
-          </div>
-          <div style={{ fontSize: '0.92rem', color: '#334155', fontWeight: 600, lineHeight: 1.4 }}>
-            {adviceText}
           </div>
         </div>
       </div>
