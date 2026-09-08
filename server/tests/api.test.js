@@ -66,6 +66,14 @@ async function testApiEndpoints() {
   app.use(express.json({ limit: '20mb' }));
 
   app.get('/api/health', (req, res) => res.json({ status: 'ok', service: 'KaoJai Real-time Quiz Engine' }));
+  app.get('/api/server-info', (req, res) => {
+    res.json({
+      success: true,
+      localIp: '192.168.1.100',
+      configuredHost: process.env.PUBLIC_HOST || null,
+      serverPort: 4000
+    });
+  });
   app.get('/api/quizzes', (req, res) => res.json({ quizzes: defaultQuizSets }));
   app.post('/api/quizzes', (req, res) => {
     const { quiz } = req.body;
@@ -113,6 +121,13 @@ async function testApiEndpoints() {
     assert.strictEqual(resHealth.body.status, 'ok');
     assert.strictEqual(resHealth.body.service, 'KaoJai Real-time Quiz Engine');
     console.log('    ✓ GET /api/health passed');
+
+    console.log('  Testing GET /api/server-info...');
+    const resServerInfo = await httpGet(`http://localhost:${port}/api/server-info`);
+    assert.strictEqual(resServerInfo.statusCode, 200);
+    assert.strictEqual(resServerInfo.body.success, true);
+    assert.ok(resServerInfo.body.localIp);
+    console.log('    ✓ GET /api/server-info passed');
 
     console.log('  Testing GET /api/quizzes...');
     const resQuizzes = await httpGet(`http://localhost:${port}/api/quizzes`);

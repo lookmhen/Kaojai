@@ -5,9 +5,30 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const setupSocketHandlers = require('./socketHandler');
 const { getAllQuizzes, saveQuiz, deleteQuiz, duplicateQuiz, importQuizzes } = require('./quizData');
 const { generateAiQuiz } = require('./aiService');
+
+function getLocalIpAddress() {
+  const interfaces = os.networkInterfaces();
+  const candidates = [];
+
+  for (const name of Object.keys(interfaces)) {
+    for (const net of interfaces[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        // Prioritize common Wi-Fi and Ethernet adapters
+        const lowerName = name.toLowerCase();
+        const isVirtual = lowerName.includes('vethernet') || lowerName.includes('virtual') || lowerName.includes('wsl');
+        candidates.push({ address: net.address, isVirtual, name });
+      }
+    }
+  }
+
+  // Sort physical adapters first
+  candidates.sort((a, b) => (a.isVirtual === b.isVirtual ? 0 : a.isVirtual ? 1 : -1));
+  return candidates[0]?.address || 'localhost';
+}
 
 const app = express();
 app.use(cors());
@@ -35,9 +56,20 @@ const io = new Server(server, {
 
 
 
-// REST Health Check & Quiz CRUD Endpoints
+// REST Health Check & Server Info
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'KaoJai Real-time Quiz Engine' });
+});
+
+app.get('/api/server-info', (req, res) => {
+  const localIp = getLocalIpAddress();
+  const configuredHost = process.env.PUBLIC_HOST || process.env.SERVER_HOST || null;
+  res.json({
+    success: true,
+    localIp,
+    configuredHost,
+    serverPort: process.env.PORT || 4000
+  });
 });
 
 app.get('/api/quizzes', (req, res) => {

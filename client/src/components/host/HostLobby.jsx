@@ -18,6 +18,7 @@ export const HostLobby = ({
   const [newTeamColor, setNewTeamColor] = useState(TEAM_COLOR_PRESETS[0]);
   const [dragOverTeamId, setDragOverTeamId] = useState(null);
   const [isDragOverUnassign, setIsDragOverUnassign] = useState(false);
+  const [serverHost, setServerHost] = useState(null);
 
   useEffect(() => {
     fetch('/api/quizzes')
@@ -29,9 +30,29 @@ export const HostLobby = ({
         }
       })
       .catch(err => console.error('Fetch quizzes error:', err));
+
+    // Fetch actual LAN IP or domain from server
+    fetch('/api/server-info')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const clientPort = window.location.port ? `:${window.location.port}` : '';
+          if (data.configuredHost) {
+            setServerHost(data.configuredHost);
+          } else if (data.localIp && data.localIp !== 'localhost' && data.localIp !== '127.0.0.1') {
+            setServerHost(`${data.localIp}${clientPort}`);
+          }
+        }
+      })
+      .catch(err => console.error('Fetch server info error:', err));
   }, []);
 
-  const joinUrl = `${window.location.origin}/?pin=${pin}`;
+  // Determine the effective host for external participant access:
+  // If host opened via a real domain or IP (not localhost/127.0.0.1), use window.location.host
+  // Otherwise, use serverHost (the LAN IP e.g. 192.168.1.100:3000)
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const effectiveHost = (!isLocalhost || !serverHost) ? window.location.host : serverHost;
+  const joinUrl = `${window.location.protocol}//${effectiveHost}/?pin=${pin}`;
   const qrCodeImgSrc = generateQRCodeSVG(joinUrl, 180);
 
   const connectedPlayers = players.filter(p => p.isConnected !== false);
@@ -69,8 +90,8 @@ export const HostLobby = ({
             <div style={{ fontSize: '4.8rem', fontWeight: 900, color: 'var(--accent-earth-orange)', letterSpacing: '8px', lineHeight: 1 }}>
               {pin}
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '8px' }}>
-              URL: <span style={{ color: 'var(--accent-earth-blue)', fontWeight: 700 }}>{window.location.host}</span>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '8px' }}>
+              URL: <span style={{ color: 'var(--accent-earth-blue)', fontWeight: 800, textDecoration: 'underline' }}>{effectiveHost}</span>
             </p>
           </div>
         </div>
