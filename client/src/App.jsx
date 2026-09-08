@@ -39,6 +39,7 @@ export function AppContent() {
   const [questionResult, setQuestionResult] = useState(null);
   const [pulseVotes, setPulseVotes] = useState({ green: 0, yellow: 0, red: 0 });
   const [leaderboard, setLeaderboard] = useState([]);
+  const [quizAnalytics, setQuizAnalytics] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [prepareData, setPrepareData] = useState(null);
 
@@ -151,6 +152,9 @@ export function AppContent() {
     const onShowLeaderboard = (data) => {
       setPrepareData(null);
       const list = data.leaderboard || [];
+      if (data.quizAnalytics) {
+        setQuizAnalytics(data.quizAnalytics);
+      }
       setLeaderboard(list);
       setPlayerData(prev => {
         const me = list.find(p => p.playerId === prev.playerId);
@@ -166,6 +170,9 @@ export function AppContent() {
     const onQuizEnded = (data) => {
       setPrepareData(null);
       const list = data.leaderboard || [];
+      if (data.quizAnalytics) {
+        setQuizAnalytics(data.quizAnalytics);
+      }
       setLeaderboard(list);
       setPlayerData(prev => {
         const me = list.find(p => p.playerId === prev.playerId);
@@ -224,6 +231,7 @@ export function AppContent() {
       setPrepareData(null);
       setCurrentQuestion(null);
       setQuestionResult(null);
+      setQuizAnalytics(null);
       setStatus('LOBBY');
     };
 
@@ -399,6 +407,7 @@ export function AppContent() {
               pin={pin}
               leaderboard={leaderboard}
               pulseVotes={pulseVotes}
+              quizAnalytics={quizAnalytics}
               isEnded={status === 'ENDED'}
               onNextQuestion={handleNextQuestion}
               onResetToLobby={handleResetToLobby}

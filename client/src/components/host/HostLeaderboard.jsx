@@ -4,7 +4,7 @@ import { sfx } from '../../utils/audioSFX';
 import { Trophy, ArrowRight, Flag, RotateCcw, FileSpreadsheet } from 'lucide-react';
 import { exportGameReportCSV } from '../../utils/exportReport';
 
-export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, isEnded, onNextQuestion, onResetToLobby }) => {
+export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, isEnded, onNextQuestion, onResetToLobby }) => {
   const [animatedScores, setAnimatedScores] = useState({});
 
   useEffect(() => {
@@ -200,7 +200,7 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, isEnded, onNextQ
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
         <button
           type="button"
-          onClick={() => exportGameReportCSV({ pin, leaderboard, pulseVotes })}
+          onClick={() => exportGameReportCSV({ pin, leaderboard, pulseVotes, quizAnalytics })}
           style={{
             padding: '16px 32px',
             borderRadius: '50px',

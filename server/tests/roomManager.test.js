@@ -538,6 +538,49 @@ async function testRoomManager() {
     console.log('    ✓ Answer streak & comeback gamification passed');
   }
 
+  // Test 14: Question History Recording & In-depth Quiz Analytics
+  {
+    console.log('  Testing Question History Recording & getQuizAnalytics...');
+    const rm = new RoomManager();
+    const room = rm.createRoom('host-analytics');
+
+    const p1 = rm.joinPlayer(room.pin, 's1', { name: 'Alice', playerId: 'p1' }).player;
+    const p2 = rm.joinPlayer(room.pin, 's2', { name: 'Bob', playerId: 'p2' }).player;
+
+    // Start Q0
+    rm.startQuestion(room.pin, 0);
+    const q0 = room.quizSet.questions[0];
+    const correct0 = q0.options.find(o => o.isCorrect).id;
+    const wrong0 = q0.options.find(o => !o.isCorrect).id;
+
+    rm.submitAnswer(room.pin, p1.playerId, correct0);
+    rm.submitAnswer(room.pin, p2.playerId, wrong0);
+
+    // Call getQuestionResult
+    const q0Res = rm.getQuestionResult(room.pin);
+    assert.ok(q0Res);
+    assert.strictEqual(room.questionHistory.length, 1);
+
+    const hist0 = room.questionHistory[0];
+    assert.strictEqual(hist0.questionIndex, 0);
+    assert.strictEqual(hist0.correctCount, 1);
+    assert.strictEqual(hist0.incorrectCount, 1);
+    assert.strictEqual(hist0.accuracyPct, 50);
+    assert.strictEqual(hist0.playerResponses[p1.playerId].isCorrect, true);
+    assert.strictEqual(hist0.playerResponses[p2.playerId].isCorrect, false);
+
+    // Get analytics
+    const analytics = rm.getQuizAnalytics(room.pin);
+    assert.ok(analytics);
+    assert.strictEqual(analytics.totalPlayers, 2);
+    assert.strictEqual(analytics.questionHistory.length, 1);
+    assert.strictEqual(analytics.overallAccuracyPct, 50);
+    assert.ok(analytics.hardestQuestion);
+    assert.ok(analytics.easiestQuestion);
+
+    console.log('    ✓ Question History & Quiz Analytics passed');
+  }
+
   console.log('✅ RoomManager tests passed cleanly!');
 }
 

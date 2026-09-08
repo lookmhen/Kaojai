@@ -35,7 +35,8 @@ class RoomManager {
       votedPulseUsers: new Set(),
       pulseVotes: { green: 0, yellow: 0, red: 0 },
       status: 'LOBBY', // 'LOBBY', 'QUESTION', 'QUESTION_RESULT', 'LEADERBOARD', 'ENDED'
-      currentAnswers: new Map() // playerId -> { optionId, isCorrect, timeUsed, pointsEarned }
+      currentAnswers: new Map(), // playerId -> { optionId, isCorrect, timeUsed, pointsEarned }
+      questionHistory: [] // Array of historical question result snapshots for detailed analytics
     };
 
     this.rooms.set(pin, room);
@@ -478,6 +479,8 @@ class RoomManager {
     const isSequence = currentQuestion?.questionType === 'SEQUENCE' || Boolean(currentQuestion?.sequenceItems?.length);
     const counts = this.getPlayerCounts(pin);
 
+    let resultPayload = null;
+
     if (isSequence) {
       let perfectCount = 0;
       let partialCount = 0;
@@ -490,7 +493,7 @@ class RoomManager {
         }
       }
 
-      return {
+      resultPayload = {
         questionId: currentQuestion.id,
         questionType: 'SEQUENCE',
         correctSequence: currentQuestion.sequenceItems.map(item => ({
@@ -502,20 +505,29 @@ class RoomManager {
         answeredCount: counts.answeredCount,
         totalPlayers: counts.totalPlayers
       };
-    }
-
-    // CHOICE mode
-    const optionCounts = {};
-    if (currentQuestion && currentQuestion.options) {
-      currentQuestion.options.forEach(opt => {
-        optionCounts[opt.id] = 0;
-      });
-    }
-
-    for (const answer of room.currentAnswers.values()) {
-      if (answer.optionId && optionCounts[answer.optionId] !== undefined) {
-        optionCounts[answer.optionId] += 1;
+    } else {
+      // CHOICE mode
+      const optionCounts = {};
+      if (currentQuestion && currentQuestion.options) {
+        currentQuestion.options.forEach(opt => {
+          optionCounts[opt.id] = 0;
+        });
       }
+
+      for (const answer of room.currentAnswers.values()) {
+        if (answer.optionId && optionCounts[answer.optionId] !== undefined) {
+          optionCounts[answer.optionId] += 1;
+        }
+      }
+
+      resultPayload = {
+        questionId: currentQuestion ? currentQuestion.id : null,
+        questionType: 'CHOICE',
+        correctOptionId: currentQuestion?.options?.find(o => o.isCorrect)?.id,
+        optionCounts,
+        answeredCount: counts.answeredCount,
+        totalPlayers: counts.totalPlayers
+      };
     }
 
     // Reset streak for players who timed out or did not submit answer
@@ -528,13 +540,145 @@ class RoomManager {
       }
     }
 
-    return {
-      questionId: currentQuestion ? currentQuestion.id : null,
-      questionType: 'CHOICE',
-      correctOptionId: currentQuestion?.options?.find(o => o.isCorrect)?.id,
-      optionCounts,
+    // Record question history snapshot for in-depth analytics
+    if (!room.questionHistory) {
+      room.questionHistory = [];
+    }
+
+    // Avoid duplicate entry for the same question index
+    const existingHistIdx = room.questionHistory.findIndex(h => h.questionIndex === room.currentQuestionIndex);
+
+    // Build per-player response map
+    const playerResponses = {};
+    for (const [pId, player] of room.players.entries()) {
+      const ans = room.currentAnswers.get(pId);
+      if (ans) {
+        let chosenLabel = '-';
+        if (isSequence) {
+          chosenLabel = ans.isCorrect ? 'จัดถูกทั้งหมด (100%)' : `จัดถูก ${ans.correctPositions || 0} ตำแหน่ง`;
+        } else {
+          const opt = currentQuestion.options?.find(o => o.id === ans.optionId);
+          chosenLabel = opt ? opt.text : '-';
+        }
+        playerResponses[pId] = {
+          name: player.name,
+          avatar: player.avatar,
+          hasAnswered: true,
+          isCorrect: Boolean(ans.isCorrect),
+          chosenLabel,
+          optionId: ans.optionId || null,
+          orderedItemIds: ans.orderedItemIds || null,
+          timeUsedMs: ans.timeUsedMs || 0,
+          pointsEarned: ans.pointsEarned || 0,
+          streak: player.streak || 0
+        };
+      } else {
+        playerResponses[pId] = {
+          name: player.name,
+          avatar: player.avatar,
+          hasAnswered: false,
+          isCorrect: false,
+          chosenLabel: 'ไม่ได้ตอบ (หมดเวลา)',
+          optionId: null,
+          orderedItemIds: null,
+          timeUsedMs: (currentQuestion.timeLimitSeconds || 20) * 1000,
+          pointsEarned: 0,
+          streak: 0
+        };
+      }
+    }
+
+    const correctAnswersCount = Array.from(room.currentAnswers.values()).filter(a => a.isCorrect).length;
+    const accuracyPct = counts.totalPlayers > 0 ? Math.round((correctAnswersCount / counts.totalPlayers) * 100) : 0;
+
+    const historyEntry = {
+      questionIndex: room.currentQuestionIndex,
+      questionId: currentQuestion.id,
+      questionText: currentQuestion.questionText,
+      questionType: currentQuestion.questionType,
+      timeLimitSeconds: currentQuestion.timeLimitSeconds,
+      options: currentQuestion.options ? currentQuestion.options.map(o => ({ id: o.id, text: o.text, isCorrect: Boolean(o.isCorrect) })) : [],
+      sequenceItems: currentQuestion.sequenceItems ? currentQuestion.sequenceItems.map(s => ({ id: s.id, text: s.text })) : [],
+      correctOptionText: currentQuestion.options?.find(o => o.isCorrect)?.text || '',
+      optionCounts: resultPayload.optionCounts || null,
+      perfectCount: resultPayload.perfectCount || 0,
+      partialCount: resultPayload.partialCount || 0,
       answeredCount: counts.answeredCount,
-      totalPlayers: counts.totalPlayers
+      totalPlayers: counts.totalPlayers,
+      correctCount: correctAnswersCount,
+      incorrectCount: Math.max(0, counts.totalPlayers - correctAnswersCount),
+      accuracyPct,
+      playerResponses
+    };
+
+    if (existingHistIdx >= 0) {
+      room.questionHistory[existingHistIdx] = historyEntry;
+    } else {
+      room.questionHistory.push(historyEntry);
+    }
+
+    return resultPayload;
+  }
+
+  /**
+   * Generates comprehensive analytics for the session:
+   * 1. Overview summary (total questions, class accuracy, average score)
+   * 2. Question analysis (item breakdown, options distribution, hardest/easiest questions)
+   * 3. Player matrix (per-question answers and time used)
+   */
+  getQuizAnalytics(pin) {
+    const room = this.rooms.get(pin);
+    if (!room) return null;
+
+    const leaderboard = this.getLeaderboard(pin);
+    const totalPlayers = leaderboard.length;
+    const history = room.questionHistory || [];
+    const totalQuestions = room.quizSet?.questions?.length || history.length || 0;
+
+    const totalScoreSum = leaderboard.reduce((acc, p) => acc + (p.score || 0), 0);
+    const averageScore = totalPlayers > 0 ? Math.round(totalScoreSum / totalPlayers) : 0;
+
+    let overallCorrectCount = 0;
+    let totalPossibleAnswers = totalPlayers * history.length;
+
+    history.forEach(h => {
+      overallCorrectCount += (h.correctCount || 0);
+    });
+
+    const overallAccuracyPct = totalPossibleAnswers > 0
+      ? Math.round((overallCorrectCount / totalPossibleAnswers) * 100)
+      : 0;
+
+    // Identify hardest & easiest question
+    let hardestQuestion = null;
+    let easiestQuestion = null;
+
+    if (history.length > 0) {
+      const sortedByAccuracy = [...history].sort((a, b) => a.accuracyPct - b.accuracyPct);
+      hardestQuestion = {
+        questionIndex: sortedByAccuracy[0].questionIndex,
+        questionText: sortedByAccuracy[0].questionText,
+        accuracyPct: sortedByAccuracy[0].accuracyPct
+      };
+      easiestQuestion = {
+        questionIndex: sortedByAccuracy[sortedByAccuracy.length - 1].questionIndex,
+        questionText: sortedByAccuracy[sortedByAccuracy.length - 1].questionText,
+        accuracyPct: sortedByAccuracy[sortedByAccuracy.length - 1].accuracyPct
+      };
+    }
+
+    return {
+      pin,
+      quizTitle: room.quizSet?.title || 'แบบทดสอบ KaoJai',
+      totalQuestions,
+      totalPlayers,
+      averageScore,
+      overallAccuracyPct,
+      hardestQuestion,
+      easiestQuestion,
+      leaderboard,
+      questionHistory: history,
+      pulseVotes: room.pulseVotes
     };
   }
 

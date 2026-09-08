@@ -146,7 +146,8 @@ module.exports = function setupSocketHandlers(io) {
         if (nextIdx >= room.quizSet.questions.length) {
           room.status = 'ENDED';
           const leaderboard = roomManager.getLeaderboard(pin);
-          return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true });
+          const quizAnalytics = roomManager.getQuizAnalytics(pin);
+          return io.to(pin).emit('quiz_ended', { leaderboard, quizAnalytics, status: 'ENDED', isEnded: true });
         }
 
         const prepareDurationMs = process.env.NODE_ENV === 'test' ? 20 : 5000;
@@ -163,7 +164,8 @@ module.exports = function setupSocketHandlers(io) {
           const result = roomManager.startQuestion(pin);
           if (result.isEnded) {
             const leaderboard = roomManager.getLeaderboard(pin);
-            return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true });
+            const quizAnalytics = roomManager.getQuizAnalytics(pin);
+            return io.to(pin).emit('quiz_ended', { leaderboard, quizAnalytics, status: 'ENDED', isEnded: true });
           }
 
           const counts = roomManager.getPlayerCounts(pin);
@@ -202,13 +204,14 @@ module.exports = function setupSocketHandlers(io) {
         }
 
         const leaderboard = roomManager.getLeaderboard(pin);
+        const quizAnalytics = roomManager.getQuizAnalytics(pin);
 
         if (room.status === 'ENDED') {
-          return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true });
+          return io.to(pin).emit('quiz_ended', { leaderboard, quizAnalytics, status: 'ENDED', isEnded: true });
         }
 
         room.status = 'LEADERBOARD';
-        io.to(pin).emit('show_leaderboard', { leaderboard, status: 'LEADERBOARD' });
+        io.to(pin).emit('show_leaderboard', { leaderboard, quizAnalytics, status: 'LEADERBOARD' });
       } catch (err) {
         console.error('[Socket Error] show_leaderboard:', err);
         socket.emit('error_message', { message: err.message });
