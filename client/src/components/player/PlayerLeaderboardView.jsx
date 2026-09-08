@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import { Trophy, Award, Flag, Eye, Sparkles } from 'lucide-react';
+import { Trophy, Award, Flag, Eye, Sparkles, LogOut } from 'lucide-react';
 import { sfx } from '../../utils/audioSFX';
 
-export const PlayerLeaderboardView = ({ player, leaderboard }) => {
+export const PlayerLeaderboardView = ({ player, leaderboard, onLeave }) => {
   const myEntry = leaderboard?.find(p => p.playerId === player?.playerId);
   const myRankIdx = leaderboard ? leaderboard.findIndex(p => p.playerId === player?.playerId) : -1;
   const myRank = myRankIdx >= 0 ? myRankIdx + 1 : null;
@@ -79,6 +79,32 @@ export const PlayerLeaderboardView = ({ player, leaderboard }) => {
           <Eye size={18} />
           <span>รอวิทยากรเปิดคำถามข้อถัดไป...</span>
         </div>
+
+        {onLeave && (
+          <div style={{ marginTop: '16px' }}>
+            <button
+              type="button"
+              onClick={onLeave}
+              style={{
+                width: '100%',
+                padding: '11px 18px',
+                borderRadius: '30px',
+                background: '#F1F5F9',
+                color: '#475569',
+                border: '1.5px solid #CBD5E1',
+                fontSize: '0.88rem',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              <LogOut size={16} color="#DC2626" /> ออกจากห้อง / กลับหน้าหลัก
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

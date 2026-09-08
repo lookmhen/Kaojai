@@ -8,13 +8,39 @@ export const PlayerLobby = ({
   mode,
   teamsEnabled = false,
   teams = [],
-  onAssignTeam
+  onAssignTeam,
+  onLeave
 }) => {
   const currentTeam = teams.find(t => t.id === player?.teamId);
 
   return (
     <div style={{ maxWidth: '460px', margin: '30px auto', padding: '0 16px', textAlign: 'center' }}>
       <div className="glass-card animate-pop" style={{ position: 'relative', padding: '28px 20px' }}>
+        {onLeave && (
+          <button
+            type="button"
+            onClick={onLeave}
+            title="ออกจากห้อง / กลับหน้าหลัก"
+            style={{
+              position: 'absolute',
+              top: '16px',
+              left: '16px',
+              width: '34px',
+              height: '34px',
+              borderRadius: '50%',
+              background: '#FEE2E2',
+              border: '1px solid #FCA5A5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#DC2626'
+            }}
+          >
+            <LogOut size={16} />
+          </button>
+        )}
+
         <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
           <SoundToggle size={16} style={{ width: '34px', height: '34px' }} />
         </div>
@@ -231,6 +257,33 @@ export const PlayerLobby = ({
             หน้าจอจะอัปเดตอัตโนมัติเมื่อ Host เริ่มกิจกรรม ✨
           </p>
         </div>
+
+        {onLeave && (
+          <div style={{ marginTop: '20px' }}>
+            <button
+              type="button"
+              onClick={onLeave}
+              style={{
+                width: '100%',
+                padding: '12px 20px',
+                borderRadius: '30px',
+                background: '#F1F5F9',
+                color: '#475569',
+                border: '1.5px solid #CBD5E1',
+                fontSize: '0.9rem',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              <LogOut size={16} color="#DC2626" /> ออกจากห้อง / กลับหน้าหลัก
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

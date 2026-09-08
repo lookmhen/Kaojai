@@ -622,6 +622,31 @@ async function testRoomManager() {
     console.log('    ✓ Score & Streak Reset on Replay and Reset to Lobby passed');
   }
 
+  // 16. Remove Player and Delete Room
+  {
+    console.log('  Testing Remove Player & Delete Room...');
+    const rm = new RoomManager();
+    const room = rm.createRoom('host-remove-test');
+    const p1 = rm.joinPlayer(room.pin, 'sock-rem-1', { name: 'Player One' }).player;
+    const p2 = rm.joinPlayer(room.pin, 'sock-rem-2', { name: 'Player Two' }).player;
+
+    assert.strictEqual(rm.getPlayerCounts(room.pin).totalPlayers, 2);
+
+    const remRes = rm.removePlayer(room.pin, p1.playerId);
+    assert.strictEqual(remRes.removed, true);
+    assert.strictEqual(rm.getPlayerCounts(room.pin).totalPlayers, 1);
+
+    const list = rm.getPlayerList(room.pin);
+    assert.strictEqual(list.length, 1);
+    assert.strictEqual(list[0].playerId, p2.playerId);
+
+    const delRes = rm.deleteRoom(room.pin);
+    assert.strictEqual(delRes, true);
+    assert.strictEqual(rm.getRoom(room.pin), undefined);
+
+    console.log('    ✓ Remove Player & Delete Room passed');
+  }
+
   console.log('✅ RoomManager tests passed cleanly!');
 }
 

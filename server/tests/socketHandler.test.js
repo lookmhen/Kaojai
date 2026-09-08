@@ -65,6 +65,12 @@ function createMockSocketEnvironment() {
         }
         roomMap.get(roomPin).add(socket);
       },
+      leave(roomPin) {
+        joinedRooms.delete(roomPin);
+        if (roomMap.has(roomPin)) {
+          roomMap.get(roomPin).delete(socket);
+        }
+      },
       // Trigger a socket event asynchronously or synchronously
       async fire(event, data, ackCallback) {
         const handler = listeners.get(event);
@@ -289,6 +295,20 @@ async function testSocketHandlers() {
   assert.strictEqual(seqFeedback.details.correctPositions, 5);
   assert.ok(seqFeedback.pointsEarned > 0);
   console.log('    ✓ Sequence Race submit_answer passed');
+
+  // Test 11: leave_room event
+  console.log('  Testing leave_room event...');
+  await seqPlayerSocket.fire('leave_room', { pin: seqRoomPin, playerId: seqPlayerId });
+  assert.strictEqual(roomManager.getPlayerCounts(seqRoomPin).totalPlayers, 0, 'Player removed from room on leave_room');
+  console.log('    ✓ leave_room passed');
+
+  // Test 12: close_room event
+  console.log('  Testing close_room event...');
+  const roomCloseBroadCastCount = broadcasts.filter(b => b.event === 'room_closed').length;
+  await seqHostSocket.fire('close_room', { pin: seqRoomPin, hostToken: seqHostSocket.getLastEmitted('room_created')?.hostToken });
+  assert.strictEqual(roomManager.getRoom(seqRoomPin), undefined, 'Room deleted on close_room');
+  assert.strictEqual(broadcasts.filter(b => b.event === 'room_closed').length, roomCloseBroadCastCount + 1, 'room_closed broadcast to room');
+  console.log('    ✓ close_room passed');
 
   console.log('✅ socketHandler tests passed cleanly!');
 }

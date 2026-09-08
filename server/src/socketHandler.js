@@ -300,6 +300,58 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
+    socket.on('close_room', ({ pin, hostToken }) => {
+      try {
+        verifyHost(pin, hostToken);
+        io.to(pin).emit('room_closed', { message: 'วิทยากรได้ปิดห้องหรือออกจากห้องแล้ว' });
+        roomManager.deleteRoom(pin);
+      } catch (err) {
+        console.error('[Socket Error] close_room:', err);
+      }
+    });
+
+    socket.on('leave_room', ({ pin, playerId }) => {
+      try {
+        if (!pin || !playerId) return;
+        const result = roomManager.removePlayer(pin, playerId);
+        if (typeof socket.leave === 'function') {
+          socket.leave(pin);
+        }
+
+        if (result && result.room) {
+          const playerList = roomManager.getPlayerList(pin);
+          const counts = roomManager.getPlayerCounts(pin);
+
+          io.to(pin).emit('room_updated', {
+            players: playerList,
+            counts
+          });
+
+          io.to(pin).emit('answered_count_update', {
+            answeredCount: counts.answeredCount,
+            totalPlayers: counts.totalPlayers
+          });
+
+          io.to(pin).emit('pulse_updated', {
+            pulseVotes: result.room.pulseVotes,
+            pulseAnsweredCount: counts.pulseAnsweredCount,
+            totalPlayers: counts.totalPlayers
+          });
+
+          if (result.room.status === 'QUESTION' && counts.totalPlayers > 0 && counts.answeredCount >= counts.totalPlayers) {
+            if (result.room.questionTimer) {
+              clearTimeout(result.room.questionTimer);
+              result.room.questionTimer = null;
+            }
+            const questionResult = roomManager.getQuestionResult(pin);
+            io.to(pin).emit('question_result', questionResult);
+          }
+        }
+      } catch (err) {
+        console.error('[Socket Error] leave_room:', err);
+      }
+    });
+
     // --- PLAYER HANDLERS ---
     socket.on('join_room', ({ pin, name, avatar, playerId }, ackCallback) => {
       try {

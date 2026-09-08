@@ -239,6 +239,28 @@ export function AppContent() {
       setStatus('LOBBY');
     };
 
+    const onRoomClosed = (data) => {
+      setErrorMessage(data.message || 'วิทยากรได้ปิดห้องหรือออกจากห้องแล้ว');
+      clearSession();
+      if (window.history.replaceState) {
+        const cleanUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+        window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+      }
+      setViewMode('PLAYER_JOIN');
+      setPin('');
+      setStatus('LOBBY');
+      setPlayerData(null);
+      setPrepareData(null);
+      setCurrentQuestion(null);
+      setQuestionResult(null);
+      setLeaderboard([]);
+      setQuizAnalytics(null);
+      setPlayers([]);
+      setTeams([]);
+      setPulseVotes({ green: 0, yellow: 0, red: 0 });
+      setCounts({ totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 });
+    };
+
     socket.on('room_created', onRoomCreated);
     socket.on('host_reconnected', onHostReconnected);
     socket.on('room_updated', onRoomUpdated);
@@ -256,6 +278,7 @@ export function AppContent() {
     socket.on('teams_toggled', onTeamsToggled);
     socket.on('teams_updated', onTeamsUpdated);
     socket.on('room_reset_to_lobby', onRoomResetToLobby);
+    socket.on('room_closed', onRoomClosed);
 
     return () => {
       socket.off('room_created', onRoomCreated);
@@ -275,6 +298,7 @@ export function AppContent() {
       socket.off('teams_toggled', onTeamsToggled);
       socket.off('teams_updated', onTeamsUpdated);
       socket.off('room_reset_to_lobby', onRoomResetToLobby);
+      socket.off('room_closed', onRoomClosed);
     };
   }, [socket, session.hostToken]);
 
@@ -310,6 +334,13 @@ export function AppContent() {
   };
 
   const handleLeaveSession = () => {
+    if (socket && pin) {
+      if (session?.isHost || session?.hostToken) {
+        socket.emit('close_room', { pin, hostToken: session.hostToken });
+      } else if (playerData?.playerId) {
+        socket.emit('leave_room', { pin, playerId: playerData.playerId });
+      }
+    }
     clearSession();
     if (window.history.replaceState) {
       const cleanUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
@@ -472,6 +503,7 @@ export function AppContent() {
               player={playerData}
               pulseAnsweredCount={counts.pulseAnsweredCount}
               totalPlayers={counts.totalPlayers}
+              onLeave={handleLeaveSession}
             />
           ) : status === 'LOBBY' ? (
             <PlayerLobby
@@ -482,6 +514,7 @@ export function AppContent() {
               teamsEnabled={teamsEnabled}
               teams={teams}
               onAssignTeam={handleAssignTeam}
+              onLeave={handleLeaveSession}
             />
           ) : status === 'ENDED' ? (
             <PlayerEndedView
@@ -493,6 +526,7 @@ export function AppContent() {
             <PlayerLeaderboardView
               player={playerData}
               leaderboard={leaderboard}
+              onLeave={handleLeaveSession}
             />
           ) : (
             <PlayerQuiz

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { sfx } from '../../utils/audioSFX';
-import { Smile, Meh, Frown, Users, Bell, Sparkles, X, Heart, Flame, Lightbulb, HelpCircle } from 'lucide-react';
+import { Smile, Meh, Frown, Users, Bell, Sparkles, X, Heart, Flame, Lightbulb, HelpCircle, LogOut } from 'lucide-react';
 import { SoundToggle } from '../common/SoundToggle';
 
 const QUICK_REACTIONS = [
@@ -12,7 +12,7 @@ const QUICK_REACTIONS = [
   { emoji: '❓', label: 'สงสัย' }
 ];
 
-export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers }) => {
+export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers, onLeave }) => {
   const { socket } = useSocket();
   const [activeChoice, setActiveChoice] = useState(null);
   const [nudgeAlert, setNudgeAlert] = useState(null);
@@ -262,6 +262,27 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers }) =
             <span>ตอบแล้ว <span className="highlight">{pulseAnsweredCount}</span> / {totalPlayers}</span>
           </div>
           <SoundToggle size={16} style={{ width: '32px', height: '32px' }} />
+          {onLeave && (
+            <button
+              type="button"
+              onClick={onLeave}
+              title="ออกจากห้อง / กลับหน้าหลัก"
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: '#FEE2E2',
+                border: '1px solid #FCA5A5',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#DC2626'
+              }}
+            >
+              <LogOut size={15} />
+            </button>
+          )}
         </div>
       </div>
 

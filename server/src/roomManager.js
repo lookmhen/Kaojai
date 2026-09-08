@@ -237,6 +237,33 @@ class RoomManager {
     return null;
   }
 
+  removePlayer(pin, playerId) {
+    const room = this.rooms.get(pin);
+    if (!room) return null;
+
+    const player = room.players.get(playerId);
+    if (!player) return { room, removed: false };
+
+    if (player.disconnectTimeout) {
+      clearTimeout(player.disconnectTimeout);
+      player.disconnectTimeout = null;
+    }
+
+    if (player.teamId && room.teams.has(player.teamId)) {
+      room.teams.get(player.teamId).memberIds.delete(playerId);
+    }
+
+    if (player.pulseChoice && room.pulseVotes[player.pulseChoice] !== undefined) {
+      room.pulseVotes[player.pulseChoice] = Math.max(0, room.pulseVotes[player.pulseChoice] - 1);
+    }
+
+    room.players.delete(playerId);
+    room.currentAnswers.delete(playerId);
+    room.votedPulseUsers.delete(playerId);
+
+    return { room, removed: true };
+  }
+
   getPlayerCounts(pin) {
     const room = this.rooms.get(pin);
     if (!room) return { totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 };
