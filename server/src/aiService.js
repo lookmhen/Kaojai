@@ -1,7 +1,8 @@
 // server/src/aiService.js
 // Handles AI Quiz generation using Google Gemini 1.5 Flash REST API with Smart Mock Fallback
 
-const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+// Prefer gemini-flash-latest, with fallback options
+const GEMINI_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash'];
 
 const QUIZ_RESPONSE_SCHEMA = {
   type: 'OBJECT',
@@ -84,10 +85,6 @@ function buildUserPrompt(topic, textContent, questionCount) {
 }
 
 async function callGeminiApi(systemPrompt, userPrompt, apiKey, timeoutMs = 30000) {
-  const url = GEMINI_API_ENDPOINT + '?key=' + apiKey;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
   const payload = {
     contents: [
       { role: 'user', parts: [{ text: systemPrompt + '\n\n---\n' + userPrompt }] }
@@ -100,29 +97,46 @@ async function callGeminiApi(systemPrompt, userPrompt, apiKey, timeoutMs = 30000
     }
   };
 
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal: controller.signal
-    });
+  let lastError = null;
 
-    if (!res.ok) {
-      const errBody = await res.text();
-      throw new Error('Gemini API returned status ' + res.status + ': ' + errBody);
+  for (const model of GEMINI_MODELS) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+
+      if (!res.ok) {
+        const errBody = await res.text();
+        lastError = new Error(`Gemini API (${model}) returned status ${res.status}: ${errBody}`);
+        console.warn(`[AI Service] Model ${model} failed, trying fallback:`, lastError.message);
+        continue;
+      }
+
+      const data = await res.json();
+      const rawContent = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!rawContent) {
+        throw new Error(`Gemini API (${model}) did not return text content in candidates`);
+      }
+
+      return JSON.parse(rawContent);
+    } catch (err) {
+      lastError = err;
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    const data = await res.json();
-    const rawContent = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!rawContent) {
-      throw new Error('Gemini API did not return text content in candidates');
-    }
-
-    return JSON.parse(rawContent);
-  } finally {
-    clearTimeout(timeoutId);
   }
+
+  throw lastError || new Error('All Gemini models failed');
 }
 
 function generateMockQuiz(topic, textContent, questionCount = 5, questionTypes = 'MIXED') {
