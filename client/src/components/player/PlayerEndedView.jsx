@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
-import { Trophy } from 'lucide-react';
+import { Trophy, Home } from 'lucide-react';
 
-export const PlayerEndedView = ({ player, leaderboard }) => {
+export const PlayerEndedView = ({ player, leaderboard, onLeave }) => {
   useEffect(() => {
     fireConfetti();
     sfx.playFanfare();
@@ -51,9 +51,36 @@ export const PlayerEndedView = ({ player, leaderboard }) => {
           </div>
         </div>
 
-        <div style={{ color: 'var(--accent-earth-blue)', fontWeight: 700, fontSize: '0.9rem' }}>
+        <div style={{ color: 'var(--accent-earth-blue)', fontWeight: 700, fontSize: '0.9rem', marginBottom: '16px' }}>
           🌟 รอวิทยากรสรุปกิจกรรมบนหน้าจอใหญ่...
         </div>
+
+        {onLeave && (
+          <div style={{ marginTop: '20px' }}>
+            <button
+              type="button"
+              onClick={onLeave}
+              style={{
+                width: '100%',
+                padding: '14px 20px',
+                borderRadius: '30px',
+                background: 'var(--accent-earth-blue)',
+                color: '#FFFFFF',
+                fontSize: '1rem',
+                fontWeight: 800,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 14px rgba(30, 58, 138, 0.25)',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <Home size={18} /> กลับสู่หน้าหลัก
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

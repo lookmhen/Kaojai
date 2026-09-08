@@ -31,7 +31,7 @@ async function runAllTests() {
     console.log('\n==================================================');
     console.log(`🎉 ALL TESTS PASSED! (${passedSuites}/${totalSuites} test suites passed in ${duration}s)`);
     console.log('==================================================');
-    process.exit(0);
+    setTimeout(() => process.exit(0), 200);
   } catch (error) {
     console.error('\n❌ TEST SUITE FAILED!');
     console.error(error);

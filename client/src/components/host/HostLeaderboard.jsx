@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
-import { Trophy, ArrowRight, Flag, RotateCcw, FileSpreadsheet } from 'lucide-react';
+import { Trophy, ArrowRight, Flag, RotateCcw, FileSpreadsheet, LogOut } from 'lucide-react';
 import { exportGameReportCSV } from '../../utils/exportReport';
 
-export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, isEnded, onNextQuestion, onResetToLobby }) => {
+export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, isEnded, onNextQuestion, onResetToLobby, onLeave }) => {
   const [animatedScores, setAnimatedScores] = useState({});
 
   useEffect(() => {
@@ -220,26 +220,51 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, i
         </button>
 
         {isEnded ? (
-          <button
-            type="button"
-            onClick={onResetToLobby}
-            style={{
-              padding: '16px 36px',
-              borderRadius: '50px',
-              background: 'var(--accent-earth-blue)',
-              color: '#FFFFFF',
-              fontSize: '1.1rem',
-              fontWeight: 800,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '10px',
-              boxShadow: '0 4px 14px rgba(30, 58, 138, 0.25)',
-              borderBottom: '3px solid #172554',
-              cursor: 'pointer'
-            }}
-          >
-            <RotateCcw size={20} /> จบเกม / กลับสู่หน้า Lobby
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={onResetToLobby}
+              style={{
+                padding: '16px 32px',
+                borderRadius: '50px',
+                background: 'var(--accent-earth-blue)',
+                color: '#FFFFFF',
+                fontSize: '1.1rem',
+                fontWeight: 800,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '10px',
+                boxShadow: '0 4px 14px rgba(30, 58, 138, 0.25)',
+                borderBottom: '3px solid #172554',
+                cursor: 'pointer'
+              }}
+            >
+              <RotateCcw size={20} /> จบเกม / กลับสู่หน้า Lobby
+            </button>
+
+            {onLeave && (
+              <button
+                type="button"
+                onClick={onLeave}
+                style={{
+                  padding: '16px 32px',
+                  borderRadius: '50px',
+                  background: '#F1F5F9',
+                  color: '#334155',
+                  border: '1.5px solid #CBD5E1',
+                  fontSize: '1.1rem',
+                  fontWeight: 800,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                  cursor: 'pointer'
+                }}
+              >
+                <LogOut size={20} color="#DC2626" /> ออกจากห้อง / กลับหน้าหลัก
+              </button>
+            )}
+          </>
         ) : (
           <button
             type="button"

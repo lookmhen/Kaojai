@@ -82,6 +82,9 @@ module.exports = function setupSocketHandlers(io) {
           return socket.emit('error_message', { message: 'ชุดคำถามนี้ไม่มีข้อคำถาม' });
         }
 
+        // Reset all player scores, streaks, and question history for the new game session
+        roomManager.resetRoomScores(pin);
+
         const prepareDurationMs = process.env.NODE_ENV === 'test' ? 20 : 5000;
 
         room.status = 'PREPARE';
@@ -206,7 +209,11 @@ module.exports = function setupSocketHandlers(io) {
         const leaderboard = roomManager.getLeaderboard(pin);
         const quizAnalytics = roomManager.getQuizAnalytics(pin);
 
-        if (room.status === 'ENDED') {
+        const isLastQuestion = (room.currentQuestionIndex !== null && room.currentQuestionIndex !== undefined)
+          && room.currentQuestionIndex >= (room.quizSet?.questions?.length || 1) - 1;
+
+        if (room.status === 'ENDED' || isLastQuestion) {
+          room.status = 'ENDED';
           return io.to(pin).emit('quiz_ended', { leaderboard, quizAnalytics, status: 'ENDED', isEnded: true });
         }
 
@@ -281,9 +288,12 @@ module.exports = function setupSocketHandlers(io) {
           room.prepareTimer = null;
         }
 
-        room.status = 'LOBBY';
-        room.currentAnswers.clear();
-        io.to(pin).emit('room_reset_to_lobby', { status: 'LOBBY' });
+        roomManager.resetRoomToLobby(pin);
+        const playerList = roomManager.getPlayerList(pin);
+        const counts = roomManager.getPlayerCounts(pin);
+
+        io.to(pin).emit('room_reset_to_lobby', { status: 'LOBBY', players: playerList, counts });
+        io.to(pin).emit('room_updated', { players: playerList, counts });
       } catch (err) {
         console.error('[Socket Error] reset_to_lobby:', err);
         socket.emit('error_message', { message: err.message });
@@ -546,6 +556,16 @@ module.exports = function setupSocketHandlers(io) {
           pulseAnsweredCount: counts.pulseAnsweredCount,
           totalPlayers: counts.totalPlayers
         });
+
+        // If in QUESTION phase and all remaining connected players have answered, close question immediately
+        if (info.room.status === 'QUESTION' && counts.totalPlayers > 0 && counts.answeredCount >= counts.totalPlayers) {
+          if (info.room.questionTimer) {
+            clearTimeout(info.room.questionTimer);
+            info.room.questionTimer = null;
+          }
+          const questionResult = roomManager.getQuestionResult(info.room.pin);
+          io.to(info.room.pin).emit('question_result', questionResult);
+        }
       }
     });
   });

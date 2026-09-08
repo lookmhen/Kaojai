@@ -232,6 +232,10 @@ export function AppContent() {
       setCurrentQuestion(null);
       setQuestionResult(null);
       setQuizAnalytics(null);
+      setLeaderboard([]);
+      setPlayerData(prev => (prev ? { ...prev, score: 0 } : null));
+      if (data?.players) setPlayers(data.players);
+      if (data?.counts) setCounts(data.counts);
       setStatus('LOBBY');
     };
 
@@ -307,9 +311,23 @@ export function AppContent() {
 
   const handleLeaveSession = () => {
     clearSession();
+    if (window.history.replaceState) {
+      const cleanUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+      window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+    }
     setViewMode('PLAYER_JOIN');
     setPin('');
     setStatus('LOBBY');
+    setPlayerData(null);
+    setPrepareData(null);
+    setCurrentQuestion(null);
+    setQuestionResult(null);
+    setLeaderboard([]);
+    setQuizAnalytics(null);
+    setPlayers([]);
+    setTeams([]);
+    setPulseVotes({ green: 0, yellow: 0, red: 0 });
+    setCounts({ totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 });
   };
 
   const handleToggleTeams = (enabled) => {
@@ -411,6 +429,7 @@ export function AppContent() {
               isEnded={status === 'ENDED'}
               onNextQuestion={handleNextQuestion}
               onResetToLobby={handleResetToLobby}
+              onLeave={handleLeaveSession}
             />
           ) : (
             <HostQuiz
@@ -468,6 +487,7 @@ export function AppContent() {
             <PlayerEndedView
               player={playerData}
               leaderboard={leaderboard}
+              onLeave={handleLeaveSession}
             />
           ) : status === 'LEADERBOARD' ? (
             <PlayerLeaderboardView

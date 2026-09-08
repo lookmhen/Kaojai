@@ -581,6 +581,47 @@ async function testRoomManager() {
     console.log('    ✓ Question History & Quiz Analytics passed');
   }
 
+  // 15. Score and Streak Reset on Replay and Reset to Lobby
+  {
+    console.log('  Testing Score & Streak Reset on Replay and Reset to Lobby...');
+    const rm = new RoomManager();
+    const room = rm.createRoom('host-reset-test');
+    const p1 = rm.joinPlayer(room.pin, 'sock-reset-1', { name: 'Player One' }).player;
+
+    rm.startQuestion(room.pin, 0);
+    const correctOpt = room.quizSet.questions[0].options.find(o => o.isCorrect).id;
+    const ans = rm.submitAnswer(room.pin, p1.playerId, correctOpt);
+    assert.strictEqual(ans.isCorrect, true);
+    assert.ok(p1.score > 0);
+    assert.strictEqual(p1.streak, 1);
+
+    const qResult = rm.getQuestionResult(room.pin);
+    assert.strictEqual(qResult.isLastQuestion, false);
+
+    // Test resetRoomToLobby
+    rm.resetRoomToLobby(room.pin);
+    assert.strictEqual(room.status, 'LOBBY');
+    assert.strictEqual(p1.score, 0);
+    assert.strictEqual(p1.streak, 0);
+    assert.strictEqual(p1.highestStreak, 0);
+    assert.strictEqual(room.questionHistory.length, 0);
+
+    // Replay: startQuestion at 0 should start with 0 score and 0 streak
+    p1.score = 500;
+    p1.streak = 3;
+    rm.startQuestion(room.pin, 0);
+    assert.strictEqual(p1.score, 0, 'Starting Q0 must reset score to 0');
+    assert.strictEqual(p1.streak, 0, 'Starting Q0 must reset streak to 0');
+
+    // Last question check
+    const lastQIdx = room.quizSet.questions.length - 1;
+    rm.startQuestion(room.pin, lastQIdx);
+    const lastQRes = rm.getQuestionResult(room.pin);
+    assert.strictEqual(lastQRes.isLastQuestion, true, 'Final question must flag isLastQuestion = true');
+
+    console.log('    ✓ Score & Streak Reset on Replay and Reset to Lobby passed');
+  }
+
   console.log('✅ RoomManager tests passed cleanly!');
 }
 

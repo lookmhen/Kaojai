@@ -32,6 +32,13 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
     return () => clearInterval(interval);
   }, [question?.id]);
 
+  useEffect(() => {
+    if (result) {
+      setTimeLeft(0);
+    }
+  }, [result]);
+
+  const isFinalQuestion = Boolean(result?.isLastQuestion || (question?.questionIndex + 1 >= question?.totalQuestions));
   const maxCount = Math.max(...(question.options?.map(opt => result?.optionCounts?.[opt.id] || 0) || [1]), 1);
 
   return (
@@ -379,17 +386,18 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
           style={{
             padding: '14px 28px',
             borderRadius: '12px',
-            background: '#F1F5F9',
-            border: '1px solid #CBD5E1',
-            color: 'var(--text-main)',
+            background: isFinalQuestion ? '#FEF3C7' : '#F1F5F9',
+            border: isFinalQuestion ? '1.5px solid #F59E0B' : '1px solid #CBD5E1',
+            color: isFinalQuestion ? '#92400E' : 'var(--text-main)',
             fontSize: '1.05rem',
-            fontWeight: 700,
+            fontWeight: 800,
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
           }}
         >
-          <Trophy size={18} color="var(--accent-earth-orange)" /> ดู Leaderboard
+          <Trophy size={18} color="var(--accent-earth-orange)" />
+          {isFinalQuestion ? 'สรุปผลคะแนนรอบสุดท้าย / ผู้ชนะ 🏆' : 'ดู Leaderboard'}
         </button>
 
         <button
@@ -398,17 +406,17 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
           style={{
             padding: '14px 28px',
             borderRadius: '12px',
-            background: 'var(--accent-earth-blue)',
+            background: isFinalQuestion ? '#138808' : 'var(--accent-earth-blue)',
             color: '#FFFFFF',
             fontSize: '1.05rem',
-            fontWeight: 700,
+            fontWeight: 800,
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            boxShadow: '0 4px 12px rgba(30, 58, 138, 0.2)'
+            boxShadow: isFinalQuestion ? '0 4px 14px rgba(19, 136, 8, 0.35)' : '0 4px 12px rgba(30, 58, 138, 0.2)'
           }}
         >
-          ข้อถัดไป <ArrowRight size={18} />
+          {isFinalQuestion ? 'จบเกมทันที 🏁' : 'ข้อถัดไป'} {!isFinalQuestion && <ArrowRight size={18} />}
         </button>
       </div>
     </div>

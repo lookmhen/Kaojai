@@ -146,6 +146,17 @@ class RoomManager {
       existingPlayer.isConnected = true;
       existingPlayer.name = sanitizedName;
       existingPlayer.avatar = sanitizedAvatar;
+
+      // If room is in LOBBY or ENDED, ensure player starts fresh with 0 score and 0 streak
+      if (room.status === 'LOBBY' || room.status === 'ENDED') {
+        existingPlayer.score = 0;
+        existingPlayer.previousScore = 0;
+        existingPlayer.lastPointsEarned = 0;
+        existingPlayer.streak = 0;
+        existingPlayer.highestStreak = 0;
+        existingPlayer.streakBonus = 0;
+        existingPlayer.comebackBonus = 0;
+      }
     } else {
       isReconnect = false;
       existingPlayer = {
@@ -311,6 +322,20 @@ class RoomManager {
     if (room.currentQuestionIndex >= room.quizSet.questions.length) {
       room.status = 'ENDED';
       return { isEnded: true };
+    }
+
+    // If starting a fresh quiz or replay (Question 0), reset all player scores, streaks, and history
+    if (room.currentQuestionIndex === 0) {
+      room.questionHistory = [];
+      for (const player of room.players.values()) {
+        player.score = 0;
+        player.previousScore = 0;
+        player.lastPointsEarned = 0;
+        player.streak = 0;
+        player.highestStreak = 0;
+        player.streakBonus = 0;
+        player.comebackBonus = 0;
+      }
     }
 
     // Save previous scores and identify bottom 50% for Comeback Bonus
@@ -530,6 +555,9 @@ class RoomManager {
       };
     }
 
+    const isLastQuestion = room.currentQuestionIndex >= (room.quizSet?.questions?.length || 1) - 1;
+    resultPayload.isLastQuestion = isLastQuestion;
+
     // Reset streak for players who timed out or did not submit answer
     for (const [pId, player] of room.players.entries()) {
       if (!room.currentAnswers.has(pId)) {
@@ -736,6 +764,44 @@ class RoomManager {
     if (!['QUIZ', 'PULSE'].includes(mode)) throw new Error('Mode ไม่ถูกต้อง');
 
     room.mode = mode;
+    return room;
+  }
+
+  /**
+   * Reset all player scores, streaks, and question history for a room.
+   */
+  resetRoomScores(pin) {
+    const room = this.rooms.get(pin);
+    if (!room) return;
+
+    room.questionHistory = [];
+    room.currentAnswers.clear();
+    room.bottomHalfPlayerIds = new Set();
+    room.pulseVotes = { green: 0, yellow: 0, red: 0 };
+    room.votedPulseUsers.clear();
+
+    for (const player of room.players.values()) {
+      player.score = 0;
+      player.previousScore = 0;
+      player.lastPointsEarned = 0;
+      player.streak = 0;
+      player.highestStreak = 0;
+      player.streakBonus = 0;
+      player.comebackBonus = 0;
+    }
+  }
+
+  /**
+   * Reset room status and all player states back to Lobby.
+   */
+  resetRoomToLobby(pin) {
+    const room = this.rooms.get(pin);
+    if (!room) return null;
+
+    room.status = 'LOBBY';
+    room.currentQuestionIndex = -1;
+    room.currentSafeQuestion = null;
+    this.resetRoomScores(pin);
     return room;
   }
 

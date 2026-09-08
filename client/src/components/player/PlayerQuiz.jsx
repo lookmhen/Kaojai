@@ -55,6 +55,14 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
   }, [question?.id]);
 
   useEffect(() => {
+    if (result) {
+      setTimeLeft(0);
+    }
+  }, [result]);
+
+  const isFinalQuestion = Boolean(result?.isLastQuestion || (question?.questionIndex + 1 >= question?.totalQuestions));
+
+  useEffect(() => {
     if (!socket) return;
 
     const handleFeedback = (data) => {
@@ -272,7 +280,11 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
             </>
           )}
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '16px' }}>
-            {result ? 'สรุปผลคำตอบของเพื่อนๆ ทุกคนในข้อนี้:' : 'รอการสรุปผลคำตอบจากวิทยากร...'}
+            {result
+              ? (isFinalQuestion
+                  ? '🏁 คำถามข้อสุดท้ายเสร็จสิ้นแล้ว! เตรียมดูสรุปผลคะแนนและผู้ชนะบนหน้าจอใหญ่...'
+                  : 'สรุปผลคำตอบของเพื่อนๆ ทุกคนในข้อนี้:')
+              : 'รอการสรุปผลคำตอบจากวิทยากร...'}
           </p>
 
           {result && (
