@@ -62,16 +62,11 @@ class RoomManager {
 
     let currentQuestion = null;
     if (room.status === 'QUESTION' && room.currentQuestionIndex >= 0 && room.quizSet.questions[room.currentQuestionIndex]) {
-      const q = room.quizSet.questions[room.currentQuestionIndex];
-      currentQuestion = {
-        id: q.id,
-        questionText: q.questionText,
-        timeLimitSeconds: q.timeLimitSeconds,
-        imageUrl: q.imageUrl || '',
-        options: q.options.map(opt => ({ id: opt.id, text: opt.text })),
-        questionIndex: room.currentQuestionIndex,
-        totalQuestions: room.quizSet.questions.length
-      };
+      currentQuestion = room.currentSafeQuestion || this.createSafeQuestion(
+        room.quizSet.questions[room.currentQuestionIndex],
+        room.currentQuestionIndex,
+        room.quizSet.questions.length
+      );
     }
 
     const questionResult = room.status === 'QUESTION_RESULT' ? this.getQuestionResult(pin) : null;
@@ -218,10 +213,31 @@ class RoomManager {
     const isSequence = q.questionType === 'SEQUENCE' || (Array.isArray(q.sequenceItems) && q.sequenceItems.length > 0);
 
     if (isSequence) {
-      // Shuffle sequence items randomly so players do not receive pre-ordered items
-      const shuffled = [...q.sequenceItems]
-        .map(item => ({ id: item.id, text: item.text }))
-        .sort(() => Math.random() - 0.5);
+      // Robust Fisher-Yates (Knuth) Shuffle guaranteed to NOT be in the exact original order
+      const originalItems = q.sequenceItems.map(item => ({ id: item.id, text: item.text }));
+      const shuffled = [...originalItems];
+
+      const isIdentical = (arr) => arr.every((item, idx) => item.id === originalItems[idx].id);
+
+      // Fisher-Yates Shuffle
+      const shuffle = (array) => {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+      };
+
+      // Perform shuffle, repeating if accidentally in original 100% correct order
+      let attempts = 0;
+      do {
+        shuffle(shuffled);
+        attempts++;
+      } while (originalItems.length > 1 && isIdentical(shuffled) && attempts < 10);
+
+      // If somehow still identical (fallback for >= 2 items), swap first two
+      if (originalItems.length >= 2 && isIdentical(shuffled)) {
+        [shuffled[0], shuffled[1]] = [shuffled[1], shuffled[0]];
+      }
 
       return {
         id: q.id,
