@@ -1,4 +1,7 @@
-let quizStore = [
+const fs = require('fs');
+const path = require('path');
+
+const INITIAL_SEED_QUIZZES = [
   {
     id: "quiz-1",
     title: "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review)",
@@ -6,6 +9,7 @@ let quizStore = [
     questions: [
       {
         id: "q1",
+        questionType: "CHOICE",
         questionText: "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
         timeLimitSeconds: 20,
         imageUrl: "",
@@ -67,22 +71,86 @@ let quizStore = [
   }
 ];
 
+const DATA_DIR = path.join(__dirname, '../data');
+const DATA_FILE = path.join(DATA_DIR, 'quizzes.json');
+
+let quizStore = [];
+
+function initQuizStore() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+
+    if (fs.existsSync(DATA_FILE)) {
+      const fileData = fs.readFileSync(DATA_FILE, 'utf-8');
+      const parsed = JSON.parse(fileData);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        quizStore = parsed
+          .filter(q => q && q.title)
+          .map((q, idx) => ({
+            ...q,
+            id: q.id || `quiz-${Date.now()}-${idx}`,
+            description: q.description || ''
+          }));
+        return;
+      }
+    }
+
+    // Seed file if not exists or empty
+    quizStore = JSON.parse(JSON.stringify(INITIAL_SEED_QUIZZES));
+    persistQuizzes();
+  } catch (err) {
+    console.error('[QuizData Error] Failed to initialize quizzes.json:', err);
+    quizStore = JSON.parse(JSON.stringify(INITIAL_SEED_QUIZZES));
+  }
+}
+
+function persistQuizzes() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(DATA_FILE, JSON.stringify(quizStore, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('[QuizData Error] Failed to persist quizzes to disk:', err);
+  }
+}
+
+// Initial load on server startup
+initQuizStore();
+
 function getAllQuizzes() {
   return quizStore;
 }
 
 function saveQuiz(quiz) {
+  if (!quiz || !quiz.title) {
+    throw new Error('ข้อมูลชุดคำถามไม่ถูกต้อง');
+  }
+
+  if (!quiz.id) {
+    quiz.id = `quiz-${Date.now()}`;
+  }
+
+  if (!quiz.description) {
+    quiz.description = '';
+  }
+
   const existingIdx = quizStore.findIndex(q => q.id === quiz.id);
   if (existingIdx >= 0) {
     quizStore[existingIdx] = quiz;
   } else {
     quizStore.push(quiz);
   }
+
+  persistQuizzes();
   return quiz;
 }
 
 function deleteQuiz(quizId) {
   quizStore = quizStore.filter(q => q.id !== quizId);
+  persistQuizzes();
   return true;
 }
 
@@ -110,7 +178,42 @@ function duplicateQuiz(quizId) {
   };
 
   quizStore.push(duplicated);
+  persistQuizzes();
   return duplicated;
+}
+
+/**
+ * Import an array of quizzes.
+ * @param {Array} importedList
+ * @param {boolean} replaceAll - If true, replaces existing store. If false, merges/upserts by quiz ID.
+ */
+function importQuizzes(importedList, replaceAll = false) {
+  if (!Array.isArray(importedList)) {
+    throw new Error('รูปแบบไฟล์ไม่ถูกต้อง: ต้องเป็น Array ของชุดคำถาม');
+  }
+
+  // Validate basic schema
+  for (const item of importedList) {
+    if (!item.title || !Array.isArray(item.questions)) {
+      throw new Error(`ชุดคำถาม "${item.title || 'ไม่มีชื่อ'}" มีโครงสร้างไม่ถูกต้อง`);
+    }
+  }
+
+  if (replaceAll) {
+    quizStore = importedList;
+  } else {
+    for (const item of importedList) {
+      const idx = quizStore.findIndex(q => q.id === item.id);
+      if (idx >= 0) {
+        quizStore[idx] = item;
+      } else {
+        quizStore.push(item);
+      }
+    }
+  }
+
+  persistQuizzes();
+  return quizStore;
 }
 
 module.exports = {
@@ -118,5 +221,9 @@ module.exports = {
   getAllQuizzes,
   saveQuiz,
   deleteQuiz,
-  duplicateQuiz
+  duplicateQuiz,
+  importQuizzes,
+  initQuizStore,
+  persistQuizzes,
+  DATA_FILE
 };

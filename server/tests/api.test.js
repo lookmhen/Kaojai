@@ -59,7 +59,7 @@ async function testApiEndpoints() {
     await new Promise(r => setTimeout(r, 200));
   } catch (err) {}
 
-  const { defaultQuizSets, saveQuiz } = require('../src/quizData');
+  const { defaultQuizSets, getAllQuizzes, saveQuiz } = require('../src/quizData');
 
   const express = require('express');
   const app = express();
@@ -84,6 +84,17 @@ async function testApiEndpoints() {
     if (!imageData) return res.status(400).json({ success: false, message: 'ไม่พบข้อมูลรูปภาพ' });
     const fakePath = `/uploads/test_${Date.now()}.png`;
     res.json({ success: true, imageUrl: fakePath });
+  });
+  app.get('/api/quizzes/export', (req, res) => {
+    const quizzes = getAllQuizzes();
+    res.json(quizzes);
+  });
+  app.post('/api/quizzes/import', (req, res) => {
+    const { quizzes } = req.body;
+    if (!quizzes) return res.status(400).json({ success: false, message: 'ไม่มีข้อมูล' });
+    const { importQuizzes } = require('../src/quizData');
+    const updated = importQuizzes(quizzes);
+    res.json({ success: true, count: quizzes.length, quizzes: updated });
   });
 
   const testServer = http.createServer(app);
@@ -127,6 +138,23 @@ async function testApiEndpoints() {
     assert.strictEqual(resUpload.body.success, true);
     assert.ok(resUpload.body.imageUrl.startsWith('/uploads/'));
     console.log('    ✓ POST /api/upload passed');
+
+    console.log('  Testing GET /api/quizzes/export...');
+    const resExport = await httpGet(`http://localhost:${port}/api/quizzes/export`);
+    assert.strictEqual(resExport.statusCode, 200);
+    assert.ok(Array.isArray(resExport.body));
+    console.log('    ✓ GET /api/quizzes/export passed');
+
+    console.log('  Testing POST /api/quizzes/import...');
+    const testImportItem = [{ id: 'test-import-api', title: 'API Imported', questions: [] }];
+    const resImport = await httpPost(`http://localhost:${port}/api/quizzes/import`, { quizzes: testImportItem });
+    assert.strictEqual(resImport.statusCode, 200);
+    assert.strictEqual(resImport.body.success, true);
+    console.log('    ✓ POST /api/quizzes/import passed');
+
+    // Clean up
+    const { deleteQuiz } = require('../src/quizData');
+    deleteQuiz('test-import-api');
 
   } finally {
     testServer.close();

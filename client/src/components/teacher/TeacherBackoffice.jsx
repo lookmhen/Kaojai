@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Save, ArrowLeft, Image as ImageIcon, Clock, CheckCircle2, Upload, X, Copy, ListOrdered, ArrowUp, ArrowDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Trash2, Save, ArrowLeft, Image as ImageIcon, Clock, CheckCircle2, Upload, X, Copy, ListOrdered, ArrowUp, ArrowDown, Download, FileUp } from 'lucide-react';
 
 export const TeacherBackoffice = ({ onBack }) => {
   const [quizzes, setQuizzes] = useState([]);
@@ -7,6 +7,74 @@ export const TeacherBackoffice = ({ onBack }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [notification, setNotification] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleExportQuizzes = () => {
+    fetch('/api/quizzes/export')
+      .then(res => res.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `kaojai_quizzes_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        setNotification('ดาวน์โหลดไฟล์สำรองคลังข้อสอบ (JSON) สำเร็จเรียบร้อย! 💾');
+        setTimeout(() => setNotification(''), 3500);
+      })
+      .catch(err => {
+        console.error('Export error:', err);
+        alert('เกิดข้อผิดพลาดในการส่งออกข้อสอบ');
+      });
+  };
+
+  const handleImportFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target.result);
+        if (!Array.isArray(parsed)) {
+          alert('ไฟล์ไม่ถูกต้อง: ต้องเป็น Array ของชุดคำถาม');
+          return;
+        }
+
+        fetch('/api/quizzes/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quizzes: parsed, replaceAll: false })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              setNotification(`นำเข้าคลังข้อสอบสำเร็จ ${data.count} ชุด! 🎉`);
+              fetchQuizzes();
+              if (data.quizzes?.length > 0) {
+                setActiveQuiz(data.quizzes[data.quizzes.length - 1]);
+                setIsEditing(true);
+              }
+              setTimeout(() => setNotification(''), 4000);
+            } else {
+              alert(data.message || 'ไม่สามารถนำเข้าข้อมูลได้');
+            }
+          })
+          .catch(err => {
+            console.error('Import API error:', err);
+            alert('เกิดข้อผิดพลาดในการนำเข้าข้อมูลไปยังเซิร์ฟเวอร์');
+          });
+      } catch (err) {
+        alert('ไฟล์ JSON มีรูปแบบไม่ถูกต้อง: ' + err.message);
+      } finally {
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+    reader.readAsText(file);
+  };
 
   useEffect(() => {
     fetchQuizzes();
@@ -227,7 +295,58 @@ export const TeacherBackoffice = ({ onBack }) => {
           </h1>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Hidden File Input for Import */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".json"
+            style={{ display: 'none' }}
+            onChange={handleImportFileSelect}
+          />
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            title="นำเข้าไฟล์ข้อสอบ JSON จากเครื่องคุณ"
+            style={{
+              background: '#FFFFFF',
+              border: '1.5px solid #CBD5E1',
+              color: 'var(--text-main)',
+              padding: '10px 16px',
+              borderRadius: '12px',
+              fontWeight: 700,
+              fontSize: '0.88rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            <FileUp size={16} color="var(--accent-earth-blue)" /> นำเข้า (Import JSON)
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportQuizzes}
+            title="ดาวน์โหลดคลังข้อสอบทั้งหมดเก็บเป็นไฟล์ JSON"
+            style={{
+              background: '#FFFFFF',
+              border: '1.5px solid #CBD5E1',
+              color: 'var(--text-main)',
+              padding: '10px 16px',
+              borderRadius: '12px',
+              fontWeight: 700,
+              fontSize: '0.88rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            <Download size={16} color="#166534" /> ส่งออก (Export JSON)
+          </button>
+
           {isEditing && activeQuiz && (
             <button
               type="button"

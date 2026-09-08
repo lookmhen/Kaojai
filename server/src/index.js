@@ -5,7 +5,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const setupSocketHandlers = require('./socketHandler');
-const { getAllQuizzes, saveQuiz, deleteQuiz, duplicateQuiz } = require('./quizData');
+const { getAllQuizzes, saveQuiz, deleteQuiz, duplicateQuiz, importQuizzes } = require('./quizData');
 
 const app = express();
 app.use(cors());
@@ -80,6 +80,31 @@ app.delete('/api/quizzes/:id', (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Import & Export Quizzes
+app.get('/api/quizzes/export', (req, res) => {
+  try {
+    const quizzes = getAllQuizzes();
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="kaojai_quizzes_${Date.now()}.json"`);
+    res.send(JSON.stringify(quizzes, null, 2));
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.post('/api/quizzes/import', (req, res) => {
+  try {
+    const { quizzes, replaceAll } = req.body;
+    if (!quizzes) {
+      return res.status(400).json({ success: false, message: 'ไม่มีข้อมูลชุดคำถามที่ต้องการนำเข้า' });
+    }
+    const updated = importQuizzes(quizzes, Boolean(replaceAll));
+    res.json({ success: true, count: Array.isArray(quizzes) ? quizzes.length : 0, quizzes: updated });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
   }
 });
 
