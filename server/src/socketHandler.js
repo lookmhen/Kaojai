@@ -4,6 +4,14 @@ module.exports = function setupSocketHandlers(io) {
   io.on('connection', (socket) => {
     console.log(`[Socket Connected] ID: ${socket.id}`);
 
+    function verifyHost(pin, token = null) {
+      const room = roomManager.getRoom(pin);
+      if (!room) throw new Error('ไม่พบห้องดังกล่าว');
+      if (token && room.hostToken && token === room.hostToken) return room;
+      if (room.hostSocketId === socket.id) return room;
+      throw new Error('คุณไม่มีสิทธิ์ในการควบคุมห้องนี้ (Unauthorized Host Action)');
+    }
+
     // --- HOST HANDLERS ---
     socket.on('create_room', (customQuizSet, ackCallback) => {
       try {
@@ -13,11 +21,14 @@ module.exports = function setupSocketHandlers(io) {
         const response = {
           success: true,
           pin: room.pin,
+          hostToken: room.hostToken,
           mode: room.mode,
           status: room.status,
           quizSet: room.quizSet,
           players: roomManager.getPlayerList(room.pin),
-          counts: roomManager.getPlayerCounts(room.pin)
+          counts: roomManager.getPlayerCounts(room.pin),
+          teamsEnabled: room.teamsEnabled,
+          teams: roomManager.getTeamList(room.pin)
         };
 
         if (typeof ackCallback === 'function') {
@@ -30,10 +41,10 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('reconnect_host', ({ pin }, ackCallback) => {
+    socket.on('reconnect_host', ({ pin, hostToken }, ackCallback) => {
       try {
         if (!pin) return;
-        const snapshot = roomManager.reconnectHost(pin, socket.id);
+        const snapshot = roomManager.reconnectHost(pin, socket.id, hostToken);
         socket.join(pin);
 
         if (typeof ackCallback === 'function') {
@@ -54,10 +65,9 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('start_quiz', ({ pin }) => {
+    socket.on('start_quiz', ({ pin, hostToken }) => {
       try {
-        const room = roomManager.getRoom(pin);
-        if (!room) return socket.emit('error_message', { message: 'ไม่พบห้อง' });
+        const room = verifyHost(pin, hostToken);
 
         if (room.questionTimer) {
           clearTimeout(room.questionTimer);
@@ -71,6 +81,9 @@ module.exports = function setupSocketHandlers(io) {
         if (!room.quizSet?.questions?.length) {
           return socket.emit('error_message', { message: 'ชุดคำถามนี้ไม่มีข้อคำถาม' });
         }
+
+        // Reset all player scores, streaks, and question history for the new game session
+        roomManager.resetRoomScores(pin);
 
         const prepareDurationMs = process.env.NODE_ENV === 'test' ? 20 : 5000;
 
@@ -111,10 +124,9 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('next_question', ({ pin }) => {
+    socket.on('next_question', ({ pin, hostToken }) => {
       try {
-        const room = roomManager.getRoom(pin);
-        if (!room) return socket.emit('error_message', { message: 'ไม่พบห้อง' });
+        const room = verifyHost(pin, hostToken);
 
         if (room.status === 'ENDED') {
           const leaderboard = roomManager.getLeaderboard(pin);
@@ -137,7 +149,8 @@ module.exports = function setupSocketHandlers(io) {
         if (nextIdx >= room.quizSet.questions.length) {
           room.status = 'ENDED';
           const leaderboard = roomManager.getLeaderboard(pin);
-          return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true });
+          const quizAnalytics = roomManager.getQuizAnalytics(pin);
+          return io.to(pin).emit('quiz_ended', { leaderboard, quizAnalytics, status: 'ENDED', isEnded: true });
         }
 
         const prepareDurationMs = process.env.NODE_ENV === 'test' ? 20 : 5000;
@@ -154,7 +167,8 @@ module.exports = function setupSocketHandlers(io) {
           const result = roomManager.startQuestion(pin);
           if (result.isEnded) {
             const leaderboard = roomManager.getLeaderboard(pin);
-            return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true });
+            const quizAnalytics = roomManager.getQuizAnalytics(pin);
+            return io.to(pin).emit('quiz_ended', { leaderboard, quizAnalytics, status: 'ENDED', isEnded: true });
           }
 
           const counts = roomManager.getPlayerCounts(pin);
@@ -179,34 +193,41 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('show_leaderboard', ({ pin }) => {
+    socket.on('show_leaderboard', ({ pin, hostToken }) => {
       try {
-        const room = roomManager.getRoom(pin);
-        if (!room) return socket.emit('error_message', { message: 'ไม่พบห้อง' });
+        const room = verifyHost(pin, hostToken);
 
         if (room.questionTimer) {
           clearTimeout(room.questionTimer);
           room.questionTimer = null;
         }
+        if (room.prepareTimer) {
+          clearTimeout(room.prepareTimer);
+          room.prepareTimer = null;
+        }
 
         const leaderboard = roomManager.getLeaderboard(pin);
+        const quizAnalytics = roomManager.getQuizAnalytics(pin);
 
-        if (room.status === 'ENDED') {
-          return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true });
+        const isLastQuestion = (room.currentQuestionIndex !== null && room.currentQuestionIndex !== undefined)
+          && room.currentQuestionIndex >= (room.quizSet?.questions?.length || 1) - 1;
+
+        if (room.status === 'ENDED' || isLastQuestion) {
+          room.status = 'ENDED';
+          return io.to(pin).emit('quiz_ended', { leaderboard, quizAnalytics, status: 'ENDED', isEnded: true });
         }
 
         room.status = 'LEADERBOARD';
-        io.to(pin).emit('show_leaderboard', { leaderboard, status: 'LEADERBOARD' });
+        io.to(pin).emit('show_leaderboard', { leaderboard, quizAnalytics, status: 'LEADERBOARD' });
       } catch (err) {
         console.error('[Socket Error] show_leaderboard:', err);
         socket.emit('error_message', { message: err.message });
       }
     });
 
-    socket.on('switch_mode', ({ pin, mode }) => {
+    socket.on('switch_mode', ({ pin, mode, hostToken }) => {
       try {
-        const room = roomManager.getRoom(pin);
-        if (!room) return socket.emit('error_message', { message: 'ไม่พบห้อง' });
+        const room = verifyHost(pin, hostToken);
 
         if (room.questionTimer) {
           clearTimeout(room.questionTimer);
@@ -233,10 +254,9 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('send_pulse_nudge', ({ pin }) => {
+    socket.on('send_pulse_nudge', ({ pin, hostToken }) => {
       try {
-        const room = roomManager.getRoom(pin);
-        if (!room) return socket.emit('error_message', { message: 'ไม่พบห้องดังกล่าว' });
+        const room = verifyHost(pin, hostToken);
 
         const unvotedPlayers = Array.from(room.players.values()).filter(
           p => p.isConnected && !room.votedPulseUsers.has(p.playerId)
@@ -251,7 +271,84 @@ module.exports = function setupSocketHandlers(io) {
           }
         });
       } catch (err) {
-        console.error('[Socket Error] send_pulse_nudge:', err);
+        socket.emit('error_message', { message: err.message });
+      }
+    });
+
+    socket.on('reset_to_lobby', ({ pin, hostToken }) => {
+      try {
+        const room = verifyHost(pin, hostToken);
+
+        if (room.questionTimer) {
+          clearTimeout(room.questionTimer);
+          room.questionTimer = null;
+        }
+        if (room.prepareTimer) {
+          clearTimeout(room.prepareTimer);
+          room.prepareTimer = null;
+        }
+
+        roomManager.resetRoomToLobby(pin);
+        const playerList = roomManager.getPlayerList(pin);
+        const counts = roomManager.getPlayerCounts(pin);
+
+        io.to(pin).emit('room_reset_to_lobby', { status: 'LOBBY', players: playerList, counts });
+        io.to(pin).emit('room_updated', { players: playerList, counts });
+      } catch (err) {
+        console.error('[Socket Error] reset_to_lobby:', err);
+        socket.emit('error_message', { message: err.message });
+      }
+    });
+
+    socket.on('close_room', ({ pin, hostToken }) => {
+      try {
+        verifyHost(pin, hostToken);
+        io.to(pin).emit('room_closed', { message: 'วิทยากรได้ปิดห้องหรือออกจากห้องแล้ว' });
+        roomManager.deleteRoom(pin);
+      } catch (err) {
+        console.error('[Socket Error] close_room:', err);
+      }
+    });
+
+    socket.on('leave_room', ({ pin, playerId }) => {
+      try {
+        if (!pin || !playerId) return;
+        const result = roomManager.removePlayer(pin, playerId);
+        if (typeof socket.leave === 'function') {
+          socket.leave(pin);
+        }
+
+        if (result && result.room) {
+          const playerList = roomManager.getPlayerList(pin);
+          const counts = roomManager.getPlayerCounts(pin);
+
+          io.to(pin).emit('room_updated', {
+            players: playerList,
+            counts
+          });
+
+          io.to(pin).emit('answered_count_update', {
+            answeredCount: counts.answeredCount,
+            totalPlayers: counts.totalPlayers
+          });
+
+          io.to(pin).emit('pulse_updated', {
+            pulseVotes: result.room.pulseVotes,
+            pulseAnsweredCount: counts.pulseAnsweredCount,
+            totalPlayers: counts.totalPlayers
+          });
+
+          if (result.room.status === 'QUESTION' && counts.totalPlayers > 0 && counts.answeredCount >= counts.totalPlayers) {
+            if (result.room.questionTimer) {
+              clearTimeout(result.room.questionTimer);
+              result.room.questionTimer = null;
+            }
+            const questionResult = roomManager.getQuestionResult(pin);
+            io.to(pin).emit('question_result', questionResult);
+          }
+        }
+      } catch (err) {
+        console.error('[Socket Error] leave_room:', err);
       }
     });
 
@@ -278,7 +375,8 @@ module.exports = function setupSocketHandlers(io) {
             playerId: joinData.player.playerId,
             name: joinData.player.name,
             avatar: joinData.player.avatar,
-            score: joinData.player.score
+            score: joinData.player.score,
+            teamId: joinData.player.teamId || null
           },
           mode: joinData.mode,
           status: joinData.status,
@@ -287,7 +385,9 @@ module.exports = function setupSocketHandlers(io) {
           pulseVotes: joinData.pulseVotes,
           leaderboard: joinData.leaderboard,
           isReconnect: joinData.isReconnect,
-          counts: joinData.counts
+          counts: joinData.counts,
+          teamsEnabled: joinData.room.teamsEnabled,
+          teams: roomManager.getTeamList(cleanPin)
         };
 
         if (typeof ackCallback === 'function') {
@@ -308,15 +408,23 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('submit_answer', ({ pin, playerId, optionId }) => {
+    socket.on('submit_answer', ({ pin, playerId, optionId, orderedItemIds }) => {
       try {
-        const result = roomManager.submitAnswer(pin, playerId, optionId);
+        const answerPayload = orderedItemIds ? { orderedItemIds } : { optionId };
+        const result = roomManager.submitAnswer(pin, playerId, answerPayload);
         
         socket.emit('answer_feedback', {
           isCorrect: result.isCorrect,
           pointsEarned: result.pointsEarned,
+          basePoints: result.basePoints,
+          streak: result.streak,
+          highestStreak: result.highestStreak,
+          streakBonus: result.streakBonus,
+          comebackBonus: result.comebackBonus,
+          isComeback: result.isComeback,
           totalScore: result.totalScore,
-          alreadyAnswered: result.alreadyAnswered
+          alreadyAnswered: result.alreadyAnswered,
+          details: result.details
         });
 
         io.to(pin).emit('answered_count_update', {
@@ -358,10 +466,129 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
+    socket.on('send_pulse_reaction', ({ pin, emoji, playerId }) => {
+      try {
+        if (!pin || !emoji) return;
+        io.to(pin).emit('pulse_reaction_received', {
+          emoji,
+          playerId,
+          id: `${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
+        });
+      } catch (err) {
+        console.error('[Socket Error] send_pulse_reaction:', err);
+      }
+    });
+
+    // ─── TEAM HANDLERS (Host) ────────────────────────────────────────────────
+
+    socket.on('toggle_teams', ({ pin, enabled }, ackCallback) => {
+      try {
+        const room = roomManager.getRoom(pin);
+        if (!room) return;
+        const teamsEnabled = roomManager.setTeamsEnabled(pin, enabled);
+        const teams = roomManager.getTeamList(pin);
+        const playerList = roomManager.getPlayerList(pin);
+        io.to(pin).emit('teams_toggled', { teamsEnabled, teams, players: playerList });
+        if (typeof ackCallback === 'function') ackCallback({ success: true, teamsEnabled });
+      } catch (err) {
+        console.error('[Socket Error] toggle_teams:', err);
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: err.message });
+      }
+    });
+
+    socket.on('create_team', ({ pin, name, color }, ackCallback) => {
+      try {
+        const room = roomManager.getRoom(pin);
+        if (!room) return;
+        const team = roomManager.createTeam(pin, { name, color });
+        const teams = roomManager.getTeamList(pin);
+        const playerList = roomManager.getPlayerList(pin);
+        io.to(pin).emit('teams_updated', { teams, players: playerList });
+        if (typeof ackCallback === 'function') ackCallback({ success: true, team });
+      } catch (err) {
+        console.error('[Socket Error] create_team:', err);
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: err.message });
+      }
+    });
+
+    socket.on('remove_team', ({ pin, teamId }, ackCallback) => {
+      try {
+        const room = roomManager.getRoom(pin);
+        if (!room) return;
+        roomManager.removeTeam(pin, teamId);
+        const teams = roomManager.getTeamList(pin);
+        const playerList = roomManager.getPlayerList(pin);
+        io.to(pin).emit('teams_updated', { teams, players: playerList });
+        if (typeof ackCallback === 'function') ackCallback({ success: true });
+      } catch (err) {
+        console.error('[Socket Error] remove_team:', err);
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: err.message });
+      }
+    });
+
+    socket.on('assign_team', ({ pin, playerId, teamId }, ackCallback) => {
+      try {
+        const room = roomManager.getRoom(pin);
+        if (!room) return;
+        roomManager.assignPlayerToTeam(pin, playerId, teamId);
+        const teams = roomManager.getTeamList(pin);
+        const playerList = roomManager.getPlayerList(pin);
+        io.to(pin).emit('teams_updated', { teams, players: playerList });
+        if (typeof ackCallback === 'function') ackCallback({ success: true });
+      } catch (err) {
+        console.error('[Socket Error] assign_team:', err);
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: err.message });
+      }
+    });
+
+    socket.on('auto_assign_teams', ({ pin, teamCount }, ackCallback) => {
+      try {
+        const room = roomManager.getRoom(pin);
+        if (!room) return;
+        const teams = roomManager.autoAssignTeams(pin, teamCount || 2);
+        const playerList = roomManager.getPlayerList(pin);
+        io.to(pin).emit('teams_updated', { teams, players: playerList });
+        if (typeof ackCallback === 'function') ackCallback({ success: true, teams });
+      } catch (err) {
+        console.error('[Socket Error] auto_assign_teams:', err);
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: err.message });
+      }
+    });
+
+    socket.on('get_teams', ({ pin }, ackCallback) => {
+      try {
+        const teams = roomManager.getTeamList(pin);
+        if (typeof ackCallback === 'function') ackCallback({ success: true, teams });
+      } catch (err) {
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: err.message });
+      }
+    });
+
     // --- DISCONNECT ---
     socket.on('disconnect', () => {
       console.log(`[Socket Disconnected] ID: ${socket.id}`);
-      const info = roomManager.handleDisconnect(socket.id);
+      const info = roomManager.handleDisconnect(socket.id, undefined, (expiredRoom, expiredPlayerId) => {
+        try {
+          const counts = roomManager.getPlayerCounts(expiredRoom.pin);
+          const playerList = roomManager.getPlayerList(expiredRoom.pin);
+          io.to(expiredRoom.pin).emit('room_updated', {
+            players: playerList,
+            counts
+          });
+          io.to(expiredRoom.pin).emit('answered_count_update', {
+            answeredCount: counts.answeredCount,
+            totalPlayers: counts.totalPlayers
+          });
+          io.to(expiredRoom.pin).emit('pulse_updated', {
+            pulseVotes: expiredRoom.pulseVotes,
+            pulseAnsweredCount: counts.pulseAnsweredCount,
+            totalPlayers: counts.totalPlayers
+          });
+        } catch (e) {
+          console.error('[Socket Cleanup Error]:', e);
+        }
+      });
+
       if (info && info.room) {
         const counts = roomManager.getPlayerCounts(info.room.pin);
         const playerList = roomManager.getPlayerList(info.room.pin);
@@ -381,6 +608,16 @@ module.exports = function setupSocketHandlers(io) {
           pulseAnsweredCount: counts.pulseAnsweredCount,
           totalPlayers: counts.totalPlayers
         });
+
+        // If in QUESTION phase and all remaining connected players have answered, close question immediately
+        if (info.room.status === 'QUESTION' && counts.totalPlayers > 0 && counts.answeredCount >= counts.totalPlayers) {
+          if (info.room.questionTimer) {
+            clearTimeout(info.room.questionTimer);
+            info.room.questionTimer = null;
+          }
+          const questionResult = roomManager.getQuestionResult(info.room.pin);
+          io.to(info.room.pin).emit('question_result', questionResult);
+        }
       }
     });
   });

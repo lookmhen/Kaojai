@@ -1,17 +1,18 @@
 import React, { useEffect } from 'react';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
-import { Trophy } from 'lucide-react';
+import { Trophy, Home } from 'lucide-react';
 
-export const PlayerEndedView = ({ player, leaderboard }) => {
+export const PlayerEndedView = ({ player, leaderboard, onLeave }) => {
   useEffect(() => {
     fireConfetti();
     sfx.playFanfare();
   }, []);
 
-  const myRankIdx = leaderboard.findIndex(p => p.playerId === player.playerId);
+  const myEntry = leaderboard?.find(p => p.playerId === player?.playerId);
+  const myRankIdx = leaderboard ? leaderboard.findIndex(p => p.playerId === player?.playerId) : -1;
   const myRank = myRankIdx >= 0 ? myRankIdx + 1 : null;
-  const myScore = player.score || 0;
+  const myScore = myEntry?.score !== undefined ? myEntry.score : (player?.score || 0);
 
   return (
     <div style={{ maxWidth: '440px', margin: '40px auto', padding: '0 16px', textAlign: 'center' }}>
@@ -21,7 +22,7 @@ export const PlayerEndedView = ({ player, leaderboard }) => {
           จบกิจกรรมตอบคำถามแล้ว!
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '4px', marginBottom: '24px' }}>
-          ขอบคุณสำหรับการมีส่วนร่วมสุดยอดเยี่ยม ✨
+          ขอบคุณสำหรับการมีส่วนร่วม ✨
         </p>
 
         <div style={{ background: '#F8FAFC', borderRadius: '16px', padding: '20px', border: '1px solid #E2E8F0', marginBottom: '24px' }}>
@@ -50,9 +51,36 @@ export const PlayerEndedView = ({ player, leaderboard }) => {
           </div>
         </div>
 
-        <div style={{ color: 'var(--accent-earth-blue)', fontWeight: 700, fontSize: '0.9rem' }}>
+        <div style={{ color: 'var(--accent-earth-blue)', fontWeight: 700, fontSize: '0.9rem', marginBottom: '16px' }}>
           🌟 รอวิทยากรสรุปกิจกรรมบนหน้าจอใหญ่...
         </div>
+
+        {onLeave && (
+          <div style={{ marginTop: '20px' }}>
+            <button
+              type="button"
+              onClick={onLeave}
+              style={{
+                width: '100%',
+                padding: '14px 20px',
+                borderRadius: '30px',
+                background: 'var(--accent-earth-blue)',
+                color: '#FFFFFF',
+                fontSize: '1rem',
+                fontWeight: 800,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 14px rgba(30, 58, 138, 0.25)',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <Home size={18} /> กลับสู่หน้าหลัก
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

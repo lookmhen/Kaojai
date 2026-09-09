@@ -5,6 +5,7 @@ import { PlayerLobby } from './components/player/PlayerLobby';
 import { PlayerQuiz } from './components/player/PlayerQuiz';
 import { PlayerPulse } from './components/player/PlayerPulse';
 import { PlayerEndedView } from './components/player/PlayerEndedView';
+import { PlayerLeaderboardView } from './components/player/PlayerLeaderboardView';
 import { HostHeader } from './components/host/HostHeader';
 import { HostLobby } from './components/host/HostLobby';
 import { HostQuiz } from './components/host/HostQuiz';
@@ -38,8 +39,13 @@ export function AppContent() {
   const [questionResult, setQuestionResult] = useState(null);
   const [pulseVotes, setPulseVotes] = useState({ green: 0, yellow: 0, red: 0 });
   const [leaderboard, setLeaderboard] = useState([]);
+  const [quizAnalytics, setQuizAnalytics] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [prepareData, setPrepareData] = useState(null);
+
+  // Team State
+  const [teamsEnabled, setTeamsEnabled] = useState(false);
+  const [teams, setTeams] = useState([]);
 
   // Socket Listeners
   useEffect(() => {
@@ -50,9 +56,11 @@ export function AppContent() {
       setRoomMode(data.mode || 'QUIZ');
       setPlayers(data.players || []);
       setCounts(data.counts || { totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 });
+      if (data.teamsEnabled !== undefined) setTeamsEnabled(data.teamsEnabled);
+      if (data.teams) setTeams(data.teams);
       setStatus('LOBBY');
       setViewMode('HOST_GAME');
-      saveSessionData({ pin: data.pin, isHost: true });
+      saveSessionData({ pin: data.pin, isHost: true, hostToken: data.hostToken });
     };
 
     const onHostReconnected = (data) => {
@@ -65,8 +73,10 @@ export function AppContent() {
       if (data.questionResult) setQuestionResult(data.questionResult);
       if (data.pulseVotes) setPulseVotes(data.pulseVotes);
       if (data.leaderboard) setLeaderboard(data.leaderboard);
+      if (data.teamsEnabled !== undefined) setTeamsEnabled(data.teamsEnabled);
+      if (data.teams) setTeams(data.teams);
       setViewMode('HOST_GAME');
-      saveSessionData({ pin: data.pin, isHost: true });
+      saveSessionData({ pin: data.pin, isHost: true, hostToken: data.hostToken || session.hostToken });
     };
 
     const onRoomUpdated = (data) => {
@@ -84,6 +94,8 @@ export function AppContent() {
       if (data.questionResult) setQuestionResult(data.questionResult);
       if (data.pulseVotes) setPulseVotes(data.pulseVotes);
       if (data.leaderboard) setLeaderboard(data.leaderboard);
+      if (data.teamsEnabled !== undefined) setTeamsEnabled(data.teamsEnabled);
+      if (data.teams) setTeams(data.teams);
       
       saveSessionData({
         pin: data.pin,
@@ -131,9 +143,23 @@ export function AppContent() {
       }
     };
 
+    const onAnswerFeedback = (data) => {
+      if (data && data.totalScore !== undefined) {
+        setPlayerData(prev => ({ ...prev, score: data.totalScore }));
+      }
+    };
+
     const onShowLeaderboard = (data) => {
       setPrepareData(null);
-      setLeaderboard(data.leaderboard || []);
+      const list = data.leaderboard || [];
+      if (data.quizAnalytics) {
+        setQuizAnalytics(data.quizAnalytics);
+      }
+      setLeaderboard(list);
+      setPlayerData(prev => {
+        const me = list.find(p => p.playerId === prev.playerId);
+        return me ? { ...prev, score: me.score } : prev;
+      });
       if (data.status === 'ENDED' || data.isEnded) {
         setStatus('ENDED');
       } else {
@@ -143,7 +169,15 @@ export function AppContent() {
 
     const onQuizEnded = (data) => {
       setPrepareData(null);
-      if (data.leaderboard) setLeaderboard(data.leaderboard);
+      const list = data.leaderboard || [];
+      if (data.quizAnalytics) {
+        setQuizAnalytics(data.quizAnalytics);
+      }
+      setLeaderboard(list);
+      setPlayerData(prev => {
+        const me = list.find(p => p.playerId === prev.playerId);
+        return me ? { ...prev, score: me.score } : prev;
+      });
       setStatus('ENDED');
     };
 
@@ -172,6 +206,61 @@ export function AppContent() {
       setTimeout(() => setErrorMessage(''), 4000);
     };
 
+    const onTeamsToggled = (data) => {
+      setTeamsEnabled(data.teamsEnabled);
+      setTeams(data.teams || []);
+      setPlayers(data.players || []);
+      setPlayerData(prev => {
+        if (!prev?.playerId) return prev;
+        const me = (data.players || []).find(p => p.playerId === prev.playerId);
+        return me ? { ...prev, teamId: me.teamId || null } : prev;
+      });
+    };
+
+    const onTeamsUpdated = (data) => {
+      setTeams(data.teams || []);
+      setPlayers(data.players || []);
+      setPlayerData(prev => {
+        if (!prev?.playerId) return prev;
+        const me = (data.players || []).find(p => p.playerId === prev.playerId);
+        return me ? { ...prev, teamId: me.teamId || null } : prev;
+      });
+    };
+
+    const onRoomResetToLobby = (data) => {
+      setPrepareData(null);
+      setCurrentQuestion(null);
+      setQuestionResult(null);
+      setQuizAnalytics(null);
+      setLeaderboard([]);
+      setPlayerData(prev => (prev ? { ...prev, score: 0 } : null));
+      if (data?.players) setPlayers(data.players);
+      if (data?.counts) setCounts(data.counts);
+      setStatus('LOBBY');
+    };
+
+    const onRoomClosed = (data) => {
+      setErrorMessage(data.message || 'วิทยากรได้ปิดห้องหรือออกจากห้องแล้ว');
+      clearSession();
+      if (window.history.replaceState) {
+        const cleanUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+        window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+      }
+      setViewMode('PLAYER_JOIN');
+      setPin('');
+      setStatus('LOBBY');
+      setPlayerData(null);
+      setPrepareData(null);
+      setCurrentQuestion(null);
+      setQuestionResult(null);
+      setLeaderboard([]);
+      setQuizAnalytics(null);
+      setPlayers([]);
+      setTeams([]);
+      setPulseVotes({ green: 0, yellow: 0, red: 0 });
+      setCounts({ totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 });
+    };
+
     socket.on('room_created', onRoomCreated);
     socket.on('host_reconnected', onHostReconnected);
     socket.on('room_updated', onRoomUpdated);
@@ -179,12 +268,17 @@ export function AppContent() {
     socket.on('question_prepare', onQuestionPrepare);
     socket.on('question_start', onQuestionStart);
     socket.on('answered_count_update', onAnsweredCountUpdate);
+    socket.on('answer_feedback', onAnswerFeedback);
     socket.on('question_result', onQuestionResult);
     socket.on('show_leaderboard', onShowLeaderboard);
     socket.on('quiz_ended', onQuizEnded);
     socket.on('pulse_updated', onPulseUpdated);
     socket.on('mode_switched', onModeSwitched);
     socket.on('error_message', onErrorMessage);
+    socket.on('teams_toggled', onTeamsToggled);
+    socket.on('teams_updated', onTeamsUpdated);
+    socket.on('room_reset_to_lobby', onRoomResetToLobby);
+    socket.on('room_closed', onRoomClosed);
 
     return () => {
       socket.off('room_created', onRoomCreated);
@@ -194,14 +288,19 @@ export function AppContent() {
       socket.off('question_prepare', onQuestionPrepare);
       socket.off('question_start', onQuestionStart);
       socket.off('answered_count_update', onAnsweredCountUpdate);
+      socket.off('answer_feedback', onAnswerFeedback);
       socket.off('question_result', onQuestionResult);
       socket.off('show_leaderboard', onShowLeaderboard);
       socket.off('quiz_ended', onQuizEnded);
       socket.off('pulse_updated', onPulseUpdated);
       socket.off('mode_switched', onModeSwitched);
       socket.off('error_message', onErrorMessage);
+      socket.off('teams_toggled', onTeamsToggled);
+      socket.off('teams_updated', onTeamsUpdated);
+      socket.off('room_reset_to_lobby', onRoomResetToLobby);
+      socket.off('room_closed', onRoomClosed);
     };
-  }, [socket]);
+  }, [socket, session.hostToken]);
 
   // Host Action Handlers
   const handleCreateRoom = (customQuizId) => {
@@ -211,29 +310,80 @@ export function AppContent() {
 
   const handleStartQuiz = (quizId) => {
     if (!socket) return;
-    socket.emit('start_quiz', { pin });
+    socket.emit('start_quiz', { pin, hostToken: session.hostToken });
   };
 
   const handleNextQuestion = () => {
     if (!socket || status === 'ENDED') return;
-    socket.emit('next_question', { pin });
+    socket.emit('next_question', { pin, hostToken: session.hostToken });
   };
 
   const handleShowLeaderboard = () => {
     if (!socket) return;
-    socket.emit('show_leaderboard', { pin });
+    socket.emit('show_leaderboard', { pin, hostToken: session.hostToken });
   };
 
   const handleSwitchMode = (targetMode) => {
     if (!socket) return;
-    socket.emit('switch_mode', { pin, mode: targetMode });
+    socket.emit('switch_mode', { pin, mode: targetMode, hostToken: session.hostToken });
+  };
+
+  const handleResetToLobby = () => {
+    if (!socket) return;
+    socket.emit('reset_to_lobby', { pin, hostToken: session.hostToken });
   };
 
   const handleLeaveSession = () => {
+    if (socket && pin) {
+      if (session?.isHost || session?.hostToken) {
+        socket.emit('close_room', { pin, hostToken: session.hostToken });
+      } else if (playerData?.playerId) {
+        socket.emit('leave_room', { pin, playerId: playerData.playerId });
+      }
+    }
     clearSession();
+    if (window.history.replaceState) {
+      const cleanUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+      window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+    }
     setViewMode('PLAYER_JOIN');
     setPin('');
     setStatus('LOBBY');
+    setPlayerData(null);
+    setPrepareData(null);
+    setCurrentQuestion(null);
+    setQuestionResult(null);
+    setLeaderboard([]);
+    setQuizAnalytics(null);
+    setPlayers([]);
+    setTeams([]);
+    setPulseVotes({ green: 0, yellow: 0, red: 0 });
+    setCounts({ totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 });
+  };
+
+  const handleToggleTeams = (enabled) => {
+    if (!socket) return;
+    socket.emit('toggle_teams', { pin, enabled });
+  };
+
+  const handleAutoAssignTeams = (teamCount) => {
+    if (!socket) return;
+    socket.emit('auto_assign_teams', { pin, teamCount });
+  };
+
+  const handleCreateTeam = (name, color) => {
+    if (!socket) return;
+    socket.emit('create_team', { pin, name, color });
+  };
+
+  const handleRemoveTeam = (teamId) => {
+    if (!socket) return;
+    socket.emit('remove_team', { pin, teamId });
+  };
+
+  const handleAssignTeam = (playerId, teamId) => {
+    if (!socket) return;
+    socket.emit('assign_team', { pin, playerId, teamId });
   };
 
   return (
@@ -293,15 +443,24 @@ export function AppContent() {
               players={players}
               counts={counts}
               onStartQuiz={handleStartQuiz}
+              teamsEnabled={teamsEnabled}
+              teams={teams}
+              onToggleTeams={handleToggleTeams}
+              onAutoAssignTeams={handleAutoAssignTeams}
+              onCreateTeam={handleCreateTeam}
+              onRemoveTeam={handleRemoveTeam}
+              onAssignTeam={handleAssignTeam}
             />
           ) : status === 'LEADERBOARD' || status === 'ENDED' ? (
             <HostLeaderboard
               pin={pin}
               leaderboard={leaderboard}
               pulseVotes={pulseVotes}
+              quizAnalytics={quizAnalytics}
               isEnded={status === 'ENDED'}
               onNextQuestion={handleNextQuestion}
-              onResetToLobby={() => setStatus('LOBBY')}
+              onResetToLobby={handleResetToLobby}
+              onLeave={handleLeaveSession}
             />
           ) : (
             <HostQuiz
@@ -319,7 +478,18 @@ export function AppContent() {
       {/* PARTICIPANT VIEW ROUTING */}
       {viewMode === 'PLAYER_JOIN' && (
         <JoinRoom
-          onJoined={() => setViewMode('PLAYER_GAME')}
+          onJoined={(joinRes) => {
+            if (joinRes?.player) setPlayerData(joinRes.player);
+            if (joinRes?.pin) setPin(joinRes.pin);
+            if (joinRes?.status) setStatus(joinRes.status);
+            if (joinRes?.mode) setRoomMode(joinRes.mode);
+            if (joinRes?.currentQuestion) setCurrentQuestion(joinRes.currentQuestion);
+            if (joinRes?.leaderboard) setLeaderboard(joinRes.leaderboard);
+            if (joinRes?.counts) setCounts(joinRes.counts);
+            if (joinRes?.teamsEnabled !== undefined) setTeamsEnabled(joinRes.teamsEnabled);
+            if (joinRes?.teams) setTeams(joinRes.teams);
+            setViewMode('PLAYER_GAME');
+          }}
           onSwitchToHost={handleCreateRoom}
           onOpenTeacherBackoffice={() => setViewMode('TEACHER_BACKOFFICE')}
         />
@@ -333,17 +503,30 @@ export function AppContent() {
               player={playerData}
               pulseAnsweredCount={counts.pulseAnsweredCount}
               totalPlayers={counts.totalPlayers}
+              onLeave={handleLeaveSession}
             />
           ) : status === 'LOBBY' ? (
             <PlayerLobby
+              pin={pin}
               player={playerData}
               totalPlayers={counts.totalPlayers}
               mode={roomMode}
+              teamsEnabled={teamsEnabled}
+              teams={teams}
+              onAssignTeam={handleAssignTeam}
+              onLeave={handleLeaveSession}
             />
           ) : status === 'ENDED' ? (
             <PlayerEndedView
               player={playerData}
               leaderboard={leaderboard}
+              onLeave={handleLeaveSession}
+            />
+          ) : status === 'LEADERBOARD' ? (
+            <PlayerLeaderboardView
+              player={playerData}
+              leaderboard={leaderboard}
+              onLeave={handleLeaveSession}
             />
           ) : (
             <PlayerQuiz

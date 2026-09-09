@@ -1,11 +1,34 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const setupSocketHandlers = require('./socketHandler');
-const { getAllQuizzes, saveQuiz, deleteQuiz, duplicateQuiz } = require('./quizData');
+const { getAllQuizzes, saveQuiz, deleteQuiz, duplicateQuiz, importQuizzes } = require('./quizData');
+const { generateAiQuiz } = require('./aiService');
+
+function getLocalIpAddress() {
+  const interfaces = os.networkInterfaces();
+  const candidates = [];
+
+  for (const name of Object.keys(interfaces)) {
+    for (const net of interfaces[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        // Prioritize common Wi-Fi and Ethernet adapters
+        const lowerName = name.toLowerCase();
+        const isVirtual = lowerName.includes('vethernet') || lowerName.includes('virtual') || lowerName.includes('wsl');
+        candidates.push({ address: net.address, isVirtual, name });
+      }
+    }
+  }
+
+  // Sort physical adapters first
+  candidates.sort((a, b) => (a.isVirtual === b.isVirtual ? 0 : a.isVirtual ? 1 : -1));
+  return candidates[0]?.address || 'localhost';
+}
 
 const app = express();
 app.use(cors());
@@ -31,16 +54,22 @@ const io = new Server(server, {
   }
 });
 
-// Static uploads serving
-const uploadsDir = path.join(__dirname, '../public/uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-app.use('/uploads', express.static(uploadsDir));
 
-// REST Health Check & Quiz CRUD Endpoints
+
+// REST Health Check & Server Info
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'KaoJai Real-time Quiz Engine' });
+});
+
+app.get('/api/server-info', (req, res) => {
+  const localIp = getLocalIpAddress();
+  const configuredHost = process.env.PUBLIC_HOST || process.env.SERVER_HOST || null;
+  res.json({
+    success: true,
+    localIp,
+    configuredHost,
+    serverPort: process.env.PORT || 4000
+  });
 });
 
 app.get('/api/quizzes', (req, res) => {
@@ -83,21 +112,101 @@ app.delete('/api/quizzes/:id', (req, res) => {
   }
 });
 
-// Image Upload Endpoint
+// Import & Export Quizzes
+app.get('/api/quizzes/export', (req, res) => {
+  try {
+    const quizzes = getAllQuizzes();
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="kaojai_quizzes_${Date.now()}.json"`);
+    res.send(JSON.stringify(quizzes, null, 2));
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.post('/api/quizzes/import', (req, res) => {
+  try {
+    const { quizzes, replaceAll } = req.body;
+    if (!quizzes) {
+      return res.status(400).json({ success: false, message: 'ไม่มีข้อมูลชุดคำถามที่ต้องการนำเข้า' });
+    }
+    const updated = importQuizzes(quizzes, Boolean(replaceAll));
+    res.json({ success: true, count: Array.isArray(quizzes) ? quizzes.length : 0, quizzes: updated });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+});
+
+// AI Quiz Generator Endpoint
+app.post('/api/quizzes/generate-ai', async (req, res) => {
+  try {
+    const { topic, textContent, questionCount, questionTypes, difficulty, language } = req.body;
+    if (!topic && !textContent) {
+      return res.status(400).json({
+        success: false,
+        message: 'กรุณาระบุหัวข้อ (Topic) หรือใส่เนื้อหาที่ต้องการนำมาสร้างข้อสอบ'
+      });
+    }
+
+    const result = await generateAiQuiz({
+      topic,
+      textContent,
+      questionCount: Number(questionCount) || 5,
+      questionTypes: questionTypes || 'MIXED',
+      difficulty: difficulty || 'medium',
+      language: language || 'th'
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('[API Error] generate-ai:', err);
+    res.status(500).json({ success: false, message: err.message || 'เกิดข้อผิดพลาดในการสร้างข้อสอบด้วย AI' });
+  }
+});
+
+const ALLOWED_MIME_TYPES = {
+  'image/jpeg': 'jpg',
+  'image/jpg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif'
+};
+
+// Static uploads serving with security headers
+const uploadsDir = path.join(__dirname, '../public/uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  next();
+}, express.static(uploadsDir));
+
+// Image Upload Endpoint with Strict MIME Whitelist and 5MB Limit
 app.post('/api/upload', (req, res) => {
   try {
-    const { imageData, fileName } = req.body;
-    if (!imageData) {
+    const { imageData } = req.body;
+    if (!imageData || typeof imageData !== 'string') {
       return res.status(400).json({ success: false, message: 'ไม่มีข้อมูลรูปภาพ' });
     }
 
-    const matches = imageData.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
+    const matches = imageData.match(/^data:(image\/[a-zA-Z0-9.-]+);base64,(.+)$/);
     if (!matches) {
-      return res.json({ success: true, imageUrl: imageData });
+      return res.status(400).json({ success: false, message: 'รูปแบบ Base64 รูปภาพไม่ถูกต้อง' });
     }
 
-    const ext = matches[1] || 'png';
+    const mimeType = matches[1].toLowerCase();
+    const ext = ALLOWED_MIME_TYPES[mimeType];
+    if (!ext) {
+      return res.status(400).json({ success: false, message: 'รองรับเฉพาะไฟล์ JPG, PNG, WEBP, GIF เท่านั้น' });
+    }
+
     const base64Data = matches[2];
+    const byteLength = Buffer.byteLength(base64Data, 'base64');
+    if (byteLength > 5 * 1024 * 1024) {
+      return res.status(400).json({ success: false, message: 'ขนาดรูปภาพต้องไม่เกิน 5MB' });
+    }
+
     const safeFileName = `img_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
     const filePath = path.join(uploadsDir, safeFileName);
 
@@ -115,6 +224,11 @@ app.post('/api/upload', (req, res) => {
 setupSocketHandlers(io);
 
 const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => {
-  console.log(`🚀 KaoJai Server running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test' || require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`🚀 KaoJai Server running on port ${PORT}`);
+  });
+}
+
+module.exports = { app, server, getLocalIpAddress };
+

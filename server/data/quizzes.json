@@ -1,0 +1,777 @@
+[
+  {
+    "id": "quiz-1",
+    "title": "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review)",
+    "description": "ทดสอบความเข้าใจเกี่ยวกับกระบวนการทำงานและเป้าหมายองค์กร",
+    "questions": [
+      {
+        "id": "q1",
+        "questionType": "CHOICE",
+        "questionText": "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "สะสาง (Sort)",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "สะดวก (Set in order)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "สะอาด (Shine)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "สร้างมาตรฐาน (Standardize)",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q2",
+        "questionType": "CHOICE",
+        "questionText": "การสื่อสารที่ดีในการทำงานร่วมกันควรเน้นเรื่องใดมากที่สุด?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ความชัดเจนและความโปร่งใส",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "ความเร็วโดยไม่ตรวจทาน",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "การสั่งงานฝ่ายเดียว",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "การส่งอีเมลอย่างเดียว",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q3",
+        "questionType": "SEQUENCE",
+        "questionText": "จงเรียงลำดับขั้นตอนมาตรฐานการแก้ปัญหา Network Incident (SOP)",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq1",
+            "text": "รับแจ้งเหตุและระบุขอบเขตผลกระทบ (Triage & Assess)"
+          },
+          {
+            "id": "seq2",
+            "text": "ตรวจสอบสถานะอุปกรณ์และวิเคราะห์ Logs (Diagnose)"
+          },
+          {
+            "id": "seq3",
+            "text": "ดำเนินการแก้ไขหรือ Failover ระบบสำรอง (Mitigate)"
+          },
+          {
+            "id": "seq4",
+            "text": "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)"
+          },
+          {
+            "id": "seq5",
+            "text": "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "quiz-2",
+    "title": "ความรู้ทั่วไปและไอทีน่ารู้ (Tech & Digital Quiz)",
+    "description": "ทายความรู้รอบตัวด้านไอทีและเทคโนโลยีดิจิทัล",
+    "questions": [
+      {
+        "id": "q1",
+        "questionType": "CHOICE",
+        "questionText": "สัญลักษณ์ HTML ย่อมาจากอะไร?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "HyperText Markup Language",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "High Tech Multi Language",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "Hyper Transfer Main Link",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "Home Tool Management Line",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "quiz-1788877491090",
+    "title": "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review) (คัดลอก)",
+    "description": "ทดสอบความเข้าใจเกี่ยวกับกระบวนการทำงานและเป้าหมายองค์กร",
+    "questions": [
+      {
+        "id": "q-1788877491090-1",
+        "questionType": "CHOICE",
+        "questionText": "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "สะสาง (Sort)",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "สะดวก (Set in order)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "สะอาด (Shine)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "สร้างมาตรฐาน (Standardize)",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877491090-2",
+        "questionType": "CHOICE",
+        "questionText": "การสื่อสารที่ดีในการทำงานร่วมกันควรเน้นเรื่องใดมากที่สุด?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ความชัดเจนและความโปร่งใส",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "ความเร็วโดยไม่ตรวจทาน",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "การสั่งงานฝ่ายเดียว",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "การส่งอีเมลอย่างเดียว",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877491090-3",
+        "questionType": "SEQUENCE",
+        "questionText": "จงเรียงลำดับขั้นตอนมาตรฐานการแก้ปัญหา Network Incident (SOP)",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1788877491090-1",
+            "text": "รับแจ้งเหตุและระบุขอบเขตผลกระทบ (Triage & Assess)"
+          },
+          {
+            "id": "seq-1788877491090-2",
+            "text": "ตรวจสอบสถานะอุปกรณ์และวิเคราะห์ Logs (Diagnose)"
+          },
+          {
+            "id": "seq-1788877491090-3",
+            "text": "ดำเนินการแก้ไขหรือ Failover ระบบสำรอง (Mitigate)"
+          },
+          {
+            "id": "seq-1788877491090-4",
+            "text": "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)"
+          },
+          {
+            "id": "seq-1788877491090-5",
+            "text": "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "quiz-1788877549537",
+    "title": "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review) (คัดลอก)",
+    "description": "ทดสอบความเข้าใจเกี่ยวกับกระบวนการทำงานและเป้าหมายองค์กร",
+    "questions": [
+      {
+        "id": "q-1788877549537-1",
+        "questionType": "CHOICE",
+        "questionText": "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "สะสาง (Sort)",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "สะดวก (Set in order)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "สะอาด (Shine)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "สร้างมาตรฐาน (Standardize)",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877549537-2",
+        "questionType": "CHOICE",
+        "questionText": "การสื่อสารที่ดีในการทำงานร่วมกันควรเน้นเรื่องใดมากที่สุด?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ความชัดเจนและความโปร่งใส",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "ความเร็วโดยไม่ตรวจทาน",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "การสั่งงานฝ่ายเดียว",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "การส่งอีเมลอย่างเดียว",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877549537-3",
+        "questionType": "SEQUENCE",
+        "questionText": "จงเรียงลำดับขั้นตอนมาตรฐานการแก้ปัญหา Network Incident (SOP)",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1788877549537-1",
+            "text": "รับแจ้งเหตุและระบุขอบเขตผลกระทบ (Triage & Assess)"
+          },
+          {
+            "id": "seq-1788877549537-2",
+            "text": "ตรวจสอบสถานะอุปกรณ์และวิเคราะห์ Logs (Diagnose)"
+          },
+          {
+            "id": "seq-1788877549537-3",
+            "text": "ดำเนินการแก้ไขหรือ Failover ระบบสำรอง (Mitigate)"
+          },
+          {
+            "id": "seq-1788877549537-4",
+            "text": "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)"
+          },
+          {
+            "id": "seq-1788877549537-5",
+            "text": "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "quiz-1788877700976",
+    "title": "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review) (คัดลอก)",
+    "description": "ทดสอบความเข้าใจเกี่ยวกับกระบวนการทำงานและเป้าหมายองค์กร",
+    "questions": [
+      {
+        "id": "q-1788877700976-1",
+        "questionType": "CHOICE",
+        "questionText": "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "สะสาง (Sort)",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "สะดวก (Set in order)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "สะอาด (Shine)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "สร้างมาตรฐาน (Standardize)",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877700976-2",
+        "questionType": "CHOICE",
+        "questionText": "การสื่อสารที่ดีในการทำงานร่วมกันควรเน้นเรื่องใดมากที่สุด?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ความชัดเจนและความโปร่งใส",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "ความเร็วโดยไม่ตรวจทาน",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "การสั่งงานฝ่ายเดียว",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "การส่งอีเมลอย่างเดียว",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877700976-3",
+        "questionType": "SEQUENCE",
+        "questionText": "จงเรียงลำดับขั้นตอนมาตรฐานการแก้ปัญหา Network Incident (SOP)",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1788877700976-1",
+            "text": "รับแจ้งเหตุและระบุขอบเขตผลกระทบ (Triage & Assess)"
+          },
+          {
+            "id": "seq-1788877700976-2",
+            "text": "ตรวจสอบสถานะอุปกรณ์และวิเคราะห์ Logs (Diagnose)"
+          },
+          {
+            "id": "seq-1788877700976-3",
+            "text": "ดำเนินการแก้ไขหรือ Failover ระบบสำรอง (Mitigate)"
+          },
+          {
+            "id": "seq-1788877700976-4",
+            "text": "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)"
+          },
+          {
+            "id": "seq-1788877700976-5",
+            "text": "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "quiz-1788877714381",
+    "title": "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review) (คัดลอก)",
+    "description": "ทดสอบความเข้าใจเกี่ยวกับกระบวนการทำงานและเป้าหมายองค์กร",
+    "questions": [
+      {
+        "id": "q-1788877714381-1",
+        "questionType": "CHOICE",
+        "questionText": "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "สะสาง (Sort)",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "สะดวก (Set in order)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "สะอาด (Shine)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "สร้างมาตรฐาน (Standardize)",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877714381-2",
+        "questionType": "CHOICE",
+        "questionText": "การสื่อสารที่ดีในการทำงานร่วมกันควรเน้นเรื่องใดมากที่สุด?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ความชัดเจนและความโปร่งใส",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "ความเร็วโดยไม่ตรวจทาน",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "การสั่งงานฝ่ายเดียว",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "การส่งอีเมลอย่างเดียว",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1788877714381-3",
+        "questionType": "SEQUENCE",
+        "questionText": "จงเรียงลำดับขั้นตอนมาตรฐานการแก้ปัญหา Network Incident (SOP)",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1788877714381-1",
+            "text": "รับแจ้งเหตุและระบุขอบเขตผลกระทบ (Triage & Assess)"
+          },
+          {
+            "id": "seq-1788877714381-2",
+            "text": "ตรวจสอบสถานะอุปกรณ์และวิเคราะห์ Logs (Diagnose)"
+          },
+          {
+            "id": "seq-1788877714381-3",
+            "text": "ดำเนินการแก้ไขหรือ Failover ระบบสำรอง (Mitigate)"
+          },
+          {
+            "id": "seq-1788877714381-4",
+            "text": "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)"
+          },
+          {
+            "id": "seq-1788877714381-5",
+            "text": "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "quiz-ai-1788879355425",
+    "title": "แบบทดสอบความตระหนักรู้ด้านความปลอดภัยไซเบอร์สำหรับพนักงานใหม่",
+    "description": "ชุดแบบทดสอบนี้ออกแบบมาเพื่อประเมินและเสริมสร้างความเข้าใจพื้นฐานด้านความปลอดภัยไซเบอร์ที่จำเป็นสำหรับพนักงานใหม่ทุกคน เพื่อปกป้องข้อมูลของบริษัทและส่วนบุคคล",
+    "questions": [
+      {
+        "id": "q-ai-1788879355425-1",
+        "questionType": "CHOICE",
+        "questionText": "รหัสผ่านที่ปลอดภัยควรมีลักษณะอย่างไร?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ใช้ชื่อเล่นและปีเกิดเพื่อให้จำง่าย",
+            "isCorrect": false
+          },
+          {
+            "id": "opt2",
+            "text": "ผสมตัวอักษรพิมพ์เล็ก พิมพ์ใหญ่ ตัวเลข และสัญลักษณ์พิเศษ",
+            "isCorrect": true
+          },
+          {
+            "id": "opt3",
+            "text": "ใช้รหัสผ่านเดียวกันกับทุกบัญชีเพื่อความสะดวก",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "เขียนรหัสผ่านแปะไว้ใต้คีย์บอร์ด",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1788879355425-2",
+        "questionType": "SEQUENCE",
+        "questionText": "หากคุณได้รับอีเมลที่น่าสงสัยและคิดว่าเป็น Phishing ควรดำเนินการอย่างไรตามลำดับที่ถูกต้อง?",
+        "timeLimitSeconds": 35,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1788879355425-1-1",
+            "text": "อย่าคลิกลิงก์หรือเปิดไฟล์แนบในอีเมล"
+          },
+          {
+            "id": "seq-1788879355425-1-2",
+            "text": "ส่งต่ออีเมลดังกล่าวไปยังทีม IT Security ของบริษัท"
+          },
+          {
+            "id": "seq-1788879355425-1-3",
+            "text": "ลบอีเมลนั้นออกจากกล่องจดหมายของคุณ"
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1788879355425-3",
+        "questionType": "CHOICE",
+        "questionText": "ข้อใดไม่ใช่สัญญาณทั่วไปของอีเมล Phishing?",
+        "timeLimitSeconds": 25,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "การใช้ภาษาที่ไม่เป็นทางการและมีข้อผิดพลาดทางไวยากรณ์",
+            "isCorrect": false
+          },
+          {
+            "id": "opt2",
+            "text": "การขอให้คุณยืนยันข้อมูลส่วนบุคคลหรือข้อมูลการเข้าสู่ระบบ",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "การส่งมาจากโดเมนอีเมลที่ไม่ตรงกับชื่อองค์กร",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "การมีลายเซ็นอีเมลที่เป็นทางการและข้อมูลติดต่อครบถ้วน",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1788879355425-4",
+        "questionType": "SEQUENCE",
+        "questionText": "หากคุณทำอุปกรณ์พกพาของบริษัทหาย ควรดำเนินการอย่างไรเพื่อลดความเสี่ยงด้านความปลอดภัย?",
+        "timeLimitSeconds": 40,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1788879355425-3-1",
+            "text": "แจ้งฝ่าย IT ของบริษัททันที"
+          },
+          {
+            "id": "seq-1788879355425-3-2",
+            "text": "พยายามเข้าถึงและลบข้อมูลจากระยะไกล (ถ้าเป็นไปได้)"
+          },
+          {
+            "id": "seq-1788879355425-3-3",
+            "text": "เปลี่ยนรหัสผ่านของบัญชีสำคัญที่คุณเคยเข้าสู่ระบบจากอุปกรณ์นั้น"
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1788879355425-5",
+        "questionType": "CHOICE",
+        "questionText": "เหตุใดการอัปเดตซอฟต์แวร์และระบบปฏิบัติการให้เป็นปัจจุบันอยู่เสมอจึงมีความสำคัญ?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "เพื่อให้โปรแกรมมีฟีเจอร์ใหม่ๆ ที่สวยงามขึ้น",
+            "isCorrect": false
+          },
+          {
+            "id": "opt2",
+            "text": "เพื่อแก้ไขช่องโหว่ด้านความปลอดภัยและเพิ่มประสิทธิภาพการทำงาน",
+            "isCorrect": true
+          },
+          {
+            "id": "opt3",
+            "text": "เพื่อลดพื้นที่จัดเก็บข้อมูลบนเครื่องคอมพิวเตอร์",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "เพื่อให้สามารถติดตั้งโปรแกรมเถื่อนได้ง่ายขึ้น",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1788879355425-6",
+        "questionType": "SEQUENCE",
+        "questionText": "จงจัดลำดับขั้นตอนการสร้างรหัสผ่านที่แข็งแกร่งและปลอดภัยที่สุด",
+        "timeLimitSeconds": 45,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1788879355425-5-1",
+            "text": "เลือกใช้ประโยคหรือวลีที่จำง่ายแต่คาดเดายาก"
+          },
+          {
+            "id": "seq-1788879355425-5-2",
+            "text": "ผสมผสานตัวอักษรพิมพ์เล็ก พิมพ์ใหญ่ ตัวเลข และสัญลักษณ์พิเศษ"
+          },
+          {
+            "id": "seq-1788879355425-5-3",
+            "text": "ใช้ความยาวอย่างน้อย 12-14 ตัวอักษร"
+          },
+          {
+            "id": "seq-1788879355425-5-4",
+            "text": "หลีกเลี่ยงการใช้ข้อมูลส่วนตัวที่คาดเดาได้ง่าย เช่น วันเกิด"
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1788879355425-7",
+        "questionType": "CHOICE",
+        "questionText": "Multi-Factor Authentication (MFA) คืออะไร?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "การใช้รหัสผ่านเดียวสำหรับทุกบัญชี",
+            "isCorrect": false
+          },
+          {
+            "id": "opt2",
+            "text": "การเข้าสู่ระบบที่ต้องใช้รหัสผ่านเพียงอย่างเดียว",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "วิธีการยืนยันตัวตนที่ต้องใช้หลักฐานมากกว่าหนึ่งอย่าง เช่น รหัสผ่านและ OTP",
+            "isCorrect": true
+          },
+          {
+            "id": "opt4",
+            "text": "การอนุญาตให้ผู้อื่นเข้าถึงบัญชีของคุณได้โดยไม่ต้องใช้รหัสผ่าน",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1788879355425-8",
+        "questionType": "SEQUENCE",
+        "questionText": "หากต้องการดาวน์โหลดไฟล์จากอินเทอร์เน็ตอย่างปลอดภัย ควรปฏิบัติตามขั้นตอนใด?",
+        "timeLimitSeconds": 40,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1788879355425-7-1",
+            "text": "ตรวจสอบแหล่งที่มาของไฟล์ว่าน่าเชื่อถือหรือไม่"
+          },
+          {
+            "id": "seq-1788879355425-7-2",
+            "text": "สแกนไฟล์ด้วยโปรแกรม Antivirus ก่อนเปิดใช้งาน"
+          },
+          {
+            "id": "seq-1788879355425-7-3",
+            "text": "เปิดไฟล์ในสภาพแวดล้อมที่ปลอดภัย เช่น Sandbox (ถ้ามี)"
+          },
+          {
+            "id": "seq-1788879355425-7-4",
+            "text": "ลบไฟล์ที่ดาวน์โหลดมา หากพบว่ามีข้อสงสัยหรือเป็นอันตราย"
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1788879355425-9",
+        "questionType": "CHOICE",
+        "questionText": "ข้อใดคือความเสี่ยงหลักของการใช้งาน Wi-Fi สาธารณะ?",
+        "timeLimitSeconds": 25,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ความเร็วอินเทอร์เน็ตช้ากว่าปกติ",
+            "isCorrect": false
+          },
+          {
+            "id": "opt2",
+            "text": "อุปกรณ์อาจถูกโจมตีผ่านช่องโหว่หรือถูกดักจับข้อมูล",
+            "isCorrect": true
+          },
+          {
+            "id": "opt3",
+            "text": "ไม่สามารถเข้าถึงเว็บไซต์บางประเภทได้",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "แบตเตอรี่โทรศัพท์หมดเร็วขึ้น",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1788879355425-10",
+        "questionType": "SEQUENCE",
+        "questionText": "หากคุณสงสัยว่าคอมพิวเตอร์ติดมัลแวร์ ควรดำเนินการอย่างไรเป็นอันดับแรก?",
+        "timeLimitSeconds": 45,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1788879355425-9-1",
+            "text": "ตัดการเชื่อมต่ออินเทอร์เน็ตเพื่อป้องกันการแพร่กระจาย"
+          },
+          {
+            "id": "seq-1788879355425-9-2",
+            "text": "แจ้งทีม IT ของบริษัททันที"
+          },
+          {
+            "id": "seq-1788879355425-9-3",
+            "text": "สแกนระบบด้วยโปรแกรม Antivirus ที่เป็นปัจจุบัน"
+          },
+          {
+            "id": "seq-1788879355425-9-4",
+            "text": "ทำการสำรองข้อมูลสำคัญหากสามารถทำได้อย่างปลอดภัย"
+          }
+        ]
+      }
+    ]
+  }
+]

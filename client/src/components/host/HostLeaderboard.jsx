@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
-import { Trophy, ArrowRight, Flag, RotateCcw, FileSpreadsheet } from 'lucide-react';
+import { Trophy, ArrowRight, Flag, RotateCcw, FileSpreadsheet, LogOut } from 'lucide-react';
 import { exportGameReportCSV } from '../../utils/exportReport';
 
-export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, isEnded, onNextQuestion, onResetToLobby }) => {
+export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, isEnded, onNextQuestion, onResetToLobby, onLeave }) => {
   const [animatedScores, setAnimatedScores] = useState({});
 
   useEffect(() => {
@@ -132,9 +132,29 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, isEnded, onNextQ
                 {/* Player Info & Animated Racing Bar */}
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)' }}>
-                      {player.name}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)' }}>
+                        {player.name}
+                      </span>
+                      {player.streak >= 2 && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            background: player.streak >= 4 ? '#EF4444' : '#F97316',
+                            color: '#FFFFFF',
+                            fontSize: '0.72rem',
+                            fontWeight: 900,
+                            padding: '2px 8px',
+                            borderRadius: '20px',
+                            boxShadow: '0 2px 6px rgba(249, 115, 22, 0.4)'
+                          }}
+                        >
+                          🔥 {player.streak}
+                        </span>
+                      )}
+                    </div>
                     <span style={{ fontWeight: 900, color: 'var(--accent-earth-orange)', fontSize: '1.15rem' }}>
                       {currentScore.toLocaleString()} Pts
                     </span>
@@ -180,7 +200,7 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, isEnded, onNextQ
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
         <button
           type="button"
-          onClick={() => exportGameReportCSV({ pin, leaderboard, pulseVotes })}
+          onClick={() => exportGameReportCSV({ pin, leaderboard, pulseVotes, quizAnalytics })}
           style={{
             padding: '16px 32px',
             borderRadius: '50px',
@@ -200,26 +220,51 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, isEnded, onNextQ
         </button>
 
         {isEnded ? (
-          <button
-            type="button"
-            onClick={onResetToLobby}
-            style={{
-              padding: '16px 36px',
-              borderRadius: '50px',
-              background: 'var(--accent-earth-blue)',
-              color: '#FFFFFF',
-              fontSize: '1.1rem',
-              fontWeight: 800,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '10px',
-              boxShadow: '0 4px 14px rgba(30, 58, 138, 0.25)',
-              borderBottom: '3px solid #172554',
-              cursor: 'pointer'
-            }}
-          >
-            <RotateCcw size={20} /> จบเกม / กลับสู่หน้า Lobby
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={onResetToLobby}
+              style={{
+                padding: '16px 32px',
+                borderRadius: '50px',
+                background: 'var(--accent-earth-blue)',
+                color: '#FFFFFF',
+                fontSize: '1.1rem',
+                fontWeight: 800,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '10px',
+                boxShadow: '0 4px 14px rgba(30, 58, 138, 0.25)',
+                borderBottom: '3px solid #172554',
+                cursor: 'pointer'
+              }}
+            >
+              <RotateCcw size={20} /> จบเกม / กลับสู่หน้า Lobby
+            </button>
+
+            {onLeave && (
+              <button
+                type="button"
+                onClick={onLeave}
+                style={{
+                  padding: '16px 32px',
+                  borderRadius: '50px',
+                  background: '#F1F5F9',
+                  color: '#334155',
+                  border: '1.5px solid #CBD5E1',
+                  fontSize: '1.1rem',
+                  fontWeight: 800,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                  cursor: 'pointer'
+                }}
+              >
+                <LogOut size={20} color="#DC2626" /> ออกจากห้อง / กลับหน้าหลัก
+              </button>
+            )}
+          </>
         ) : (
           <button
             type="button"
