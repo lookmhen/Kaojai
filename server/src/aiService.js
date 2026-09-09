@@ -2,7 +2,11 @@
 // Handles AI Quiz generation using Google Gemini 1.5 Flash REST API with Smart Mock Fallback
 
 // Prefer gemini-flash-latest, with fallback options
-const GEMINI_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash'];
+const GEMINI_MODELS = [
+  'gemini-flash-latest', // ให้ระบบเลือก Flash ตัวล่าสุดที่เสถียร
+  'gemini-3.8-flash',    // Fallback หรือเจาะจงรุ่นใหม่
+  'gemini-2.5-flash'     // Fallback ตัวสำรองกรณีตัวบนติดโหลดสูง (503)
+];
 
 const QUIZ_RESPONSE_SCHEMA = {
   type: 'OBJECT',
@@ -93,7 +97,7 @@ async function callGeminiApi(systemPrompt, userPrompt, apiKey, timeoutMs = (proc
       responseMimeType: 'application/json',
       responseSchema: QUIZ_RESPONSE_SCHEMA,
       temperature: 0.7,
-      maxOutputTokens: 4096
+      maxOutputTokens: 8192
     }
   };
 

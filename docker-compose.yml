@@ -5,10 +5,11 @@ services:
       dockerfile: Dockerfile
     expose:
       - "4000"
+    env_file:
+      - ./server/.env
     environment:
       - PORT=4000
       - NODE_ENV=production
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
     volumes:
       - ./server/data:/app/data
       - server_uploads:/app/public/uploads
@@ -19,7 +20,7 @@ services:
       context: ./client
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "81:80"
     depends_on:
       - server
     restart: always
