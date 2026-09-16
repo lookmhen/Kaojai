@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
-import { Trophy, ArrowRight, Flag, RotateCcw, FileSpreadsheet, LogOut, TrendingUp, Award } from 'lucide-react';
-import { exportGameReportCSV } from '../../utils/exportReport';
+import { Trophy, ArrowRight, Flag, RotateCcw, FileSpreadsheet, FileText, LogOut, TrendingUp, Award, Download } from 'lucide-react';
+import { exportGameReportExcel, exportGameReportPDF } from '../../utils/exportReport';
 
 export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, pretestData, isEnded, onNextQuestion, onResetToLobby, onLeave }) => {
   const [animatedScores, setAnimatedScores] = useState({});
@@ -256,26 +256,51 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
       )}
 
       {/* Control Buttons */}
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+        {/* Export Excel Button */}
         <button
           type="button"
-          onClick={() => exportGameReportCSV({ pin, leaderboard, pulseVotes, quizAnalytics, pretestData })}
+          onClick={() => exportGameReportExcel({ pin, leaderboard, pulseVotes, quizAnalytics, pretestData })}
           style={{
-            padding: '16px 32px',
+            padding: '14px 28px',
             borderRadius: '50px',
-            background: '#138808',
+            background: 'linear-gradient(135deg, #107C41 0%, #0B5A2F 100%)',
             color: '#FFFFFF',
-            fontSize: '1.1rem',
+            fontSize: '1.05rem',
             fontWeight: 800,
             display: 'inline-flex',
             alignItems: 'center',
             gap: '10px',
-            boxShadow: '0 4px 14px rgba(19, 136, 8, 0.35)',
-            borderBottom: '3px solid #0B5605',
+            boxShadow: '0 4px 14px rgba(16, 124, 65, 0.35)',
+            borderBottom: '3px solid #063C1E',
             cursor: 'pointer'
           }}
+          title="ดาวน์โหลดรายงานสมบูรณ์เป็นไฟล์ Microsoft Excel (.xlsx) แยกชีตสวยงาม"
         >
-          <FileSpreadsheet size={20} /> ดาวน์โหลดรายงานสรุปผลคะแนน (CSV)
+          <FileSpreadsheet size={20} /> ดาวน์โหลดรายงาน Excel (.xlsx)
+        </button>
+
+        {/* Export PDF Button */}
+        <button
+          type="button"
+          onClick={() => exportGameReportPDF({ pin, leaderboard, pulseVotes, quizAnalytics, pretestData })}
+          style={{
+            padding: '14px 28px',
+            borderRadius: '50px',
+            background: 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)',
+            color: '#FFFFFF',
+            fontSize: '1.05rem',
+            fontWeight: 800,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '10px',
+            boxShadow: '0 4px 14px rgba(220, 38, 38, 0.35)',
+            borderBottom: '3px solid #7F1D1D',
+            cursor: 'pointer'
+          }}
+          title="ดาวน์โหลดรายงานสรุปผลภาพรวมเป็นไฟล์ PDF พร้อมจัดหน้าสวยงาม"
+        >
+          <FileText size={20} /> ดาวน์โหลดรายงาน PDF (.pdf)
         </button>
 
         {isEnded ? (
