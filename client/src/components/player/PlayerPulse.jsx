@@ -12,10 +12,11 @@ const QUICK_REACTIONS = [
   { emoji: '❓', label: 'สงสัย' }
 ];
 
-export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers, onLeave }) => {
+export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers, onLeave, pulseRound }) => {
   const { socket } = useSocket();
   const [activeChoice, setActiveChoice] = useState(null);
   const [nudgeAlert, setNudgeAlert] = useState(null);
+  const [resetNotice, setResetNotice] = useState(null);
   const [floatingEmojis, setFloatingEmojis] = useState([]);
 
   useEffect(() => {
@@ -33,6 +34,32 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers, onL
       socket.off('pulse_nudge_alert', handlePulseNudge);
     };
   }, [socket, activeChoice]);
+
+  // Reset active choice and show notification on new round
+  useEffect(() => {
+    if (!socket) return;
+
+    const handlePulseReset = (data) => {
+      setActiveChoice(null);
+      sfx.playCuteChime();
+      const roundNum = data?.round || pulseRound || 1;
+      setResetNotice(`✨ เริ่มรอบประเมินที่ ${roundNum} แล้ว! ส่งผลความเข้าใจรอบใหม่ได้เลย`);
+      setTimeout(() => {
+        setResetNotice(null);
+      }, 4500);
+    };
+
+    socket.on('pulse_reset', handlePulseReset);
+
+    return () => {
+      socket.off('pulse_reset', handlePulseReset);
+    };
+  }, [socket, pulseRound]);
+
+  // Synchronize when pulseRound prop increments
+  useEffect(() => {
+    setActiveChoice(null);
+  }, [pulseRound]);
 
   const triggerFloatingEmoji = (emoji) => {
     const id = `${Date.now()}_${Math.random()}`;
@@ -238,22 +265,42 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers, onL
 
       {/* Header Status Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'rgba(19, 136, 8, 0.1)',
-            color: '#138808',
-            border: '1px solid rgba(19, 136, 8, 0.25)',
-            borderRadius: '20px',
-            padding: '5px 12px',
-            fontSize: '0.8rem',
-            fontWeight: 800
-          }}
-        >
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'heartPulseRing 1.5s infinite' }} />
-          LIVE PULSE
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
+              color: '#1D4ED8',
+              border: '1px solid #BFDBFE',
+              borderRadius: '20px',
+              padding: '4px 10px',
+              fontSize: '0.8rem',
+              fontWeight: 800
+            }}
+          >
+            <Sparkles size={12} color="#2563EB" />
+            <span>รอบที่ {pulseRound || 1}</span>
+          </div>
+
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(19, 136, 8, 0.1)',
+              color: '#138808',
+              border: '1px solid rgba(19, 136, 8, 0.25)',
+              borderRadius: '20px',
+              padding: '5px 12px',
+              fontSize: '0.8rem',
+              fontWeight: 800
+            }}
+          >
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'heartPulseRing 1.5s infinite' }} />
+            LIVE PULSE
+          </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -286,6 +333,31 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers, onL
         </div>
       </div>
 
+      {/* New Round Reset Toast Banner */}
+      {resetNotice && (
+        <div
+          className="animate-pop"
+          style={{
+            marginBottom: '16px',
+            padding: '12px 16px',
+            background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
+            border: '1.5px solid #93C5FD',
+            borderRadius: '16px',
+            color: '#1E40AF',
+            fontSize: '0.92rem',
+            fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            boxShadow: '0 4px 14px rgba(59, 130, 246, 0.2)'
+          }}
+        >
+          <Sparkles size={18} color="#2563EB" />
+          <span>{resetNotice}</span>
+        </div>
+      )}
+
       {/* Main Pulse Card Banner */}
       <div
         className="glass-card animate-pop"
@@ -303,7 +375,7 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers, onL
           ความเข้าใจในหัวข้อนี้เป็นอย่างไรบ้าง?
         </h2>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', fontWeight: 600 }}>
-          ส่งสัญญาณบอกวิทยากรได้ทันที แตะเปลี่ยนระดับได้ตลอดเวลา ✨
+          รอบประเมินที่ {pulseRound || 1} • ส่งสัญญาณบอกวิทยากรได้ทันที ✨
         </p>
       </div>
 

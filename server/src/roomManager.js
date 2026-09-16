@@ -34,6 +34,8 @@ class RoomManager {
       teamsEnabled: false, // host toggles this on/off per session
       votedPulseUsers: new Set(),
       pulseVotes: { green: 0, yellow: 0, red: 0 },
+      pulseRound: 1,
+      pulseHistory: [],
       status: 'LOBBY', // 'LOBBY', 'QUESTION', 'QUESTION_RESULT', 'LEADERBOARD', 'ENDED'
       currentAnswers: new Map(), // playerId -> { optionId, isCorrect, timeUsed, pointsEarned }
       questionHistory: [] // Array of historical question result snapshots for detailed analytics
@@ -92,6 +94,8 @@ class RoomManager {
       currentQuestion,
       questionResult,
       pulseVotes: room.pulseVotes,
+      pulseRound: room.pulseRound || 1,
+      pulseHistory: room.pulseHistory || [],
       leaderboard,
       players,
       counts,
@@ -201,6 +205,7 @@ class RoomManager {
       currentQuestion,
       questionResult,
       pulseVotes: room.pulseVotes,
+      pulseRound: room.pulseRound || 1,
       leaderboard,
       counts
     };
@@ -733,7 +738,9 @@ class RoomManager {
       easiestQuestion,
       leaderboard,
       questionHistory: history,
-      pulseVotes: room.pulseVotes
+      pulseVotes: room.pulseVotes,
+      pulseRound: room.pulseRound || 1,
+      pulseHistory: room.pulseHistory || []
     };
   }
 
@@ -785,6 +792,53 @@ class RoomManager {
     };
   }
 
+  /**
+   * Reset pulse votes for a new check-in round during training session.
+   * Archives current round's votes into pulseHistory so insights are retained.
+   */
+  resetPulse(pin) {
+    const room = this.rooms.get(pin);
+    if (!room) throw new Error('Room not found');
+
+    const counts = this.getPlayerCounts(pin);
+    const green = room.pulseVotes?.green || 0;
+    const yellow = room.pulseVotes?.yellow || 0;
+    const red = room.pulseVotes?.red || 0;
+    const totalVoted = green + yellow + red;
+
+    // Archive current round if any votes were cast or round started
+    if (!room.pulseHistory) room.pulseHistory = [];
+    room.pulseHistory.push({
+      round: room.pulseRound || 1,
+      pulseVotes: { ...room.pulseVotes },
+      totalVoted,
+      totalPlayers: counts.totalPlayers,
+      clarityIndex: totalVoted > 0
+        ? Math.round(((green * 1.0 + yellow * 0.5) / totalVoted) * 100)
+        : 100,
+      timestamp: Date.now()
+    });
+
+    room.pulseRound = (room.pulseRound || 1) + 1;
+    room.pulseVotes = { green: 0, yellow: 0, red: 0 };
+    room.votedPulseUsers.clear();
+
+    // Clear each player's active pulse choice so they can vote freshly
+    for (const player of room.players.values()) {
+      player.pulseChoice = null;
+    }
+
+    const updatedCounts = this.getPlayerCounts(pin);
+
+    return {
+      pulseVotes: room.pulseVotes,
+      pulseRound: room.pulseRound,
+      pulseAnsweredCount: updatedCounts.pulseAnsweredCount,
+      totalPlayers: updatedCounts.totalPlayers,
+      pulseHistory: room.pulseHistory
+    };
+  }
+
   switchMode(pin, mode) {
     const room = this.rooms.get(pin);
     if (!room) throw new Error('Room not found');
@@ -805,6 +859,8 @@ class RoomManager {
     room.currentAnswers.clear();
     room.bottomHalfPlayerIds = new Set();
     room.pulseVotes = { green: 0, yellow: 0, red: 0 };
+    room.pulseRound = 1;
+    room.pulseHistory = [];
     room.votedPulseUsers.clear();
 
     for (const player of room.players.values()) {
@@ -815,6 +871,7 @@ class RoomManager {
       player.highestStreak = 0;
       player.streakBonus = 0;
       player.comebackBonus = 0;
+      player.pulseChoice = null;
     }
   }
 

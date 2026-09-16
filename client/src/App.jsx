@@ -38,6 +38,7 @@ export function AppContent() {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [questionResult, setQuestionResult] = useState(null);
   const [pulseVotes, setPulseVotes] = useState({ green: 0, yellow: 0, red: 0 });
+  const [pulseRound, setPulseRound] = useState(1);
   const [leaderboard, setLeaderboard] = useState([]);
   const [quizAnalytics, setQuizAnalytics] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -56,6 +57,7 @@ export function AppContent() {
       setRoomMode(data.mode || 'QUIZ');
       setPlayers(data.players || []);
       setCounts(data.counts || { totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 });
+      if (data.pulseRound) setPulseRound(data.pulseRound);
       if (data.teamsEnabled !== undefined) setTeamsEnabled(data.teamsEnabled);
       if (data.teams) setTeams(data.teams);
       setStatus('LOBBY');
@@ -72,6 +74,7 @@ export function AppContent() {
       if (data.currentQuestion) setCurrentQuestion(data.currentQuestion);
       if (data.questionResult) setQuestionResult(data.questionResult);
       if (data.pulseVotes) setPulseVotes(data.pulseVotes);
+      if (data.pulseRound) setPulseRound(data.pulseRound);
       if (data.leaderboard) setLeaderboard(data.leaderboard);
       if (data.teamsEnabled !== undefined) setTeamsEnabled(data.teamsEnabled);
       if (data.teams) setTeams(data.teams);
@@ -93,6 +96,7 @@ export function AppContent() {
       if (data.currentQuestion) setCurrentQuestion(data.currentQuestion);
       if (data.questionResult) setQuestionResult(data.questionResult);
       if (data.pulseVotes) setPulseVotes(data.pulseVotes);
+      if (data.pulseRound) setPulseRound(data.pulseRound);
       if (data.leaderboard) setLeaderboard(data.leaderboard);
       if (data.teamsEnabled !== undefined) setTeamsEnabled(data.teamsEnabled);
       if (data.teams) setTeams(data.teams);
@@ -194,9 +198,20 @@ export function AppContent() {
       setPrepareData(null);
       setRoomMode(data.mode);
       if (data.pulseVotes) setPulseVotes(data.pulseVotes);
+      if (data.pulseRound) setPulseRound(data.pulseRound);
       setCounts(prev => ({
         ...prev,
         pulseAnsweredCount: data.pulseAnsweredCount || 0,
+        totalPlayers: data.totalPlayers || prev.totalPlayers
+      }));
+    };
+
+    const onPulseReset = (data) => {
+      setPulseVotes(data.pulseVotes || { green: 0, yellow: 0, red: 0 });
+      if (data.pulseRound) setPulseRound(data.pulseRound);
+      setCounts(prev => ({
+        ...prev,
+        pulseAnsweredCount: 0,
         totalPlayers: data.totalPlayers || prev.totalPlayers
       }));
     };
@@ -233,6 +248,7 @@ export function AppContent() {
       setQuestionResult(null);
       setQuizAnalytics(null);
       setLeaderboard([]);
+      setPulseRound(1);
       setPlayerData(prev => (prev ? { ...prev, score: 0 } : null));
       if (data?.players) setPlayers(data.players);
       if (data?.counts) setCounts(data.counts);
@@ -257,6 +273,7 @@ export function AppContent() {
       setQuizAnalytics(null);
       setPlayers([]);
       setTeams([]);
+      setPulseRound(1);
       setPulseVotes({ green: 0, yellow: 0, red: 0 });
       setCounts({ totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 });
     };
@@ -273,6 +290,7 @@ export function AppContent() {
     socket.on('show_leaderboard', onShowLeaderboard);
     socket.on('quiz_ended', onQuizEnded);
     socket.on('pulse_updated', onPulseUpdated);
+    socket.on('pulse_reset', onPulseReset);
     socket.on('mode_switched', onModeSwitched);
     socket.on('error_message', onErrorMessage);
     socket.on('teams_toggled', onTeamsToggled);
@@ -293,6 +311,7 @@ export function AppContent() {
       socket.off('show_leaderboard', onShowLeaderboard);
       socket.off('quiz_ended', onQuizEnded);
       socket.off('pulse_updated', onPulseUpdated);
+      socket.off('pulse_reset', onPulseReset);
       socket.off('mode_switched', onModeSwitched);
       socket.off('error_message', onErrorMessage);
       socket.off('teams_toggled', onTeamsToggled);
@@ -436,6 +455,7 @@ export function AppContent() {
               pulseVotes={pulseVotes}
               pulseAnsweredCount={counts.pulseAnsweredCount}
               totalPlayers={counts.totalPlayers}
+              pulseRound={pulseRound}
             />
           ) : status === 'LOBBY' ? (
             <HostLobby
@@ -504,6 +524,7 @@ export function AppContent() {
               pulseAnsweredCount={counts.pulseAnsweredCount}
               totalPlayers={counts.totalPlayers}
               onLeave={handleLeaveSession}
+              pulseRound={pulseRound}
             />
           ) : status === 'LOBBY' ? (
             <PlayerLobby

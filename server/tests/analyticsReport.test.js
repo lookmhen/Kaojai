@@ -159,26 +159,70 @@ function buildReportCSVString({ pin, leaderboard = [], pulseVotes, totalPlayers,
     rows.push([]);
   }
 
-  // SECTION 5: Training Pulse Survey
+  // SECTION 5: Training Pulse Survey & Multi-Round History
+  const pulseHistory = quizAnalytics?.pulseHistory || [];
+  const currentPulseRound = quizAnalytics?.pulseRound || 1;
   const effectivePulse = pulseVotes || quizAnalytics?.pulseVotes;
-  if (effectivePulse) {
-    const green = effectivePulse.green || 0;
-    const yellow = effectivePulse.yellow || 0;
-    const red = effectivePulse.red || 0;
-    const totalVoted = green + yellow + red;
 
-    const greenPct = totalVoted > 0 ? Math.round((green / totalVoted) * 100) : 0;
-    const yellowPct = totalVoted > 0 ? Math.round((yellow / totalVoted) * 100) : 0;
-    const redPct = totalVoted > 0 ? Math.round((red / totalVoted) * 100) : 0;
+  if (effectivePulse || pulseHistory.length > 0) {
+    rows.push(['-------------------------------------------------------------------------------']);
+    rows.push(['💬 ผลสำรวจความเข้าใจระหว่างการอบรม (Training Pulse Survey - Multi-Round History)']);
+    rows.push(['-------------------------------------------------------------------------------']);
 
-    rows.push(['-------------------------------------------------------------------------------']);
-    rows.push(['💬 ผลสำรวจความเข้าใจระหว่างการอบรม (Training Pulse Survey)']);
-    rows.push(['-------------------------------------------------------------------------------']);
-    rows.push(['ระดับความเข้าใจ', 'จำนวนผู้เรียน (คน)', 'สัดส่วน (%)']);
-    rows.push(['เข้าใจดีเยี่ยม (Clear & Confident) 🟢', green, `${greenPct}%`]);
-    rows.push(['ขอตัวอย่างเพิ่มเติม (Need Example) 🟡', yellow, `${yellowPct}%`]);
-    rows.push(['ขอให้อธิบายซ้ำอีกครั้ง (Need Recap) 🔴', red, `${redPct}%`]);
-    rows.push(['รวมผู้ส่งผลตอบรับ', totalVoted, '100%']);
+    if (pulseHistory.length > 0) {
+      rows.push(['--- สรุปภาพรวมทุกรอบที่ประเมิน (Pulse Check-in Rounds Summary) ---']);
+      rows.push(['รอบที่', 'เข้าใจดี (🟢)', 'ขอตัวอย่าง (🟡)', 'ทบทวนใหม่ (🔴)', 'รวมผู้ตอบ', 'ดัชนีความเข้าใจ (Clarity Index)']);
+
+      pulseHistory.forEach(h => {
+        rows.push([
+          `รอบที่ ${h.round}`,
+          `${h.pulseVotes?.green || 0} คน`,
+          `${h.pulseVotes?.yellow || 0} คน`,
+          `${h.pulseVotes?.red || 0} คน`,
+          `${h.totalVoted || 0} คน`,
+          `${h.clarityIndex || 0}%`
+        ]);
+      });
+
+      if (effectivePulse) {
+        const curGreen = effectivePulse.green || 0;
+        const curYellow = effectivePulse.yellow || 0;
+        const curRed = effectivePulse.red || 0;
+        const curTotal = curGreen + curYellow + curRed;
+        const curClarity = curTotal > 0
+          ? Math.round(((curGreen * 1.0 + curYellow * 0.5) / curTotal) * 100)
+          : 0;
+
+        rows.push([
+          `รอบที่ ${currentPulseRound} (รอบปัจจุบัน)`,
+          `${curGreen} คน`,
+          `${curYellow} คน`,
+          `${curRed} คน`,
+          `${curTotal} คน`,
+          `${curClarity}%`
+        ]);
+      }
+
+      rows.push([]);
+    }
+
+    if (effectivePulse) {
+      const green = effectivePulse.green || 0;
+      const yellow = effectivePulse.yellow || 0;
+      const red = effectivePulse.red || 0;
+      const totalVoted = green + yellow + red;
+
+      const greenPct = totalVoted > 0 ? Math.round((green / totalVoted) * 100) : 0;
+      const yellowPct = totalVoted > 0 ? Math.round((yellow / totalVoted) * 100) : 0;
+      const redPct = totalVoted > 0 ? Math.round((red / totalVoted) * 100) : 0;
+
+      rows.push([`--- รายละเอียดผลการประเมินรอบปัจจุบัน (รอบที่ ${currentPulseRound}) ---`]);
+      rows.push(['ระดับความเข้าใจ', 'จำนวนผู้เรียน (คน)', 'สัดส่วน (%)']);
+      rows.push(['เข้าใจดีเยี่ยม (Clear & Confident) 🟢', green, `${greenPct}%`]);
+      rows.push(['ขอตัวอย่างเพิ่มเติม (Need Example) 🟡', yellow, `${yellowPct}%`]);
+      rows.push(['ขอให้อธิบายซ้ำอีกครั้ง (Need Recap) 🔴', red, `${redPct}%`]);
+      rows.push(['รวมผู้ส่งผลตอบรับ', totalVoted, '100%']);
+    }
   }
 
   // Escaping & UTF-8 with BOM

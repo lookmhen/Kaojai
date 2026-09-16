@@ -802,6 +802,54 @@ async function testRoomManager() {
     console.log('    ✓ Team Mode Score Aggregation & Leaderboard passed');
   }
 
+  // 20. Multi-Round Pulse Check-in & Reset
+  {
+    console.log('  Testing Multi-Round Pulse Check-in & Reset (resetPulse)...');
+    const rm = new RoomManager();
+    const room = rm.createRoom('host-pulse-rounds');
+    assert.strictEqual(room.pulseRound, 1, 'Initial pulseRound should be 1');
+    assert.deepStrictEqual(room.pulseHistory, [], 'Initial pulseHistory should be empty array');
+
+    const p1 = rm.joinPlayer(room.pin, 's-p1', { name: 'Player 1' }).player;
+    const p2 = rm.joinPlayer(room.pin, 's-p2', { name: 'Player 2' }).player;
+
+    // Round 1 votes
+    rm.submitPulse(room.pin, p1.playerId, 'green');
+    rm.submitPulse(room.pin, p2.playerId, 'yellow');
+    assert.strictEqual(room.pulseVotes.green, 1);
+    assert.strictEqual(room.pulseVotes.yellow, 1);
+    assert.strictEqual(p1.pulseChoice, 'green');
+    assert.strictEqual(p2.pulseChoice, 'yellow');
+
+    // Reset Pulse to start Round 2
+    const resetRes = rm.resetPulse(room.pin);
+    assert.strictEqual(resetRes.pulseRound, 2, 'pulseRound must increment to 2');
+    assert.deepStrictEqual(resetRes.pulseVotes, { green: 0, yellow: 0, red: 0 }, 'pulseVotes must reset to zeros');
+    assert.strictEqual(room.pulseHistory.length, 1, 'pulseHistory must have 1 archived round');
+    assert.strictEqual(room.pulseHistory[0].round, 1);
+    assert.strictEqual(room.pulseHistory[0].totalVoted, 2);
+    assert.strictEqual(room.pulseHistory[0].clarityIndex, 75); // (1*1 + 1*0.5) / 2 = 75%
+    assert.strictEqual(p1.pulseChoice, null, 'Player pulseChoice should be cleared');
+    assert.strictEqual(p2.pulseChoice, null);
+
+    // Round 2 votes
+    rm.submitPulse(room.pin, p1.playerId, 'green');
+    assert.strictEqual(room.pulseVotes.green, 1);
+    assert.strictEqual(p1.pulseChoice, 'green');
+
+    // Check Analytics
+    const analytics = rm.getQuizAnalytics(room.pin);
+    assert.strictEqual(analytics.pulseRound, 2);
+    assert.strictEqual(analytics.pulseHistory.length, 1);
+
+    // resetRoomScores also resets pulse rounds
+    rm.resetRoomScores(room.pin);
+    assert.strictEqual(room.pulseRound, 1, 'resetRoomScores must reset pulseRound back to 1');
+    assert.deepStrictEqual(room.pulseHistory, [], 'resetRoomScores must clear pulseHistory');
+
+    console.log('    ✓ Multi-Round Pulse Check-in & Reset passed');
+  }
+
   console.log('✅ RoomManager tests passed cleanly!');
 }
 

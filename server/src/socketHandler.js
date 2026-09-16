@@ -27,6 +27,8 @@ module.exports = function setupSocketHandlers(io) {
           quizSet: room.quizSet,
           players: roomManager.getPlayerList(room.pin),
           counts: roomManager.getPlayerCounts(room.pin),
+          pulseVotes: room.pulseVotes,
+          pulseRound: room.pulseRound || 1,
           teamsEnabled: room.teamsEnabled,
           teams: roomManager.getTeamList(room.pin)
         };
@@ -245,6 +247,7 @@ module.exports = function setupSocketHandlers(io) {
           mode: room.mode,
           status: room.status,
           pulseVotes: room.pulseVotes,
+          pulseRound: room.pulseRound || 1,
           pulseAnsweredCount: counts.pulseAnsweredCount,
           totalPlayers: counts.totalPlayers
         });
@@ -271,6 +274,39 @@ module.exports = function setupSocketHandlers(io) {
           }
         });
       } catch (err) {
+        socket.emit('error_message', { message: err.message });
+      }
+    });
+
+    socket.on('reset_pulse', ({ pin, hostToken }, ackCallback) => {
+      try {
+        const room = verifyHost(pin, hostToken);
+        const result = roomManager.resetPulse(pin);
+
+        io.to(pin).emit('pulse_reset', {
+          pulseVotes: result.pulseVotes,
+          pulseRound: result.pulseRound,
+          round: result.pulseRound,
+          pulseAnsweredCount: 0,
+          totalPlayers: result.totalPlayers,
+          pulseHistory: result.pulseHistory
+        });
+
+        io.to(pin).emit('pulse_updated', {
+          pulseVotes: result.pulseVotes,
+          pulseRound: result.pulseRound,
+          pulseAnsweredCount: 0,
+          totalPlayers: result.totalPlayers
+        });
+
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: true, pulseRound: result.pulseRound });
+        }
+      } catch (err) {
+        console.error('[Socket Error] reset_pulse:', err);
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: false, message: err.message });
+        }
         socket.emit('error_message', { message: err.message });
       }
     });
@@ -383,6 +419,7 @@ module.exports = function setupSocketHandlers(io) {
           currentQuestion: joinData.currentQuestion,
           questionResult: joinData.questionResult,
           pulseVotes: joinData.pulseVotes,
+          pulseRound: joinData.room.pulseRound || 1,
           leaderboard: joinData.leaderboard,
           isReconnect: joinData.isReconnect,
           counts: joinData.counts,

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { sfx } from '../../utils/audioSFX';
-import { Users, Smile, Meh, Frown, Activity, Bell, Sparkles, Zap, Flame, Heart, HelpCircle } from 'lucide-react';
+import { Users, Smile, Meh, Frown, Activity, Bell, Sparkles, Zap, Flame, Heart, HelpCircle, RotateCcw } from 'lucide-react';
 
-export const HostPulse = ({ pin, pulseVotes, pulseAnsweredCount, totalPlayers }) => {
+export const HostPulse = ({ pin, pulseVotes, pulseAnsweredCount, totalPlayers, pulseRound }) => {
   const { socket } = useSocket();
   const [isNudged, setIsNudged] = useState(false);
   const [floatingEmojis, setFloatingEmojis] = useState([]);
@@ -55,12 +55,27 @@ export const HostPulse = ({ pin, pulseVotes, pulseAnsweredCount, totalPlayers })
     };
   }, [socket]);
 
+  const [isResetting, setIsResetting] = useState(false);
+
   const handleSendNudge = () => {
     if (!socket || !pin) return;
     sfx.playCuteChime();
     socket.emit('send_pulse_nudge', { pin });
     setIsNudged(true);
     setTimeout(() => setIsNudged(false), 3000);
+  };
+
+  const handleResetPulse = () => {
+    if (!socket || !pin || isResetting) return;
+    const currentRound = pulseRound || 1;
+    if (window.confirm(`ต้องการล้างผลประเมินและเริ่มรอบที่ ${currentRound + 1} ใช่หรือไม่?\n(ระบบจะบันทึกสถิติรอบที่ ${currentRound} ไว้ในประวัติอัตโนมัติ)`)) {
+      setIsResetting(true);
+      sfx.playCuteChime();
+      socket.emit('reset_pulse', { pin }, () => {
+        setIsResetting(false);
+      });
+      setTimeout(() => setIsResetting(false), 3000);
+    }
   };
 
   return (
@@ -129,8 +144,28 @@ export const HostPulse = ({ pin, pulseVotes, pulseAnsweredCount, totalPlayers })
           ผู้เรียนสามารถกดแจ้งระดับความเข้าใจและยิง Reaction สดผ่านสมาร์ตโฟนได้แบบ Real-time
         </p>
 
-        {/* Counter and Nudge Controls */}
-        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+        {/* Counter, Round, and Nudge Controls */}
+        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+          {/* Round Indicator Badge */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
+              color: '#1D4ED8',
+              border: '1.5px solid #93C5FD',
+              borderRadius: '30px',
+              padding: '8px 20px',
+              fontSize: '1rem',
+              fontWeight: 800,
+              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)'
+            }}
+          >
+            <Sparkles size={18} color="#2563EB" />
+            <span>รอบประเมินที่ <span style={{ fontSize: '1.25rem', color: '#1E40AF' }}>{pulseRound || 1}</span></span>
+          </div>
+
           <div className="counter-badge" style={{ fontSize: '1.05rem', padding: '8px 22px' }}>
             <Users size={18} color="var(--accent-earth-orange)" />
             <span>ตอบสัญญาณแล้ว <span className="highlight" style={{ fontSize: '1.4rem' }}>{pulseAnsweredCount}</span> / {totalPlayers} คน</span>
@@ -144,7 +179,7 @@ export const HostPulse = ({ pin, pulseVotes, pulseAnsweredCount, totalPlayers })
               color: isNudged ? '#92400E' : '#FFFFFF',
               border: isNudged ? '2px solid #F59E0B' : 'none',
               borderRadius: '30px',
-              padding: '10px 24px',
+              padding: '10px 22px',
               fontWeight: 800,
               fontSize: '0.95rem',
               display: 'inline-flex',
@@ -156,7 +191,33 @@ export const HostPulse = ({ pin, pulseVotes, pulseAnsweredCount, totalPlayers })
             }}
           >
             <Bell size={18} className={isNudged ? 'animate-bounce' : ''} />
-            {isNudged ? '✨ ส่งสัญญาณตามสำเร็จแล้ว!' : `🔔 ส่งสัญญาณตามผู้เรียน (ยังไม่ตอบ ${unvotedCount} คน)`}
+            {isNudged ? '✨ ส่งสัญญาณตามสำเร็จแล้ว!' : `🔔 ส่งสัญญาณตาม (${unvotedCount})`}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleResetPulse}
+            disabled={isResetting}
+            style={{
+              background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '30px',
+              padding: '10px 22px',
+              fontWeight: 800,
+              fontSize: '0.95rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: isResetting ? 'not-allowed' : 'pointer',
+              boxShadow: '0 6px 18px rgba(37, 99, 235, 0.35)',
+              transition: 'all 0.2s ease',
+              opacity: isResetting ? 0.7 : 1
+            }}
+            title="ล้างผลเพื่อเริ่มวัดความเข้าใจในหัวข้อถัดไป"
+          >
+            <RotateCcw size={18} className={isResetting ? 'animate-spin' : ''} />
+            <span>{isResetting ? 'กำลังเริ่มรอบใหม่...' : 'ล้างผล / เริ่มรอบใหม่'}</span>
           </button>
         </div>
       </div>

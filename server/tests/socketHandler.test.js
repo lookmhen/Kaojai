@@ -466,6 +466,20 @@ async function testSocketHandlers() {
   assert.strictEqual(resetBroadcast.payload.status, 'LOBBY');
   console.log('    ✓ reset_to_lobby passed');
 
+  // Test 18: reset_pulse event
+  console.log('  Testing reset_pulse event...');
+  let resetPulseAck = null;
+  await newHostSocket.fire('reset_pulse', { pin: teamPin }, (res) => {
+    resetPulseAck = res;
+  });
+  assert.ok(resetPulseAck, 'reset_pulse must acknowledge');
+  assert.strictEqual(resetPulseAck.success, true);
+  assert.strictEqual(resetPulseAck.pulseRound, 2);
+  const pulseResetBroadcast = broadcasts.find(b => b.roomPin === teamPin && b.event === 'pulse_reset');
+  assert.ok(pulseResetBroadcast, 'pulse_reset event must be broadcasted to room');
+  assert.strictEqual(pulseResetBroadcast.payload.round, 2);
+  console.log('    ✓ reset_pulse passed');
+
   console.log('✅ socketHandler tests passed cleanly!');
 }
 
