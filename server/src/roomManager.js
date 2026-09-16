@@ -139,9 +139,11 @@ class RoomManager {
     }
 
     let isReconnect = false;
+    let previousSocketId = null;
 
     if (existingPlayer) {
       isReconnect = true;
+      previousSocketId = existingPlayer.socketId;
       if (existingPlayer.disconnectTimeout) {
         clearTimeout(existingPlayer.disconnectTimeout);
         existingPlayer.disconnectTimeout = null;
@@ -200,6 +202,7 @@ class RoomManager {
       room,
       player: existingPlayer,
       isReconnect,
+      previousSocketId,
       mode: room.mode,
       status: room.status,
       currentQuestion,

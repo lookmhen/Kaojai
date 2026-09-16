@@ -400,6 +400,22 @@ module.exports = function setupSocketHandlers(io) {
         const cleanPin = pin.trim();
         const joinData = roomManager.joinPlayer(cleanPin, socket.id, { name, avatar, playerId });
         
+        // If player was already connected on an old socket (e.g. from previous tab/browser), disconnect the old socket
+        if (joinData.previousSocketId && joinData.previousSocketId !== socket.id) {
+          try {
+            const oldSocket = (io.sockets && io.sockets.sockets && io.sockets.sockets.get)
+              ? io.sockets.sockets.get(joinData.previousSocketId)
+              : null;
+            if (oldSocket) {
+              if (typeof oldSocket.leave === 'function') oldSocket.leave(cleanPin);
+              oldSocket.emit('session_replaced', { message: 'เซสชันของคุณได้เปิดใช้งานบนแท็บหรือหน้าต่างใหม่แล้ว' });
+              if (typeof oldSocket.disconnect === 'function') oldSocket.disconnect(true);
+            }
+          } catch (cleanErr) {
+            console.warn('[Socket Cleanup] Previous socket disconnect:', cleanErr.message);
+          }
+        }
+
         socket.join(cleanPin);
 
         const playerList = roomManager.getPlayerList(cleanPin);

@@ -321,6 +321,28 @@ export function AppContent() {
     };
   }, [socket, session.hostToken]);
 
+  // Intercept browser back button when player is in game
+  useEffect(() => {
+    if (viewMode === 'PLAYER_GAME') {
+      window.history.pushState({ inGame: true }, '', window.location.href);
+
+      const handlePopState = () => {
+        const confirmLeave = window.confirm('คุณต้องการออกจากห้องกิจกรรมและกลับสู่หน้าหลักใช่หรือไม่?');
+        if (confirmLeave) {
+          handleLeaveSession();
+        } else {
+          // Re-push state so next back button press will also be intercepted
+          window.history.pushState({ inGame: true }, '', window.location.href);
+        }
+      };
+
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [viewMode, pin, playerData?.playerId]);
+
   // Host Action Handlers
   const handleCreateRoom = (customQuizId) => {
     if (!socket) return;

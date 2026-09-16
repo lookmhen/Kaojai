@@ -9,23 +9,51 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
   // Internal Screen State: 'MODE_SELECT' or 'PLAYER_FORM'
   const [screen, setScreen] = useState('MODE_SELECT');
 
-  const [pin, setPin] = useState('');
-  const [name, setName] = useState('');
-  const [selectedAvatar, setSelectedAvatar] = useState(() => getRandomAvatar());
+  const [pin, setPin] = useState(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('pin') || session?.pin || '';
+  });
+  const [name, setName] = useState(() => session?.name || '');
+  const [selectedAvatar, setSelectedAvatar] = useState(() => session?.avatar || getRandomAvatar());
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const queryPin = urlParams.get('pin');
+    const effectivePin = queryPin || session?.pin;
+
     if (queryPin && queryPin.length === 6) {
       setPin(queryPin);
       setScreen('PLAYER_FORM');
     }
-  }, []);
+
+    if (session?.name && !name) {
+      setName(session.name);
+    }
+    if (session?.avatar && !selectedAvatar) {
+      setSelectedAvatar(session.avatar);
+    }
+
+    // Auto-reconnect if arriving via QR scan for the room we were already playing in
+    if (socket && queryPin && queryPin.length === 6 && session?.pin === queryPin && session?.name && session?.playerId && !session?.isHost) {
+      setIsLoading(true);
+      socket.emit('join_room', {
+        pin: queryPin,
+        name: session.name,
+        avatar: session.avatar,
+        playerId: session.playerId
+      }, (response) => {
+        setIsLoading(false);
+        if (response && response.success) {
+          onJoined(response);
+        }
+      });
+    }
+  }, [socket, session]);
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setError('');
 
     if (!pin.trim() || pin.trim().length !== 6) {
@@ -105,6 +133,51 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
           {error && (
             <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B', padding: '10px 14px', borderRadius: '10px', marginBottom: '20px', fontSize: '0.9rem', fontWeight: 600 }}>
               {error}
+            </div>
+          )}
+
+          {session?.name && session?.pin === pin && (
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
+                border: '1.5px solid #93C5FD',
+                borderRadius: '16px',
+                padding: '14px 18px',
+                marginBottom: '20px',
+                textAlign: 'center'
+              }}
+            >
+              <div style={{ fontSize: '0.86rem', color: '#1E40AF', fontWeight: 700, marginBottom: '6px' }}>
+                ✨ ตรวจพบเซสชันเดิมของคุณในห้องนี้
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '10px' }}>
+                <img
+                  src={`/avatars/${session.avatar || '0291dcc0ce.svg'}`}
+                  alt={session.name}
+                  onError={(e) => { e.target.src = '/avatars/0291dcc0ce.svg'; }}
+                  style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid #2563EB' }}
+                />
+                <span style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)' }}>{session.name}</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isLoading}
+                style={{
+                  width: '100%',
+                  padding: '10px 16px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  fontSize: '0.92rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(37,99,235,0.25)'
+                }}
+              >
+                {isLoading ? 'กำลังเข้าสู่ห้อง...' : `🚀 แตะเพื่อกลับเข้าเล่นต่อทันที (ในชื่อ ${session.name})`}
+              </button>
             </div>
           )}
 
