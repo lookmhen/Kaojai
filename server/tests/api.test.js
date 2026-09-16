@@ -210,6 +210,14 @@ async function testApiEndpoints() {
     assert.strictEqual(resAiGenEmpty.body.success, false);
     console.log('    ✓ POST /api/quizzes/generate-ai (success & 400 validation) passed');
 
+    // 12. Static Frontend Serving (Single Container validation)
+    console.log('  Testing Frontend Static Serving (GET /)...');
+    const resRoot = await httpGet(`${baseUrl}/`);
+    assert.strictEqual(resRoot.statusCode, 200);
+    assert.ok(typeof resRoot.body === 'string', 'Root should return string content');
+    assert.ok(resRoot.body.includes('<html') || resRoot.body.includes('<!DOCTYPE') || resRoot.body.includes('KaoJai'), 'Root should return HTML');
+    console.log('    ✓ Frontend Static Serving passed');
+
     // Clean up
     deleteQuiz('test-import-api');
     if (dupQuizId) deleteQuiz(dupQuizId);

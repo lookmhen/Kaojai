@@ -1,28 +1,19 @@
 services:
-  server:
+  kaojai:
     build:
-      context: ./server
+      context: .
       dockerfile: Dockerfile
-    expose:
-      - "4000"
+    ports:
+      - "80:4000"
     env_file:
       - ./server/.env
     environment:
       - PORT=4000
       - NODE_ENV=production
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
     volumes:
-      - ./server/data:/app/data
-      - server_uploads:/app/public/uploads
-    restart: always
-
-  client:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
-    ports:
-      - "81:80"
-    depends_on:
-      - server
+      - ./server/data:/app/server/data
+      - server_uploads:/app/server/public/uploads
     restart: always
 
 volumes:

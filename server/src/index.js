@@ -221,6 +221,27 @@ app.post('/api/upload', (req, res) => {
   }
 });
 
+// Static files serving (Frontend React build)
+const clientDistDir = path.join(__dirname, '../../client/dist');
+const altClientDistDir = path.join(__dirname, '../client/dist');
+
+const activeDistDir = fs.existsSync(clientDistDir)
+  ? clientDistDir
+  : fs.existsSync(altClientDistDir)
+    ? altClientDistDir
+    : null;
+
+if (activeDistDir) {
+  app.use(express.static(activeDistDir));
+  app.get('*', (req, res, next) => {
+    // Skip API and uploads routes
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads') || req.path.startsWith('/socket.io')) {
+      return next();
+    }
+    res.sendFile(path.join(activeDistDir, 'index.html'));
+  });
+}
+
 setupSocketHandlers(io);
 
 const PORT = process.env.PORT || 4000;
