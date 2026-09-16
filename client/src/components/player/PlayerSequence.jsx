@@ -94,7 +94,8 @@ export const PlayerSequence = ({
     onSubmitOrder(items.map(item => item.id));
   };
 
-  const correctIds = result?.correctSequence?.map(s => s.id) || [];
+  const hasRevealedAnswers = Boolean(result && Array.isArray(result.correctSequence) && result.correctSequence.length > 0);
+  const correctIds = hasRevealedAnswers ? result.correctSequence.map(s => s.id) : [];
 
   return (
     <div style={{ marginTop: '16px' }}>
@@ -121,8 +122,8 @@ export const PlayerSequence = ({
       {/* Sequence Items List */}
       <div ref={listRef} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {items.map((item, idx) => {
-          const isCorrectPosition = result && correctIds[idx] === item.id;
-          const isWrongPosition = result && correctIds[idx] !== item.id;
+          const isCorrectPosition = hasRevealedAnswers && correctIds[idx] === item.id;
+          const isWrongPosition = hasRevealedAnswers && correctIds[idx] !== item.id;
           const isCurrentDragged = draggedIdx === idx;
           const theme = getSequenceTheme(item, question?.sequenceItems || items);
 
@@ -219,8 +220,8 @@ export const PlayerSequence = ({
                 </div>
               </div>
 
-              {/* Status indicator after result */}
-              {result && (
+              {/* Status indicator after result (only when answers are revealed) */}
+              {hasRevealedAnswers && (
                 <div style={{ flexShrink: 0 }}>
                   {isCorrectPosition ? (
                     <CheckCircle2 size={24} color="#10B981" />

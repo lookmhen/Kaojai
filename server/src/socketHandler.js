@@ -1,5 +1,28 @@
 const roomManager = require('./roomManager');
 
+/**
+ * Strip all answer-revealing data from a question_result payload for PRETEST mode.
+ * Players should only know "time's up / answered" but NOT which positions were right.
+ */
+function maskPretestResult(questionResult) {
+  if (!questionResult) return questionResult;
+  return {
+    questionId: questionResult.questionId,
+    questionType: questionResult.questionType,
+    quizMode: 'PRETEST',
+    answeredCount: questionResult.answeredCount,
+    totalPlayers: questionResult.totalPlayers,
+    isLastQuestion: questionResult.isLastQuestion,
+    // CHOICE: hide correct option and blank option counts
+    correctOptionId: null,
+    optionCounts: null,
+    // SEQUENCE: hide correct sequence and zero the counts so no info leaks
+    correctSequence: null,
+    perfectCount: 0,
+    partialCount: 0
+  };
+}
+
 module.exports = function setupSocketHandlers(io) {
   io.on('connection', (socket) => {
     console.log(`[Socket Connected] ID: ${socket.id}`);
@@ -122,14 +145,8 @@ module.exports = function setupSocketHandlers(io) {
           const timeLimitMs = (result.question.timeLimitSeconds + 1) * 1000;
           room.questionTimer = setTimeout(() => {
             const questionResult = roomManager.getQuestionResult(pin);
-            // In PRETEST mode, mask correctOptionId and correctSequence for players
             if (room.quizMode === 'PRETEST') {
-              io.to(pin).emit('question_result', {
-                ...questionResult,
-                quizMode: 'PRETEST',
-                correctOptionId: null,
-                correctSequence: null
-              });
+              io.to(pin).emit('question_result', maskPretestResult(questionResult));
             } else {
               io.to(pin).emit('question_result', questionResult);
             }
@@ -224,12 +241,7 @@ module.exports = function setupSocketHandlers(io) {
           room.questionTimer = setTimeout(() => {
             const questionResult = roomManager.getQuestionResult(pin);
             if (room.quizMode === 'PRETEST') {
-              io.to(pin).emit('question_result', {
-                ...questionResult,
-                quizMode: 'PRETEST',
-                correctOptionId: null,
-                correctSequence: null
-              });
+              io.to(pin).emit('question_result', maskPretestResult(questionResult));
             } else {
               io.to(pin).emit('question_result', questionResult);
             }
@@ -580,12 +592,7 @@ module.exports = function setupSocketHandlers(io) {
           }
           const questionResult = roomManager.getQuestionResult(pin);
           if (isPretest) {
-            io.to(pin).emit('question_result', {
-              ...questionResult,
-              quizMode: 'PRETEST',
-              correctOptionId: null,
-              correctSequence: null
-            });
+            io.to(pin).emit('question_result', maskPretestResult(questionResult));
           } else {
             io.to(pin).emit('question_result', questionResult);
           }
@@ -765,9 +772,15 @@ module.exports = function setupSocketHandlers(io) {
             info.room.questionTimer = null;
           }
           const questionResult = roomManager.getQuestionResult(info.room.pin);
-          io.to(info.room.pin).emit('question_result', questionResult);
+          if (info.room.quizMode === 'PRETEST') {
+            io.to(info.room.pin).emit('question_result', maskPretestResult(questionResult));
+          } else {
+            io.to(info.room.pin).emit('question_result', questionResult);
+          }
         }
       }
     });
   });
 };
+
+module.exports.maskPretestResult = maskPretestResult;

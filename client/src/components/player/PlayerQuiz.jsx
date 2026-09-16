@@ -298,7 +298,7 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
               : 'รอการสรุปผลคำตอบจากวิทยากร...'}
           </p>
 
-          {result && (
+          {result && !result.isPretest && result.quizMode !== 'PRETEST' && result.optionCounts && (
             <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed #CBD5E1' }}>
               <div
                 style={{

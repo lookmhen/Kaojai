@@ -84,81 +84,99 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
       {/* Options / Sequence Presentation */}
       {isSequence ? (
         result ? (
-          /* Sequence Race Result Phase: Step-by-Step Flowchart Cards */
-          <div className="glass-card animate-pop" style={{ padding: '32px 28px', marginBottom: '32px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(30, 58, 138, 0.1)', color: 'var(--accent-earth-blue)', padding: '6px 16px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 800, marginBottom: '10px' }}>
-                <ListOrdered size={18} /> เฉลยลำดับขั้นตอนที่ถูกต้อง (Sequence Race Results)
+          result.quizMode === 'PRETEST' ? (
+            /* Sequence Race PRETEST Mode: Neutral Waiting Summary (No Answers Revealed) */
+            <div className="glass-card animate-pop" style={{ padding: '36px 28px', marginBottom: '32px', textAlign: 'center' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(59, 130, 246, 0.1)', color: '#1D4ED8', padding: '6px 18px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 800, marginBottom: '12px' }}>
+                <ListOrdered size={18} /> โหมดทดสอบก่อนเรียน (Pre-test)
               </div>
-              <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                กระบวนการและลำดับขั้นตอนมาตรฐาน
+              <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
+                บันทึกคำตอบของผู้เรียนเรียบร้อยแล้ว
               </h2>
-
-              {/* Perfect vs Partial Stats Badges */}
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginTop: '12px', flexWrap: 'wrap' }}>
-                <span style={{ background: '#DCFCE7', color: '#166534', border: '1px solid #86EFAC', borderRadius: '16px', padding: '6px 16px', fontSize: '0.9rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <CheckCircle2 size={16} color="#166534" /> เรียงถูกต้องครบ 100%: <strong>{result.perfectCount || 0} คน</strong>
-                </span>
-                <span style={{ background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A', borderRadius: '16px', padding: '6px 16px', fontSize: '0.9rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <Sparkles size={16} color="#D97706" /> เรียงถูกบางส่วน: <strong>{result.partialCount || 0} คน</strong>
-                </span>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '20px' }}>
+                (ซ่อนเฉลยและลำดับที่ถูกต้อง — ข้อมูลจะนำไปเปรียบเทียบผลสัมฤทธิ์หลังเรียนตอน Post-test)
+              </p>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '16px', padding: '10px 24px', fontSize: '1.05rem', fontWeight: 800, color: '#1E40AF' }}>
+                <Users size={20} color="#2563EB" /> ผู้เรียนส่งคำตอบแล้ว {result.answeredCount || answeredCount} / {totalPlayers} คน
               </div>
             </div>
+          ) : (
+            /* Sequence Race Result Phase: Step-by-Step Flowchart Cards */
+            <div className="glass-card animate-pop" style={{ padding: '32px 28px', marginBottom: '32px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(30, 58, 138, 0.1)', color: 'var(--accent-earth-blue)', padding: '6px 16px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 800, marginBottom: '10px' }}>
+                  <ListOrdered size={18} /> เฉลยลำดับขั้นตอนที่ถูกต้อง (Sequence Race Results)
+                </div>
+                <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                  กระบวนการและลำดับขั้นตอนมาตรฐาน
+                </h2>
 
-            {/* Step-by-Step Flowchart Cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '840px', margin: '0 auto' }}>
-              {(result.correctSequence || question.sequenceItems || []).map((step, sIdx) => {
-                const theme = getSequenceTheme(step, question.sequenceItems || result.correctSequence);
-                return (
-                  <div
-                    key={step.id || sIdx}
-                    className="animate-pop"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '16px',
-                      background: theme.cardBg,
-                      border: '2px solid #10B981',
-                      borderLeft: `8px solid ${theme.accentBar}`,
-                      borderRadius: '16px',
-                      padding: '16px 20px',
-                      boxShadow: `0 4px 16px ${theme.glowColor}`
-                    }}
-                  >
+                {/* Perfect vs Partial Stats Badges */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginTop: '12px', flexWrap: 'wrap' }}>
+                  <span style={{ background: '#DCFCE7', color: '#166534', border: '1px solid #86EFAC', borderRadius: '16px', padding: '6px 16px', fontSize: '0.9rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <CheckCircle2 size={16} color="#166534" /> เรียงถูกต้องครบ 100%: <strong>{result.perfectCount || 0} คน</strong>
+                  </span>
+                  <span style={{ background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A', borderRadius: '16px', padding: '6px 16px', fontSize: '0.9rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Sparkles size={16} color="#D97706" /> เรียงถูกบางส่วน: <strong>{result.partialCount || 0} คน</strong>
+                  </span>
+                </div>
+              </div>
+
+              {/* Step-by-Step Flowchart Cards */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '840px', margin: '0 auto' }}>
+                {(result.correctSequence || question.sequenceItems || []).map((step, sIdx) => {
+                  const theme = getSequenceTheme(step, question.sequenceItems || result.correctSequence);
+                  return (
                     <div
+                      key={step.id || sIdx}
+                      className="animate-pop"
                       style={{
-                        minWidth: '48px',
-                        height: '48px',
-                        borderRadius: '14px',
-                        background: theme.badgeBg,
-                        color: '#FFFFFF',
-                        fontWeight: 900,
-                        fontSize: '1.25rem',
                         display: 'flex',
-                        flexDirection: 'column',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        boxShadow: `0 4px 10px ${theme.glowColor}`,
-                        border: '2px solid rgba(255, 255, 255, 0.75)'
+                        gap: '16px',
+                        background: theme.cardBg,
+                        border: '2px solid #10B981',
+                        borderLeft: `8px solid ${theme.accentBar}`,
+                        borderRadius: '16px',
+                        padding: '16px 20px',
+                        boxShadow: `0 4px 16px ${theme.glowColor}`
                       }}
                     >
-                      <span style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.9, lineHeight: 1 }}>ลำดับ</span>
-                      <span style={{ lineHeight: 1.1 }}>{sIdx + 1}</span>
-                    </div>
+                      <div
+                        style={{
+                          minWidth: '48px',
+                          height: '48px',
+                          borderRadius: '14px',
+                          background: theme.badgeBg,
+                          color: '#FFFFFF',
+                          fontWeight: 900,
+                          fontSize: '1.25rem',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          boxShadow: `0 4px 10px ${theme.glowColor}`,
+                          border: '2px solid rgba(255, 255, 255, 0.75)'
+                        }}
+                      >
+                        <span style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.9, lineHeight: 1 }}>ลำดับ</span>
+                        <span style={{ lineHeight: 1.1 }}>{sIdx + 1}</span>
+                      </div>
 
-                    <div style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', textAlign: 'left' }}>
-                      {step.text}
-                    </div>
+                      <div style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', textAlign: 'left' }}>
+                        {step.text}
+                      </div>
 
-                    <div style={{ flexShrink: 0, background: '#DCFCE7', borderRadius: '50%', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Check size={20} color="#166534" strokeWidth={3} />
+                      <div style={{ flexShrink: 0, background: '#DCFCE7', borderRadius: '50%', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Check size={20} color="#166534" strokeWidth={3} />
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )
         ) : (
           /* Sequence Race Active Phase */
           <div className="glass-card animate-pop" style={{ padding: '40px 24px', textAlign: 'center', marginBottom: '32px' }}>
@@ -242,16 +260,33 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
           </div>
         )
       ) : result ? (
-        /* Regular Choice Results: Vertical Bar Chart */
-        <div className="glass-card animate-pop" style={{ padding: '30px 24px', marginBottom: '32px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-main)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-              <BarChart3 size={24} color="var(--accent-earth-blue)" /> สรุปผลคำตอบของผู้เข้าร่วมอบรม
+        result.quizMode === 'PRETEST' ? (
+          /* Regular Choice PRETEST Mode: Neutral Waiting Summary (No Answers Revealed) */
+          <div className="glass-card animate-pop" style={{ padding: '36px 28px', marginBottom: '32px', textAlign: 'center' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(59, 130, 246, 0.1)', color: '#1D4ED8', padding: '6px 18px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 800, marginBottom: '12px' }}>
+              <BarChart3 size={18} /> โหมดทดสอบก่อนเรียน (Pre-test)
+            </div>
+            <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
+              บันทึกคำตอบของผู้เรียนเรียบร้อยแล้ว
             </h2>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: 600, marginTop: '4px' }}>
-              ส่งคำตอบแล้ว {result.answeredCount || answeredCount} จากทั้งหมด {totalPlayers} คน
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '20px' }}>
+              (ซ่อนเฉลยและสถิติตัวเลือก — ข้อมูลจะนำไปเปรียบเทียบผลสัมฤทธิ์หลังเรียนตอน Post-test)
+            </p>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '16px', padding: '10px 24px', fontSize: '1.05rem', fontWeight: 800, color: '#1E40AF' }}>
+              <Users size={20} color="#2563EB" /> ผู้เรียนส่งคำตอบแล้ว {result.answeredCount || answeredCount} / {totalPlayers} คน
             </div>
           </div>
+        ) : (
+          /* Regular Choice Results: Vertical Bar Chart */
+          <div className="glass-card animate-pop" style={{ padding: '30px 24px', marginBottom: '32px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-main)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <BarChart3 size={24} color="var(--accent-earth-blue)" /> สรุปผลคำตอบของผู้เข้าร่วมอบรม
+              </h2>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: 600, marginTop: '4px' }}>
+                ส่งคำตอบแล้ว {result.answeredCount || answeredCount} จากทั้งหมด {totalPlayers} คน
+              </div>
+            </div>
 
           {/* Vertical Bar Chart Container */}
           <div
@@ -347,6 +382,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
             })}
           </div>
         </div>
+        )
       ) : (
         /* Regular Choice Grid while question is active */
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>

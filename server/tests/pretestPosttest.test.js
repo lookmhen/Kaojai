@@ -246,6 +246,52 @@ async function testPretestPosttest() {
     console.log('    ✓ PT-10 passed');
   }
 
+  /* ── 11. maskPretestResult masks SEQUENCE counts & correctSequence ───── */
+  {
+    console.log('  [PT-11] maskPretestResult zeroes SEQUENCE correctSequence & counts...');
+    const { maskPretestResult } = require('../src/socketHandler');
+    const rawSeqResult = {
+      questionId: 'seq1',
+      questionType: 'SEQUENCE',
+      correctSequence: [{ id: 'a', text: 'Step 1' }, { id: 'b', text: 'Step 2' }],
+      perfectCount: 2,
+      partialCount: 1,
+      answeredCount: 3,
+      totalPlayers: 3,
+      isLastQuestion: false
+    };
+
+    const masked = maskPretestResult(rawSeqResult);
+    assert.strictEqual(masked.quizMode, 'PRETEST');
+    assert.strictEqual(masked.correctSequence, null, 'correctSequence must be null');
+    assert.strictEqual(masked.perfectCount, 0, 'perfectCount must be 0 in pretest');
+    assert.strictEqual(masked.partialCount, 0, 'partialCount must be 0 in pretest');
+    assert.strictEqual(masked.answeredCount, 3, 'answeredCount must be preserved');
+    console.log('    ✓ PT-11 passed');
+  }
+
+  /* ── 12. maskPretestResult masks CHOICE correctOptionId & optionCounts ── */
+  {
+    console.log('  [PT-12] maskPretestResult zeroes CHOICE correctOptionId & optionCounts...');
+    const { maskPretestResult } = require('../src/socketHandler');
+    const rawChoiceResult = {
+      questionId: 'choice1',
+      questionType: 'CHOICE',
+      correctOptionId: 'opt2',
+      optionCounts: { opt1: 1, opt2: 2 },
+      answeredCount: 3,
+      totalPlayers: 3,
+      isLastQuestion: false
+    };
+
+    const masked = maskPretestResult(rawChoiceResult);
+    assert.strictEqual(masked.quizMode, 'PRETEST');
+    assert.strictEqual(masked.correctOptionId, null, 'correctOptionId must be null');
+    assert.strictEqual(masked.optionCounts, null, 'optionCounts must be null');
+    assert.strictEqual(masked.answeredCount, 3, 'answeredCount must be preserved');
+    console.log('    ✓ PT-12 passed');
+  }
+
   console.log('  ✅ All Pre-test & Post-test tests passed!\n');
 }
 
