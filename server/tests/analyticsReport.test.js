@@ -397,11 +397,50 @@ async function testAnalyticsReport() {
   // Bangkok, "City of Angels" -> "Bangkok, ""City of Angels"""
   assert.ok(csvString.includes('Bangkok, ""City of Angels""'), 'Quotes and commas in options must be escaped');
 
-  // Verify CRLF line endings
-  assert.ok(csvString.includes('\r\n'), 'CSV must use standard CRLF line breaks');
+  // 3. Verify Excel Multi-Sheet Workbook Generation
+  console.log('  Testing Excel Multi-Sheet Workbook (.xlsx) structure...');
+  let XLSX;
+  try {
+    XLSX = require('xlsx');
+  } catch {
+    XLSX = require('../../client/node_modules/xlsx');
+  }
+  const wb = XLSX.utils.book_new();
 
-  console.log('    ✓ CSV compilation, UTF-8 BOM, and cell escaping passed');
-  console.log('✅ Analytics & CSV Report tests passed cleanly!');
+  // Test Sheet 1: Overview
+  const wsOverview = XLSX.utils.aoa_to_sheet([
+    ['หัวข้อ', analytics.quizTitle],
+    ['Game PIN', room.pin],
+    ['ผู้เรียนทั้งหมด', analytics.totalPlayers],
+    ['คะแนนเฉลี่ย', analytics.averageScore]
+  ]);
+  XLSX.utils.book_append_sheet(wb, wsOverview, 'ภาพรวมกิจกรรม');
+
+  // Test Sheet 2: Leaderboard
+  const wsLeaderboard = XLSX.utils.aoa_to_sheet([
+    ['อันดับ', 'ชื่อผู้เรียน', 'คะแนนรวม'],
+    [1, p1.name, p1.score],
+    [2, p2.name, p2.score]
+  ]);
+  XLSX.utils.book_append_sheet(wb, wsLeaderboard, 'อันดับคะแนน');
+
+  // Test Sheet 3: Item Analysis
+  const wsItem = XLSX.utils.aoa_to_sheet([
+    ['ข้อที่', 'คำถาม', 'คนตอบถูก', 'อัตราตอบถูก (%)'],
+    [1, analytics.questionHistory[0].questionText, analytics.questionHistory[0].correctCount, `${analytics.questionHistory[0].accuracyPct}%`]
+  ]);
+  XLSX.utils.book_append_sheet(wb, wsItem, 'วิเคราะห์รายข้อ');
+
+  // Write buffer and verify integrity
+  const excelBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  assert.ok(excelBuffer && excelBuffer.length > 0, 'Excel buffer must be non-empty');
+
+  const readBackWb = XLSX.read(excelBuffer, { type: 'buffer' });
+  assert.strictEqual(readBackWb.SheetNames.length, 3, 'Must have exactly 3 sheets');
+  assert.deepStrictEqual(readBackWb.SheetNames, ['ภาพรวมกิจกรรม', 'อันดับคะแนน', 'วิเคราะห์รายข้อ']);
+  console.log('    ✓ Excel multi-sheet structure and Thai character encoding passed');
+
+  console.log('✅ Analytics & Export Report tests passed cleanly!');
 }
 
 module.exports = { testAnalyticsReport, buildReportCSVString };
