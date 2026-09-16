@@ -67,7 +67,7 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('start_quiz', ({ pin, hostToken }) => {
+    socket.on('start_quiz', ({ pin, hostToken, quizMode = 'NORMAL' }) => {
       try {
         const room = verifyHost(pin, hostToken);
 
@@ -84,8 +84,12 @@ module.exports = function setupSocketHandlers(io) {
           return socket.emit('error_message', { message: 'ชุดคำถามนี้ไม่มีข้อคำถาม' });
         }
 
+        // Set the room's quizMode ('NORMAL' | 'PRETEST' | 'POSTTEST')
+        room.quizMode = quizMode;
+
         // Reset all player scores, streaks, and question history for the new game session
-        roomManager.resetRoomScores(pin);
+        // If starting PRETEST, clear any old pretest data. If starting POSTTEST or NORMAL, preserve pretestData.
+        roomManager.resetRoomScores(pin, { clearPretest: quizMode === 'PRETEST' });
 
         const prepareDurationMs = process.env.NODE_ENV === 'test' ? 20 : 5000;
 
@@ -93,7 +97,8 @@ module.exports = function setupSocketHandlers(io) {
         io.to(pin).emit('question_prepare', {
           nextQuestionIndex: 0,
           totalQuestions: room.quizSet.questions.length,
-          countdownSeconds: 5
+          countdownSeconds: 5,
+          quizMode: room.quizMode
         });
 
         room.prepareTimer = setTimeout(() => {
@@ -101,7 +106,7 @@ module.exports = function setupSocketHandlers(io) {
           const result = roomManager.startQuestion(pin, 0);
           if (result.isEnded) {
             const leaderboard = roomManager.getLeaderboard(pin);
-            return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true });
+            return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true, quizMode: room.quizMode });
           }
 
           const counts = roomManager.getPlayerCounts(pin);
@@ -110,13 +115,24 @@ module.exports = function setupSocketHandlers(io) {
             currentQuestionIndex: room.currentQuestionIndex,
             totalQuestions: room.quizSet.questions.length,
             answeredCount: 0,
-            totalPlayers: counts.totalPlayers
+            totalPlayers: counts.totalPlayers,
+            quizMode: room.quizMode
           });
 
           const timeLimitMs = (result.question.timeLimitSeconds + 1) * 1000;
           room.questionTimer = setTimeout(() => {
             const questionResult = roomManager.getQuestionResult(pin);
-            io.to(pin).emit('question_result', questionResult);
+            // In PRETEST mode, mask correctOptionId and correctSequence for players
+            if (room.quizMode === 'PRETEST') {
+              io.to(pin).emit('question_result', {
+                ...questionResult,
+                quizMode: 'PRETEST',
+                correctOptionId: null,
+                correctSequence: null
+              });
+            } else {
+              io.to(pin).emit('question_result', questionResult);
+            }
           }, timeLimitMs);
         }, prepareDurationMs);
 
@@ -150,9 +166,19 @@ module.exports = function setupSocketHandlers(io) {
 
         if (nextIdx >= room.quizSet.questions.length) {
           room.status = 'ENDED';
+          if (room.quizMode === 'PRETEST') {
+            roomManager.savePretestSnapshot(pin);
+          }
           const leaderboard = roomManager.getLeaderboard(pin);
           const quizAnalytics = roomManager.getQuizAnalytics(pin);
-          return io.to(pin).emit('quiz_ended', { leaderboard, quizAnalytics, status: 'ENDED', isEnded: true });
+          return io.to(pin).emit('quiz_ended', {
+            leaderboard,
+            quizAnalytics,
+            status: 'ENDED',
+            isEnded: true,
+            quizMode: room.quizMode,
+            pretestData: room.pretestData
+          });
         }
 
         const prepareDurationMs = process.env.NODE_ENV === 'test' ? 20 : 5000;
@@ -161,16 +187,27 @@ module.exports = function setupSocketHandlers(io) {
         io.to(pin).emit('question_prepare', {
           nextQuestionIndex: nextIdx,
           totalQuestions: room.quizSet.questions.length,
-          countdownSeconds: 5
+          countdownSeconds: 5,
+          quizMode: room.quizMode
         });
 
         room.prepareTimer = setTimeout(() => {
           room.prepareTimer = null;
           const result = roomManager.startQuestion(pin);
           if (result.isEnded) {
+            if (room.quizMode === 'PRETEST') {
+              roomManager.savePretestSnapshot(pin);
+            }
             const leaderboard = roomManager.getLeaderboard(pin);
             const quizAnalytics = roomManager.getQuizAnalytics(pin);
-            return io.to(pin).emit('quiz_ended', { leaderboard, quizAnalytics, status: 'ENDED', isEnded: true });
+            return io.to(pin).emit('quiz_ended', {
+              leaderboard,
+              quizAnalytics,
+              status: 'ENDED',
+              isEnded: true,
+              quizMode: room.quizMode,
+              pretestData: room.pretestData
+            });
           }
 
           const counts = roomManager.getPlayerCounts(pin);
@@ -179,13 +216,23 @@ module.exports = function setupSocketHandlers(io) {
             currentQuestionIndex: room.currentQuestionIndex,
             totalQuestions: room.quizSet.questions.length,
             answeredCount: 0,
-            totalPlayers: counts.totalPlayers
+            totalPlayers: counts.totalPlayers,
+            quizMode: room.quizMode
           });
 
           const timeLimitMs = (result.question.timeLimitSeconds + 1) * 1000;
           room.questionTimer = setTimeout(() => {
             const questionResult = roomManager.getQuestionResult(pin);
-            io.to(pin).emit('question_result', questionResult);
+            if (room.quizMode === 'PRETEST') {
+              io.to(pin).emit('question_result', {
+                ...questionResult,
+                quizMode: 'PRETEST',
+                correctOptionId: null,
+                correctSequence: null
+              });
+            } else {
+              io.to(pin).emit('question_result', questionResult);
+            }
           }, timeLimitMs);
         }, prepareDurationMs);
 
@@ -216,11 +263,28 @@ module.exports = function setupSocketHandlers(io) {
 
         if (room.status === 'ENDED' || isLastQuestion) {
           room.status = 'ENDED';
-          return io.to(pin).emit('quiz_ended', { leaderboard, quizAnalytics, status: 'ENDED', isEnded: true });
+          if (room.quizMode === 'PRETEST') {
+            roomManager.savePretestSnapshot(pin);
+          }
+          const finalAnalytics = roomManager.getQuizAnalytics(pin);
+          return io.to(pin).emit('quiz_ended', {
+            leaderboard,
+            quizAnalytics: finalAnalytics,
+            status: 'ENDED',
+            isEnded: true,
+            quizMode: room.quizMode,
+            pretestData: room.pretestData
+          });
         }
 
         room.status = 'LEADERBOARD';
-        io.to(pin).emit('show_leaderboard', { leaderboard, quizAnalytics, status: 'LEADERBOARD' });
+        io.to(pin).emit('show_leaderboard', {
+          leaderboard,
+          quizAnalytics,
+          status: 'LEADERBOARD',
+          quizMode: room.quizMode,
+          pretestData: room.pretestData
+        });
       } catch (err) {
         console.error('[Socket Error] show_leaderboard:', err);
         socket.emit('error_message', { message: err.message });
@@ -328,10 +392,29 @@ module.exports = function setupSocketHandlers(io) {
         const playerList = roomManager.getPlayerList(pin);
         const counts = roomManager.getPlayerCounts(pin);
 
-        io.to(pin).emit('room_reset_to_lobby', { status: 'LOBBY', players: playerList, counts });
+        io.to(pin).emit('room_reset_to_lobby', {
+          status: 'LOBBY',
+          players: playerList,
+          counts,
+          quizMode: room.quizMode,
+          pretestData: room.pretestData
+        });
         io.to(pin).emit('room_updated', { players: playerList, counts });
       } catch (err) {
         console.error('[Socket Error] reset_to_lobby:', err);
+        socket.emit('error_message', { message: err.message });
+      }
+    });
+
+    socket.on('clear_pretest', ({ pin, hostToken }, ackCallback) => {
+      try {
+        const room = verifyHost(pin, hostToken);
+        roomManager.clearPretestData(pin);
+        io.to(pin).emit('pretest_cleared', { success: true, pretestData: null });
+        if (typeof ackCallback === 'function') ackCallback({ success: true });
+      } catch (err) {
+        console.error('[Socket Error] clear_pretest:', err);
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: err.message });
         socket.emit('error_message', { message: err.message });
       }
     });
@@ -465,19 +548,24 @@ module.exports = function setupSocketHandlers(io) {
       try {
         const answerPayload = orderedItemIds ? { orderedItemIds } : { optionId };
         const result = roomManager.submitAnswer(pin, playerId, answerPayload);
-        
+
+        const room = roomManager.getRoom(pin);
+        const isPretest = room?.quizMode === 'PRETEST';
+
+        // In PRETEST mode: hide isCorrect so learners can't see right/wrong feedback
         socket.emit('answer_feedback', {
-          isCorrect: result.isCorrect,
-          pointsEarned: result.pointsEarned,
-          basePoints: result.basePoints,
-          streak: result.streak,
-          highestStreak: result.highestStreak,
-          streakBonus: result.streakBonus,
-          comebackBonus: result.comebackBonus,
-          isComeback: result.isComeback,
+          isCorrect: isPretest ? null : result.isCorrect,
+          pointsEarned: isPretest ? 0 : result.pointsEarned,
+          basePoints: isPretest ? 0 : result.basePoints,
+          streak: isPretest ? 0 : result.streak,
+          highestStreak: isPretest ? 0 : result.highestStreak,
+          streakBonus: isPretest ? 0 : result.streakBonus,
+          comebackBonus: isPretest ? 0 : result.comebackBonus,
+          isComeback: isPretest ? false : result.isComeback,
           totalScore: result.totalScore,
           alreadyAnswered: result.alreadyAnswered,
-          details: result.details
+          details: result.details,
+          isPretest
         });
 
         io.to(pin).emit('answered_count_update', {
@@ -486,13 +574,21 @@ module.exports = function setupSocketHandlers(io) {
         });
 
         if (result.allAnswered) {
-          const room = roomManager.getRoom(pin);
           if (room && room.questionTimer) {
             clearTimeout(room.questionTimer);
             room.questionTimer = null;
           }
           const questionResult = roomManager.getQuestionResult(pin);
-          io.to(pin).emit('question_result', questionResult);
+          if (isPretest) {
+            io.to(pin).emit('question_result', {
+              ...questionResult,
+              quizMode: 'PRETEST',
+              correctOptionId: null,
+              correctSequence: null
+            });
+          } else {
+            io.to(pin).emit('question_result', questionResult);
+          }
         }
 
       } catch (err) {

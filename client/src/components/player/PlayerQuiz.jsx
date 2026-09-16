@@ -67,7 +67,10 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
 
     const handleFeedback = (data) => {
       setFeedback(data);
-      if (data.isCorrect) {
+      if (data.isPretest) {
+        // In PRETEST mode — play neutral 'submitted' sound, no correct/wrong reveal
+        sfx.playCorrect(); // use a soft sound; simply marks "recorded"
+      } else if (data.isCorrect) {
         if (data.streak >= 2) {
           sfx.playStreak(data.streak);
         } else if (data.isComeback) {
@@ -183,12 +186,20 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
           style={{
             textAlign: 'center',
             padding: '28px 20px',
-            background: feedback ? (feedback.isCorrect ? '#F0FDF4' : '#FEF2F2') : '#F8FAFC',
-            border: feedback ? (feedback.isCorrect ? '2px solid #166534' : '2px solid #991B1B') : '2px solid #CBD5E1'
+            background: feedback?.isPretest ? '#EFF6FF' : feedback ? (feedback.isCorrect ? '#F0FDF4' : '#FEF2F2') : '#F8FAFC',
+            border: feedback?.isPretest ? '2px solid #3B82F6' : feedback ? (feedback.isCorrect ? '2px solid #166534' : '2px solid #991B1B') : '2px solid #CBD5E1'
           }}
         >
           {feedback ? (
-            feedback.isCorrect ? (
+            feedback.isPretest ? (
+              <>
+                <CheckCircle2 size={50} color="#1D4ED8" style={{ marginBottom: '10px' }} />
+                <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#1D4ED8' }}>บันทึกคำตอบแล้ว ✨</h3>
+                <p style={{ fontSize: '0.95rem', marginTop: '8px', color: '#3B82F6' }}>
+                  (โหมด Pre-test — ผลจะเปิดเผยตอน Post-test)
+                </p>
+              </>
+            ) : feedback.isCorrect ? (
               <>
                 <CheckCircle2 size={50} color="#166534" style={{ marginBottom: '10px' }} />
                 <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#166534' }}>ถูกต้องที่สุด! 🎉</h3>

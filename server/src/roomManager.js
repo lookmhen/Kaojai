@@ -37,6 +37,8 @@ class RoomManager {
       pulseRound: 1,
       pulseHistory: [],
       status: 'LOBBY', // 'LOBBY', 'QUESTION', 'QUESTION_RESULT', 'LEADERBOARD', 'ENDED'
+      quizMode: 'NORMAL', // 'NORMAL' | 'PRETEST' | 'POSTTEST'
+      pretestData: null,  // Snapshot of pre-test results for learning gain comparison
       currentAnswers: new Map(), // playerId -> { optionId, isCorrect, timeUsed, pointsEarned }
       questionHistory: [] // Array of historical question result snapshots for detailed analytics
     };
@@ -96,6 +98,8 @@ class RoomManager {
       pulseVotes: room.pulseVotes,
       pulseRound: room.pulseRound || 1,
       pulseHistory: room.pulseHistory || [],
+      quizMode: room.quizMode || 'NORMAL',
+      pretestData: room.pretestData || null,
       leaderboard,
       players,
       counts,
@@ -209,6 +213,8 @@ class RoomManager {
       questionResult,
       pulseVotes: room.pulseVotes,
       pulseRound: room.pulseRound || 1,
+      quizMode: room.quizMode || 'NORMAL',
+      pretestData: room.pretestData || null,
       leaderboard,
       counts
     };
@@ -730,6 +736,100 @@ class RoomManager {
       };
     }
 
+    // Compute Pre-test vs Post-test Learning Gain Comparison if pretestData is present
+    let learningGain = null;
+    if (room.pretestData && room.pretestData.completed) {
+      const pre = room.pretestData;
+      const classGainPct = Math.round(overallAccuracyPct - (pre.overallAccuracyPct || 0));
+
+      // Build learner comparisons
+      const learnerComparisons = leaderboard.map(postPlayer => {
+        let postCorrectCount = 0;
+        history.forEach(q => {
+          if (q.playerResponses?.[postPlayer.playerId]?.isCorrect) {
+            postCorrectCount++;
+          }
+        });
+        const postAcc = history.length > 0 ? Math.round((postCorrectCount / history.length) * 100) : 0;
+
+        // Match pre-test player by playerId or name
+        const prePlayer = pre.playerScores?.find(
+          p => p.playerId === postPlayer.playerId || p.name.toLowerCase() === postPlayer.name.toLowerCase()
+        );
+
+        const preScore = prePlayer ? prePlayer.score : 0;
+        const preAcc = prePlayer ? prePlayer.accuracyPct : 0;
+        const scoreDiff = (postPlayer.score || 0) - preScore;
+        const accDiff = postAcc - preAcc;
+
+        return {
+          playerId: postPlayer.playerId,
+          name: postPlayer.name,
+          avatar: postPlayer.avatar,
+          hasPretest: Boolean(prePlayer),
+          preScore,
+          postScore: postPlayer.score || 0,
+          scoreDiff,
+          preAccuracyPct: preAcc,
+          postAccuracyPct: postAcc,
+          accuracyDiff: accDiff
+        };
+      });
+
+      // Also include any player who took pre-test but was absent from post-test
+      (pre.playerScores || []).forEach(prePlayer => {
+        const alreadyIn = learnerComparisons.find(
+          c => c.playerId === prePlayer.playerId || c.name.toLowerCase() === prePlayer.name.toLowerCase()
+        );
+        if (!alreadyIn) {
+          learnerComparisons.push({
+            playerId: prePlayer.playerId,
+            name: prePlayer.name,
+            avatar: prePlayer.avatar,
+            hasPretest: true,
+            preScore: prePlayer.score,
+            postScore: 0,
+            scoreDiff: -prePlayer.score,
+            preAccuracyPct: prePlayer.accuracyPct,
+            postAccuracyPct: 0,
+            accuracyDiff: -prePlayer.accuracyPct
+          });
+        }
+      });
+
+      // Find Most Improved Learner (highest positive accuracy/score diff)
+      const eligibleForImprovement = learnerComparisons.filter(l => l.hasPretest && l.accuracyDiff > 0);
+      eligibleForImprovement.sort((a, b) => b.accuracyDiff - a.accuracyDiff || b.scoreDiff - a.scoreDiff);
+      const mostImprovedLearner = eligibleForImprovement[0] || null;
+
+      // Question by question shifts
+      const questionShifts = history.map((postQ, idx) => {
+        const preQ = pre.questionAccuracy?.[idx] || pre.questionAccuracy?.find(pq => pq.questionIndex === postQ.questionIndex);
+        const preAcc = preQ ? preQ.accuracyPct : 0;
+        const postAcc = postQ.accuracyPct || 0;
+        return {
+          questionIndex: postQ.questionIndex ?? idx,
+          questionText: postQ.questionText,
+          preAccuracyPct: preAcc,
+          postAccuracyPct: postAcc,
+          diffPct: postAcc - preAcc
+        };
+      });
+
+      const sortedShifts = [...questionShifts].sort((a, b) => b.diffPct - a.diffPct);
+      const topGainedQuestion = sortedShifts[0] || null;
+
+      learningGain = {
+        preOverallAccuracyPct: pre.overallAccuracyPct || 0,
+        postOverallAccuracyPct: overallAccuracyPct,
+        classGainPct,
+        mostImprovedLearner,
+        learnerComparisons,
+        questionShifts,
+        topGainedQuestion
+      };
+    }
+
     return {
       pin,
       quizTitle: room.quizSet?.title || 'แบบทดสอบ KaoJai',
@@ -743,7 +843,10 @@ class RoomManager {
       questionHistory: history,
       pulseVotes: room.pulseVotes,
       pulseRound: room.pulseRound || 1,
-      pulseHistory: room.pulseHistory || []
+      pulseHistory: room.pulseHistory || [],
+      quizMode: room.quizMode || 'NORMAL',
+      pretestData: room.pretestData || null,
+      learningGain
     };
   }
 
@@ -852,9 +955,84 @@ class RoomManager {
   }
 
   /**
+   * Snapshot current question history and player scores as Pre-test data.
+   */
+  savePretestSnapshot(pin) {
+    const room = this.rooms.get(pin);
+    if (!room) return null;
+
+    const history = room.questionHistory || [];
+    const totalQuestions = room.quizSet?.questions?.length || history.length || 0;
+    const leaderboard = this.getLeaderboard(pin);
+    const totalPlayers = leaderboard.length;
+
+    let overallCorrectCount = 0;
+    const totalPossibleAnswers = totalPlayers * (history.length || 1);
+    history.forEach(h => {
+      overallCorrectCount += (h.correctCount || 0);
+    });
+
+    const overallAccuracyPct = totalPossibleAnswers > 0
+      ? Math.round((overallCorrectCount / totalPossibleAnswers) * 100)
+      : 0;
+
+    const totalScoreSum = leaderboard.reduce((acc, p) => acc + (p.score || 0), 0);
+    const averageScore = totalPlayers > 0 ? Math.round(totalScoreSum / totalPlayers) : 0;
+
+    const playerScores = leaderboard.map(p => {
+      let correctCount = 0;
+      history.forEach(q => {
+        if (q.playerResponses?.[p.playerId]?.isCorrect) {
+          correctCount++;
+        }
+      });
+      const accuracyPct = history.length > 0 ? Math.round((correctCount / history.length) * 100) : 0;
+      return {
+        playerId: p.playerId,
+        name: p.name,
+        avatar: p.avatar,
+        score: p.score || 0,
+        correctCount,
+        totalQuestions: history.length,
+        accuracyPct
+      };
+    });
+
+    const questionAccuracy = history.map((q, idx) => ({
+      questionIndex: q.questionIndex ?? idx,
+      questionText: q.questionText,
+      accuracyPct: q.accuracyPct || 0,
+      correctCount: q.correctCount || 0,
+      totalPlayers: q.totalPlayers || totalPlayers
+    }));
+
+    room.pretestData = {
+      completed: true,
+      completedAt: Date.now(),
+      totalQuestions,
+      totalPlayers,
+      averageScore,
+      overallAccuracyPct,
+      playerScores,
+      questionAccuracy
+    };
+
+    return room.pretestData;
+  }
+
+  /**
+   * Clear pretest data for a room.
+   */
+  clearPretestData(pin) {
+    const room = this.rooms.get(pin);
+    if (!room) return;
+    room.pretestData = null;
+  }
+
+  /**
    * Reset all player scores, streaks, and question history for a room.
    */
-  resetRoomScores(pin) {
+  resetRoomScores(pin, { clearPretest = false } = {}) {
     const room = this.rooms.get(pin);
     if (!room) return;
 
@@ -865,6 +1043,9 @@ class RoomManager {
     room.pulseRound = 1;
     room.pulseHistory = [];
     room.votedPulseUsers.clear();
+    if (clearPretest) {
+      room.pretestData = null;
+    }
 
     for (const player of room.players.values()) {
       player.score = 0;
@@ -881,14 +1062,14 @@ class RoomManager {
   /**
    * Reset room status and all player states back to Lobby.
    */
-  resetRoomToLobby(pin) {
+  resetRoomToLobby(pin, { clearPretest = false } = {}) {
     const room = this.rooms.get(pin);
     if (!room) return null;
 
     room.status = 'LOBBY';
     room.currentQuestionIndex = -1;
     room.currentSafeQuestion = null;
-    this.resetRoomScores(pin);
+    this.resetRoomScores(pin, { clearPretest });
     return room;
   }
 

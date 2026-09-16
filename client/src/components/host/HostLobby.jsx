@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { generateQRCodeSVG } from '../../utils/qrcode';
-import { Play, Users, BookOpen, QrCode, Shuffle, Plus, Trash2, UsersRound, ToggleLeft, ToggleRight, X, UserMinus, Hand } from 'lucide-react';
+import { Play, Users, BookOpen, QrCode, Shuffle, Plus, Trash2, UsersRound, ToggleLeft, ToggleRight, X, UserMinus, Hand, ClipboardList, TrendingUp, CheckCircle2 } from 'lucide-react';
 
 const TEAM_COLOR_PRESETS = [
   '#E11D48', '#2563EB', '#D97706', '#059669', '#7C3AED', '#0891B2'
@@ -9,7 +9,8 @@ const TEAM_COLOR_PRESETS = [
 export const HostLobby = ({
   pin, players, counts, onStartQuiz,
   teamsEnabled = false, teams = [],
-  onToggleTeams, onAutoAssignTeams, onCreateTeam, onRemoveTeam, onAssignTeam
+  onToggleTeams, onAutoAssignTeams, onCreateTeam, onRemoveTeam, onAssignTeam,
+  pretestData = null
 }) => {
   const [quizzes, setQuizzes] = useState([]);
   const [selectedQuizId, setSelectedQuizId] = useState('');
@@ -112,22 +113,78 @@ export const HostLobby = ({
           </select>
         </div>
 
-        <button
-          type="button"
-          onClick={() => onStartQuiz(selectedQuizId)}
-          disabled={connectedPlayers.length === 0}
-          style={{
-            padding: '16px 44px', fontSize: '1.3rem', fontWeight: 800, borderRadius: '50px',
-            background: connectedPlayers.length > 0 ? 'var(--accent-earth-orange)' : '#E2E8F0',
-            color: connectedPlayers.length > 0 ? '#FFFFFF' : '#94A3B8',
-            boxShadow: connectedPlayers.length > 0 ? '0 4px 16px rgba(192,86,33,0.3)' : 'none',
-            display: 'inline-flex', alignItems: 'center', gap: '12px', marginTop: '12px',
-            cursor: connectedPlayers.length > 0 ? 'pointer' : 'not-allowed'
-          }}
-        >
-          <Play size={24} />
-          {connectedPlayers.length === 0 ? 'รอผู้เข้าร่วมสแกนเข้าห้อง...' : `เริ่มเกม (${connectedPlayers.length} คนเข้าร่วมแล้ว)`}
-        </button>
+        {/* Pre-test badge: shown when pretestData is available */}
+        {pretestData?.completed && (
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '12px',
+            padding: '8px 18px', borderRadius: '50px', fontWeight: 700, fontSize: '0.9rem',
+            background: '#DCFCE7', color: '#166534', border: '1.5px solid #22C55E'
+          }}>
+            <CheckCircle2 size={16} color="#166534" />
+            บันทึกผล Pre-test แล้ว ({pretestData.overallAccuracyPct}% ตอบถูก · {pretestData.playerCount || 0} คน)
+          </div>
+        )}
+
+        {/* Action buttons row */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
+          {/* Normal start */}
+          <button
+            type="button"
+            onClick={() => onStartQuiz(selectedQuizId, 'NORMAL')}
+            disabled={connectedPlayers.length === 0}
+            style={{
+              padding: '14px 36px', fontSize: '1.15rem', fontWeight: 800, borderRadius: '50px',
+              background: connectedPlayers.length > 0 ? 'var(--accent-earth-orange)' : '#E2E8F0',
+              color: connectedPlayers.length > 0 ? '#FFFFFF' : '#94A3B8',
+              boxShadow: connectedPlayers.length > 0 ? '0 4px 16px rgba(192,86,33,0.3)' : 'none',
+              display: 'inline-flex', alignItems: 'center', gap: '10px',
+              cursor: connectedPlayers.length > 0 ? 'pointer' : 'not-allowed'
+            }}
+          >
+            <Play size={22} />
+            {connectedPlayers.length === 0 ? 'รอผู้เข้าร่วมสแกนเข้าห้อง...' : `เริ่มเกมปกติ (${connectedPlayers.length} คน)`}
+          </button>
+
+          {/* Pre-test */}
+          {!pretestData?.completed && (
+            <button
+              type="button"
+              onClick={() => onStartQuiz(selectedQuizId, 'PRETEST')}
+              disabled={connectedPlayers.length === 0}
+              title="ซ่อนเฉลย — บันทึกผลก่อนเรียนไว้เปรียบเทียบกับ Post-test"
+              style={{
+                padding: '14px 28px', fontSize: '1rem', fontWeight: 800, borderRadius: '50px',
+                background: connectedPlayers.length > 0 ? '#EFF6FF' : '#F1F5F9',
+                color: connectedPlayers.length > 0 ? '#1D4ED8' : '#94A3B8',
+                border: connectedPlayers.length > 0 ? '2px solid #3B82F6' : '2px solid #CBD5E1',
+                display: 'inline-flex', alignItems: 'center', gap: '10px',
+                cursor: connectedPlayers.length > 0 ? 'pointer' : 'not-allowed'
+              }}
+            >
+              <ClipboardList size={20} /> 📝 เริ่ม Pre-test (ซ่อนเฉลย)
+            </button>
+          )}
+
+          {/* Post-test — show only when pretestData is completed */}
+          {pretestData?.completed && (
+            <button
+              type="button"
+              onClick={() => onStartQuiz(selectedQuizId, 'POSTTEST')}
+              disabled={connectedPlayers.length === 0}
+              title="เริ่มแบบทดสอบหลังเรียน — เปรียบเทียบผลกับ Pre-test"
+              style={{
+                padding: '14px 28px', fontSize: '1rem', fontWeight: 800, borderRadius: '50px',
+                background: connectedPlayers.length > 0 ? '#F5F3FF' : '#F1F5F9',
+                color: connectedPlayers.length > 0 ? '#7C3AED' : '#94A3B8',
+                border: connectedPlayers.length > 0 ? '2px solid #7C3AED' : '2px solid #CBD5E1',
+                display: 'inline-flex', alignItems: 'center', gap: '10px',
+                cursor: connectedPlayers.length > 0 ? 'pointer' : 'not-allowed'
+              }}
+            >
+              <TrendingUp size={20} /> 🚀 เริ่ม Post-test (เปิดเฉลย)
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ─── Team Section ─────────────────────────────────────────────────── */}

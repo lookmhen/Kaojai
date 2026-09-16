@@ -41,6 +41,7 @@ export function AppContent() {
   const [pulseRound, setPulseRound] = useState(1);
   const [leaderboard, setLeaderboard] = useState([]);
   const [quizAnalytics, setQuizAnalytics] = useState(null);
+  const [pretestData, setPretestData] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [prepareData, setPrepareData] = useState(null);
 
@@ -176,6 +177,10 @@ export function AppContent() {
       const list = data.leaderboard || [];
       if (data.quizAnalytics) {
         setQuizAnalytics(data.quizAnalytics);
+      }
+      // When a PRETEST completes, store pretestData for the Post-test flow
+      if (data.quizMode === 'PRETEST' && data.pretestData) {
+        setPretestData(data.pretestData);
       }
       setLeaderboard(list);
       setPlayerData(prev => {
@@ -349,9 +354,9 @@ export function AppContent() {
     socket.emit('create_room', null);
   };
 
-  const handleStartQuiz = (quizId) => {
+  const handleStartQuiz = (quizId, quizMode = 'NORMAL') => {
     if (!socket) return;
-    socket.emit('start_quiz', { pin, hostToken: session.hostToken });
+    socket.emit('start_quiz', { pin, hostToken: session.hostToken, quizMode });
   };
 
   const handleNextQuestion = () => {
@@ -396,6 +401,7 @@ export function AppContent() {
     setQuestionResult(null);
     setLeaderboard([]);
     setQuizAnalytics(null);
+    setPretestData(null);
     setPlayers([]);
     setTeams([]);
     setPulseVotes({ green: 0, yellow: 0, red: 0 });
@@ -492,6 +498,7 @@ export function AppContent() {
               onCreateTeam={handleCreateTeam}
               onRemoveTeam={handleRemoveTeam}
               onAssignTeam={handleAssignTeam}
+              pretestData={pretestData}
             />
           ) : status === 'LEADERBOARD' || status === 'ENDED' ? (
             <HostLeaderboard
@@ -499,6 +506,7 @@ export function AppContent() {
               leaderboard={leaderboard}
               pulseVotes={pulseVotes}
               quizAnalytics={quizAnalytics}
+              pretestData={pretestData}
               isEnded={status === 'ENDED'}
               onNextQuestion={handleNextQuestion}
               onResetToLobby={handleResetToLobby}

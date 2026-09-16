@@ -7,7 +7,8 @@ export function exportGameReportCSV({
   leaderboard = [],
   pulseVotes,
   totalPlayers,
-  quizAnalytics = null
+  quizAnalytics = null,
+  pretestData = null
 }) {
   const now = new Date();
   const dateStr = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -241,6 +242,50 @@ export function exportGameReportCSV({
       rows.push(['ขอให้อธิบายซ้ำอีกครั้ง (Need Recap) 🔴', red, `${redPct}%`]);
       rows.push(['รวมผู้ส่งผลตอบรับ', totalVoted, '100%']);
     }
+  }
+
+  // ═════════════════════════════════════════════════════════════════════════════
+  // SECTION 6: Pre-test vs Post-test Learning Gain
+  // ═════════════════════════════════════════════════════════════════════════════
+  const learningGain = quizAnalytics?.learningGain;
+  if (learningGain) {
+    rows.push(['-------------------------------------------------------------------------------']);
+    rows.push(['📈 ผลสัมฤทธิ์ทางการเรียนรู้ Pre-test vs Post-test (Learning Gain Report)']);
+    rows.push(['-------------------------------------------------------------------------------']);
+    rows.push(['ดัชนีความแม่นยำ Pre-test (%)', `${learningGain.preOverallAccuracyPct}%`]);
+    rows.push(['ดัชนีความแม่นยำ Post-test (%)', `${learningGain.postOverallAccuracyPct}%`]);
+    rows.push(['การพัฒนา (Accuracy Gain)', `${learningGain.classGainPct >= 0 ? '+' : ''}${learningGain.classGainPct}%`]);
+
+    if (learningGain.mostImprovedLearner) {
+      rows.push([
+        '🌟 ผู้เรียนที่พัฒนาได้มากที่สุด (Most Improved)',
+        `${learningGain.mostImprovedLearner.name} (+${learningGain.mostImprovedLearner.accuracyDiff}%)`
+      ]);
+    }
+
+    if (learningGain.topGainedQuestion) {
+      rows.push([
+        '📈 คำถามที่ผู้เรียนพัฒนาได้มากที่สุด',
+        `ข้อที่ ${learningGain.topGainedQuestion.questionIndex + 1}: "${learningGain.topGainedQuestion.questionText || ''}" (+${learningGain.topGainedQuestion.diffPct}%)`
+      ]);
+    }
+
+    rows.push([]);
+    if (Array.isArray(learningGain.learnerComparisons) && learningGain.learnerComparisons.length > 0) {
+      rows.push(['ชื่อผู้เรียน', 'Pre-test Score', 'Post-test Score', 'ส่วนต่างคะแนน', 'Pre Accuracy', 'Post Accuracy', 'Accuracy Gain']);
+      learningGain.learnerComparisons.forEach(lc => {
+        rows.push([
+          lc.name || 'ไม่ระบุชื่อ',
+          lc.preScore || 0,
+          lc.postScore || 0,
+          `${lc.scoreDiff >= 0 ? '+' : ''}${lc.scoreDiff || 0}`,
+          `${lc.preAccuracyPct || 0}%`,
+          `${lc.postAccuracyPct || 0}%`,
+          `${lc.accuracyDiff >= 0 ? '+' : ''}${lc.accuracyDiff || 0}%`
+        ]);
+      });
+    }
+    rows.push([]);
   }
 
   // ═════════════════════════════════════════════════════════════════════════════

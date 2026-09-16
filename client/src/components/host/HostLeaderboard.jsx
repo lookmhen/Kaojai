@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
-import { Trophy, ArrowRight, Flag, RotateCcw, FileSpreadsheet, LogOut } from 'lucide-react';
+import { Trophy, ArrowRight, Flag, RotateCcw, FileSpreadsheet, LogOut, TrendingUp, Award } from 'lucide-react';
 import { exportGameReportCSV } from '../../utils/exportReport';
 
-export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, isEnded, onNextQuestion, onResetToLobby, onLeave }) => {
+export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, pretestData, isEnded, onNextQuestion, onResetToLobby, onLeave }) => {
   const [animatedScores, setAnimatedScores] = useState({});
 
   useEffect(() => {
@@ -196,11 +196,70 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, i
         </div>
       </div>
 
+      {/* Learning Gain Card (Pre-test vs Post-test) */}
+      {quizAnalytics?.learningGain && isEnded && (
+        <div className="glass-card" style={{ marginBottom: '24px', padding: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+            <TrendingUp size={22} color="#7C3AED" />
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#7C3AED', margin: 0 }}>
+              📊 ผลสัมฤทธิ์ทางการเรียนรู้ (Pre vs Post Learning Gain)
+            </h3>
+          </div>
+
+          {/* Class Accuracy Shift */}
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            <div style={{ flex: 1, minWidth: '120px', textAlign: 'center', padding: '14px', background: '#EFF6FF', borderRadius: '12px', border: '1px solid #BFDBFE' }}>
+              <div style={{ fontSize: '0.8rem', color: '#1D4ED8', fontWeight: 700 }}>Pre-test</div>
+              <div style={{ fontSize: '2rem', fontWeight: 900, color: '#1D4ED8' }}>{quizAnalytics.learningGain.preOverallAccuracyPct}%</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', fontSize: '1.5rem' }}>→</div>
+            <div style={{ flex: 1, minWidth: '120px', textAlign: 'center', padding: '14px', background: '#F5F3FF', borderRadius: '12px', border: '1px solid #DDD6FE' }}>
+              <div style={{ fontSize: '0.8rem', color: '#7C3AED', fontWeight: 700 }}>Post-test</div>
+              <div style={{ fontSize: '2rem', fontWeight: 900, color: '#7C3AED' }}>{quizAnalytics.learningGain.postOverallAccuracyPct}%</div>
+            </div>
+            <div style={{ flex: 1, minWidth: '120px', textAlign: 'center', padding: '14px', background: quizAnalytics.learningGain.classGainPct >= 0 ? '#DCFCE7' : '#FEF2F2', borderRadius: '12px', border: `1px solid ${quizAnalytics.learningGain.classGainPct >= 0 ? '#86EFAC' : '#FECACA'}` }}>
+              <div style={{ fontSize: '0.8rem', color: quizAnalytics.learningGain.classGainPct >= 0 ? '#166534' : '#991B1B', fontWeight: 700 }}>Gain</div>
+              <div style={{ fontSize: '2rem', fontWeight: 900, color: quizAnalytics.learningGain.classGainPct >= 0 ? '#166534' : '#991B1B' }}>
+                {quizAnalytics.learningGain.classGainPct >= 0 ? '+' : ''}{quizAnalytics.learningGain.classGainPct}%
+              </div>
+            </div>
+          </div>
+
+          {/* Most Improved Learner */}
+          {quizAnalytics.learningGain.mostImprovedLearner && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: '#FFFBEB', borderRadius: '12px', border: '1px solid #FDE68A', marginBottom: '12px' }}>
+              <Award size={22} color="#D97706" />
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#92400E' }}>🌟 ผู้เรียนที่พัฒนาได้มากที่สุด</div>
+                <div style={{ fontWeight: 900, fontSize: '1.1rem', color: '#D97706' }}>
+                  {quizAnalytics.learningGain.mostImprovedLearner.name}
+                  {' '}
+                  <span style={{ fontSize: '0.85rem', color: '#92400E' }}>
+                    (+{quizAnalytics.learningGain.mostImprovedLearner.accuracyDiff}% ความแม่นยำ)
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Top Gained Question */}
+          {quizAnalytics.learningGain.topGainedQuestion && (
+            <div style={{ padding: '10px 14px', background: '#F0FDF4', borderRadius: '10px', border: '1px solid #86EFAC', fontSize: '0.85rem' }}>
+              <span style={{ fontWeight: 700, color: '#166534' }}>📈 ข้อที่พัฒนาได้มากที่สุด: </span>
+              <span style={{ color: '#15803D' }}>
+                {quizAnalytics.learningGain.topGainedQuestion.questionText?.slice(0, 60) || `ข้อที่ ${quizAnalytics.learningGain.topGainedQuestion.questionIndex + 1}`}
+                {' '} (+{quizAnalytics.learningGain.topGainedQuestion.diffPct}%)
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Control Buttons */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
         <button
           type="button"
-          onClick={() => exportGameReportCSV({ pin, leaderboard, pulseVotes, quizAnalytics })}
+          onClick={() => exportGameReportCSV({ pin, leaderboard, pulseVotes, quizAnalytics, pretestData })}
           style={{
             padding: '16px 32px',
             borderRadius: '50px',
