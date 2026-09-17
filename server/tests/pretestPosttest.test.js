@@ -417,6 +417,25 @@ async function testPretestPosttest() {
     console.log('    ✓ PT-14 passed');
   }
 
+  // PT-15: learningGain must be null during PRETEST mode (no self-comparison)
+  {
+    console.log('  [PT-15] learningGain is null in PRETEST mode even after saving snapshot...');
+    const rm = new RoomManager();
+    const room = rm.createRoom('host-pt15', SAMPLE_QUIZ);
+    room.quizMode = 'PRETEST';
+    const p1 = rm.joinPlayer(room.pin, 'sock-1', { name: 'Dan' }).player;
+
+    rm.startQuestion(room.pin, 0);
+    rm.submitAnswer(room.pin, p1.playerId, 'opt1');
+    rm.getQuestionResult(room.pin);
+    rm.savePretestSnapshot(room.pin);
+
+    assert.ok(room.pretestData?.completed, 'pretestData should be completed');
+    const analytics = rm.getQuizAnalytics(room.pin);
+    assert.strictEqual(analytics.learningGain, null, 'learningGain must be null while still in PRETEST mode');
+    console.log('    ✓ PT-15 passed');
+  }
+
   console.log('  ✅ All Pre-test & Post-test tests passed!\n');
 }
 

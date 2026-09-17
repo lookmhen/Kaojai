@@ -196,6 +196,26 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
         </div>
       </div>
 
+      {/* Pre-test Completion Notice (When ended in PRETEST mode without Post-test yet) */}
+      {!quizAnalytics?.learningGain && isEnded && (pretestData?.completed || quizAnalytics?.quizMode === 'PRETEST') && (
+        <div className="glass-card" style={{ marginBottom: '24px', padding: '20px 24px', background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)', border: '1.5px solid #93C5FD' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ background: '#DBEAFE', borderRadius: '12px', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <TrendingUp size={28} color="#1D4ED8" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#1E40AF', margin: '0 0 4px 0' }}>
+                📝 บันทึกผลสอบก่อนเรียน (Pre-test) สำเร็จเรียบร้อย!
+              </h3>
+              <p style={{ color: '#1E3A8A', margin: 0, fontSize: '0.95rem', lineHeight: 1.5 }}>
+                ความแม่นยำเฉลี่ยของห้อง: <strong style={{ color: '#1D4ED8', fontSize: '1.1rem' }}>{quizAnalytics?.overallAccuracyPct ?? pretestData?.overallAccuracyPct ?? 0}%</strong>
+                {' '}· บันทึกคะแนนตั้งต้นของผู้เรียนทุกคนแล้ว เมื่อกลับสู่หน้า Lobby ท่านสามารถกด <strong>"🚀 เริ่ม Post-test"</strong> เพื่อวัดผลสัมฤทธิ์ทางการเรียนรู้ (Learning Gain)
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Learning Gain Card (Pre-test vs Post-test) */}
       {quizAnalytics?.learningGain && isEnded && (
         <div className="glass-card" style={{ marginBottom: '24px', padding: '24px' }}>
@@ -244,12 +264,16 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
 
           {/* Top Gained Question */}
           {quizAnalytics.learningGain.topGainedQuestion && (
-            <div style={{ padding: '10px 14px', background: '#F0FDF4', borderRadius: '10px', border: '1px solid #86EFAC', fontSize: '0.85rem' }}>
-              <span style={{ fontWeight: 700, color: '#166534' }}>📈 ข้อที่พัฒนาได้มากที่สุด: </span>
-              <span style={{ color: '#15803D' }}>
-                {quizAnalytics.learningGain.topGainedQuestion.questionText?.slice(0, 60) || `ข้อที่ ${quizAnalytics.learningGain.topGainedQuestion.questionIndex + 1}`}
-                {' '} (+{quizAnalytics.learningGain.topGainedQuestion.diffPct}%)
-              </span>
+            <div style={{ padding: '14px 18px', background: '#F0FDF4', borderRadius: '12px', border: '1px solid #86EFAC', fontSize: '0.95rem' }}>
+              <div style={{ fontWeight: 800, color: '#166534', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span>📈 ข้อที่พัฒนาได้มากที่สุด:</span>
+                <span style={{ color: '#15803D', fontWeight: 900, background: '#DCFCE7', padding: '2px 8px', borderRadius: '6px' }}>
+                  ข้อที่ {quizAnalytics.learningGain.topGainedQuestion.questionIndex + 1} (+{quizAnalytics.learningGain.topGainedQuestion.diffPct}%)
+                </span>
+              </div>
+              <div style={{ color: '#14532D', lineHeight: 1.6, wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                {quizAnalytics.learningGain.topGainedQuestion.questionText || `ข้อคำถามที่ ${quizAnalytics.learningGain.topGainedQuestion.questionIndex + 1}`}
+              </div>
             </div>
           )}
         </div>

@@ -759,9 +759,9 @@ class RoomManager {
       };
     }
 
-    // Compute Pre-test vs Post-test Learning Gain Comparison if pretestData is present
+    // Compute Pre-test vs Post-test Learning Gain Comparison if pretestData is present AND current quiz session is NOT the Pre-test itself
     let learningGain = null;
-    if (room.pretestData && room.pretestData.completed) {
+    if (room.quizMode !== 'PRETEST' && room.pretestData && room.pretestData.completed) {
       const pre = room.pretestData;
       const classGainPct = Math.round(overallAccuracyPct - (pre.overallAccuracyPct || 0));
 
