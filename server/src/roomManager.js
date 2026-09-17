@@ -98,7 +98,8 @@ class RoomManager {
     }
 
     const questionResult = room.status === 'QUESTION_RESULT' ? this.getQuestionResult(pin) : null;
-    const leaderboard = room.status === 'LEADERBOARD' ? this.getLeaderboard(pin) : [];
+    const leaderboard = (room.status === 'LEADERBOARD' || room.status === 'ENDED') ? this.getLeaderboard(pin) : [];
+    const quizAnalytics = this.getQuizAnalytics(pin);
     const counts = this.getPlayerCounts(pin);
     const players = this.getPlayerList(pin);
 
@@ -117,6 +118,7 @@ class RoomManager {
       quizMode: room.quizMode || 'NORMAL',
       pretestData: room.pretestData || null,
       leaderboard,
+      quizAnalytics,
       players,
       counts,
       teamsEnabled: room.teamsEnabled,
@@ -313,6 +315,17 @@ class RoomManager {
   createSafeQuestion(q, questionIndex, totalQuestions) {
     const isSequence = q.questionType === 'SEQUENCE' || (Array.isArray(q.sequenceItems) && q.sequenceItems.length > 0);
 
+    const parsedTime = Number(q.timeLimitSeconds);
+    let safeTimeLimit = 30;
+    if (!isNaN(parsedTime)) {
+      if (parsedTime > 0 && parsedTime < 5) {
+        safeTimeLimit = 5;
+      } else if (parsedTime >= 5) {
+        safeTimeLimit = Math.round(parsedTime);
+      }
+    }
+    const safeId = q.id || `q_${questionIndex}_${Date.now()}`;
+
     if (isSequence) {
       // Robust Fisher-Yates (Knuth) Shuffle guaranteed to NOT be in the exact original order
       const originalItems = q.sequenceItems.map(item => ({ id: item.id, text: item.text }));
@@ -341,10 +354,10 @@ class RoomManager {
       }
 
       return {
-        id: q.id,
+        id: safeId,
         questionType: 'SEQUENCE',
         questionText: q.questionText,
-        timeLimitSeconds: q.timeLimitSeconds,
+        timeLimitSeconds: safeTimeLimit,
         imageUrl: q.imageUrl || '',
         sequenceItems: shuffled,
         questionIndex,
@@ -353,10 +366,10 @@ class RoomManager {
     }
 
     return {
-      id: q.id,
+      id: safeId,
       questionType: 'CHOICE',
       questionText: q.questionText,
-      timeLimitSeconds: q.timeLimitSeconds,
+      timeLimitSeconds: safeTimeLimit,
       imageUrl: q.imageUrl || '',
       options: (q.options || []).map(opt => ({ id: opt.id, text: opt.text })),
       questionIndex,
@@ -888,7 +901,9 @@ class RoomManager {
     const room = this.rooms.get(pin);
     if (!room) return [];
 
-    room.status = 'LEADERBOARD';
+    if (room.status !== 'ENDED') {
+      room.status = 'LEADERBOARD';
+    }
 
     const isPretest = room.quizMode === 'PRETEST';
 
@@ -897,12 +912,15 @@ class RoomManager {
       name: p.name,
       avatar: p.avatar,
       score: isPretest ? 0 : p.score,
+      rawScore: p.score || 0,
       previousScore: isPretest ? 0 : (p.previousScore || 0),
       lastPointsEarned: isPretest ? 0 : (p.lastPointsEarned || 0),
       streak: isPretest ? 0 : (p.streak || 0),
       highestStreak: isPretest ? 0 : (p.highestStreak || 0),
       streakBonus: isPretest ? 0 : (p.streakBonus || 0),
-      isConnected: p.isConnected
+      isConnected: p.isConnected,
+      pulseChoice: p.pulseChoice || null,
+      teamId: p.teamId || null
     }));
 
     playerList.sort((a, b) => b.score - a.score);
@@ -1070,17 +1088,19 @@ class RoomManager {
   /**
    * Reset all player scores, streaks, and question history for a room.
    */
-  resetRoomScores(pin, { clearPretest = false } = {}) {
+  resetRoomScores(pin, { clearPretest = false, clearPulse = true } = {}) {
     const room = this.rooms.get(pin);
     if (!room) return;
 
     room.questionHistory = [];
     room.currentAnswers.clear();
     room.bottomHalfPlayerIds = new Set();
-    room.pulseVotes = { green: 0, yellow: 0, red: 0 };
-    room.pulseRound = 1;
-    room.pulseHistory = [];
-    room.votedPulseUsers.clear();
+    if (clearPulse) {
+      room.pulseVotes = { green: 0, yellow: 0, red: 0 };
+      room.pulseRound = 1;
+      room.pulseHistory = [];
+      room.votedPulseUsers.clear();
+    }
     if (clearPretest) {
       room.pretestData = null;
     }
@@ -1093,7 +1113,9 @@ class RoomManager {
       player.highestStreak = 0;
       player.streakBonus = 0;
       player.comebackBonus = 0;
-      player.pulseChoice = null;
+      if (clearPulse) {
+        player.pulseChoice = null;
+      }
     }
   }
 

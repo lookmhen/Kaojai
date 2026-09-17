@@ -96,6 +96,7 @@ export function AppContent() {
       if (data.pulseVotes) setPulseVotes(data.pulseVotes);
       if (data.pulseRound) setPulseRound(data.pulseRound);
       if (data.leaderboard) setLeaderboard(data.leaderboard);
+      if (data.quizAnalytics) setQuizAnalytics(data.quizAnalytics);
       if (data.teamsEnabled !== undefined) setTeamsEnabled(data.teamsEnabled);
       if (data.teams) setTeams(data.teams);
       if (data.pretestData) setPretestData(data.pretestData);
@@ -141,6 +142,8 @@ export function AppContent() {
 
     const onQuestionPrepare = (data) => {
       if (data.quizMode) setQuizMode(data.quizMode);
+      setQuestionResult(null);
+      setStatus('PREPARE');
       setPrepareData(data);
     };
 
@@ -331,6 +334,10 @@ export function AppContent() {
       setCounts({ totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 });
     };
 
+    const onQuizAnalyticsData = (data) => {
+      if (data?.quizAnalytics) setQuizAnalytics(data.quizAnalytics);
+    };
+
     socket.on('room_created', onRoomCreated);
     socket.on('host_reconnected', onHostReconnected);
     socket.on('room_updated', onRoomUpdated);
@@ -343,6 +350,7 @@ export function AppContent() {
     socket.on('show_leaderboard', onShowLeaderboard);
     socket.on('quiz_ended', onQuizEnded);
     socket.on('quiz_selected', onQuizSelected);
+    socket.on('quiz_analytics_data', onQuizAnalyticsData);
     socket.on('pretest_cleared', onPretestCleared);
     socket.on('pulse_updated', onPulseUpdated);
     socket.on('pulse_reset', onPulseReset);
@@ -370,6 +378,7 @@ export function AppContent() {
       socket.off('show_leaderboard', onShowLeaderboard);
       socket.off('quiz_ended', onQuizEnded);
       socket.off('quiz_selected', onQuizSelected);
+      socket.off('quiz_analytics_data', onQuizAnalyticsData);
       socket.off('pretest_cleared', onPretestCleared);
       socket.off('pulse_updated', onPulseUpdated);
       socket.off('pulse_reset', onPulseReset);

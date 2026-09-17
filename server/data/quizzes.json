@@ -130,382 +130,6 @@
     ]
   },
   {
-    "id": "quiz-1788877491090",
-    "title": "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review) (คัดลอก)",
-    "description": "ทดสอบความเข้าใจเกี่ยวกับกระบวนการทำงานและเป้าหมายองค์กร",
-    "questions": [
-      {
-        "id": "q-1788877491090-1",
-        "questionType": "CHOICE",
-        "questionText": "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
-        "timeLimitSeconds": 20,
-        "imageUrl": "",
-        "options": [
-          {
-            "id": "opt1",
-            "text": "สะสาง (Sort)",
-            "isCorrect": true
-          },
-          {
-            "id": "opt2",
-            "text": "สะดวก (Set in order)",
-            "isCorrect": false
-          },
-          {
-            "id": "opt3",
-            "text": "สะอาด (Shine)",
-            "isCorrect": false
-          },
-          {
-            "id": "opt4",
-            "text": "สร้างมาตรฐาน (Standardize)",
-            "isCorrect": false
-          }
-        ]
-      },
-      {
-        "id": "q-1788877491090-2",
-        "questionType": "CHOICE",
-        "questionText": "การสื่อสารที่ดีในการทำงานร่วมกันควรเน้นเรื่องใดมากที่สุด?",
-        "timeLimitSeconds": 20,
-        "imageUrl": "",
-        "options": [
-          {
-            "id": "opt1",
-            "text": "ความชัดเจนและความโปร่งใส",
-            "isCorrect": true
-          },
-          {
-            "id": "opt2",
-            "text": "ความเร็วโดยไม่ตรวจทาน",
-            "isCorrect": false
-          },
-          {
-            "id": "opt3",
-            "text": "การสั่งงานฝ่ายเดียว",
-            "isCorrect": false
-          },
-          {
-            "id": "opt4",
-            "text": "การส่งอีเมลอย่างเดียว",
-            "isCorrect": false
-          }
-        ]
-      },
-      {
-        "id": "q-1788877491090-3",
-        "questionType": "SEQUENCE",
-        "questionText": "จงเรียงลำดับขั้นตอนมาตรฐานการแก้ปัญหา Network Incident (SOP)",
-        "timeLimitSeconds": 30,
-        "imageUrl": "",
-        "sequenceItems": [
-          {
-            "id": "seq-1788877491090-1",
-            "text": "รับแจ้งเหตุและระบุขอบเขตผลกระทบ (Triage & Assess)"
-          },
-          {
-            "id": "seq-1788877491090-2",
-            "text": "ตรวจสอบสถานะอุปกรณ์และวิเคราะห์ Logs (Diagnose)"
-          },
-          {
-            "id": "seq-1788877491090-3",
-            "text": "ดำเนินการแก้ไขหรือ Failover ระบบสำรอง (Mitigate)"
-          },
-          {
-            "id": "seq-1788877491090-4",
-            "text": "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)"
-          },
-          {
-            "id": "seq-1788877491090-5",
-            "text": "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "quiz-1788877549537",
-    "title": "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review) (คัดลอก)",
-    "description": "ทดสอบความเข้าใจเกี่ยวกับกระบวนการทำงานและเป้าหมายองค์กร",
-    "questions": [
-      {
-        "id": "q-1788877549537-1",
-        "questionType": "CHOICE",
-        "questionText": "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
-        "timeLimitSeconds": 20,
-        "imageUrl": "",
-        "options": [
-          {
-            "id": "opt1",
-            "text": "สะสาง (Sort)",
-            "isCorrect": true
-          },
-          {
-            "id": "opt2",
-            "text": "สะดวก (Set in order)",
-            "isCorrect": false
-          },
-          {
-            "id": "opt3",
-            "text": "สะอาด (Shine)",
-            "isCorrect": false
-          },
-          {
-            "id": "opt4",
-            "text": "สร้างมาตรฐาน (Standardize)",
-            "isCorrect": false
-          }
-        ]
-      },
-      {
-        "id": "q-1788877549537-2",
-        "questionType": "CHOICE",
-        "questionText": "การสื่อสารที่ดีในการทำงานร่วมกันควรเน้นเรื่องใดมากที่สุด?",
-        "timeLimitSeconds": 20,
-        "imageUrl": "",
-        "options": [
-          {
-            "id": "opt1",
-            "text": "ความชัดเจนและความโปร่งใส",
-            "isCorrect": true
-          },
-          {
-            "id": "opt2",
-            "text": "ความเร็วโดยไม่ตรวจทาน",
-            "isCorrect": false
-          },
-          {
-            "id": "opt3",
-            "text": "การสั่งงานฝ่ายเดียว",
-            "isCorrect": false
-          },
-          {
-            "id": "opt4",
-            "text": "การส่งอีเมลอย่างเดียว",
-            "isCorrect": false
-          }
-        ]
-      },
-      {
-        "id": "q-1788877549537-3",
-        "questionType": "SEQUENCE",
-        "questionText": "จงเรียงลำดับขั้นตอนมาตรฐานการแก้ปัญหา Network Incident (SOP)",
-        "timeLimitSeconds": 30,
-        "imageUrl": "",
-        "sequenceItems": [
-          {
-            "id": "seq-1788877549537-1",
-            "text": "รับแจ้งเหตุและระบุขอบเขตผลกระทบ (Triage & Assess)"
-          },
-          {
-            "id": "seq-1788877549537-2",
-            "text": "ตรวจสอบสถานะอุปกรณ์และวิเคราะห์ Logs (Diagnose)"
-          },
-          {
-            "id": "seq-1788877549537-3",
-            "text": "ดำเนินการแก้ไขหรือ Failover ระบบสำรอง (Mitigate)"
-          },
-          {
-            "id": "seq-1788877549537-4",
-            "text": "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)"
-          },
-          {
-            "id": "seq-1788877549537-5",
-            "text": "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "quiz-1788877700976",
-    "title": "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review) (คัดลอก)",
-    "description": "ทดสอบความเข้าใจเกี่ยวกับกระบวนการทำงานและเป้าหมายองค์กร",
-    "questions": [
-      {
-        "id": "q-1788877700976-1",
-        "questionType": "CHOICE",
-        "questionText": "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
-        "timeLimitSeconds": 20,
-        "imageUrl": "",
-        "options": [
-          {
-            "id": "opt1",
-            "text": "สะสาง (Sort)",
-            "isCorrect": true
-          },
-          {
-            "id": "opt2",
-            "text": "สะดวก (Set in order)",
-            "isCorrect": false
-          },
-          {
-            "id": "opt3",
-            "text": "สะอาด (Shine)",
-            "isCorrect": false
-          },
-          {
-            "id": "opt4",
-            "text": "สร้างมาตรฐาน (Standardize)",
-            "isCorrect": false
-          }
-        ]
-      },
-      {
-        "id": "q-1788877700976-2",
-        "questionType": "CHOICE",
-        "questionText": "การสื่อสารที่ดีในการทำงานร่วมกันควรเน้นเรื่องใดมากที่สุด?",
-        "timeLimitSeconds": 20,
-        "imageUrl": "",
-        "options": [
-          {
-            "id": "opt1",
-            "text": "ความชัดเจนและความโปร่งใส",
-            "isCorrect": true
-          },
-          {
-            "id": "opt2",
-            "text": "ความเร็วโดยไม่ตรวจทาน",
-            "isCorrect": false
-          },
-          {
-            "id": "opt3",
-            "text": "การสั่งงานฝ่ายเดียว",
-            "isCorrect": false
-          },
-          {
-            "id": "opt4",
-            "text": "การส่งอีเมลอย่างเดียว",
-            "isCorrect": false
-          }
-        ]
-      },
-      {
-        "id": "q-1788877700976-3",
-        "questionType": "SEQUENCE",
-        "questionText": "จงเรียงลำดับขั้นตอนมาตรฐานการแก้ปัญหา Network Incident (SOP)",
-        "timeLimitSeconds": 30,
-        "imageUrl": "",
-        "sequenceItems": [
-          {
-            "id": "seq-1788877700976-1",
-            "text": "รับแจ้งเหตุและระบุขอบเขตผลกระทบ (Triage & Assess)"
-          },
-          {
-            "id": "seq-1788877700976-2",
-            "text": "ตรวจสอบสถานะอุปกรณ์และวิเคราะห์ Logs (Diagnose)"
-          },
-          {
-            "id": "seq-1788877700976-3",
-            "text": "ดำเนินการแก้ไขหรือ Failover ระบบสำรอง (Mitigate)"
-          },
-          {
-            "id": "seq-1788877700976-4",
-            "text": "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)"
-          },
-          {
-            "id": "seq-1788877700976-5",
-            "text": "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "quiz-1788877714381",
-    "title": "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review) (คัดลอก)",
-    "description": "ทดสอบความเข้าใจเกี่ยวกับกระบวนการทำงานและเป้าหมายองค์กร",
-    "questions": [
-      {
-        "id": "q-1788877714381-1",
-        "questionType": "CHOICE",
-        "questionText": "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
-        "timeLimitSeconds": 20,
-        "imageUrl": "",
-        "options": [
-          {
-            "id": "opt1",
-            "text": "สะสาง (Sort)",
-            "isCorrect": true
-          },
-          {
-            "id": "opt2",
-            "text": "สะดวก (Set in order)",
-            "isCorrect": false
-          },
-          {
-            "id": "opt3",
-            "text": "สะอาด (Shine)",
-            "isCorrect": false
-          },
-          {
-            "id": "opt4",
-            "text": "สร้างมาตรฐาน (Standardize)",
-            "isCorrect": false
-          }
-        ]
-      },
-      {
-        "id": "q-1788877714381-2",
-        "questionType": "CHOICE",
-        "questionText": "การสื่อสารที่ดีในการทำงานร่วมกันควรเน้นเรื่องใดมากที่สุด?",
-        "timeLimitSeconds": 20,
-        "imageUrl": "",
-        "options": [
-          {
-            "id": "opt1",
-            "text": "ความชัดเจนและความโปร่งใส",
-            "isCorrect": true
-          },
-          {
-            "id": "opt2",
-            "text": "ความเร็วโดยไม่ตรวจทาน",
-            "isCorrect": false
-          },
-          {
-            "id": "opt3",
-            "text": "การสั่งงานฝ่ายเดียว",
-            "isCorrect": false
-          },
-          {
-            "id": "opt4",
-            "text": "การส่งอีเมลอย่างเดียว",
-            "isCorrect": false
-          }
-        ]
-      },
-      {
-        "id": "q-1788877714381-3",
-        "questionType": "SEQUENCE",
-        "questionText": "จงเรียงลำดับขั้นตอนมาตรฐานการแก้ปัญหา Network Incident (SOP)",
-        "timeLimitSeconds": 30,
-        "imageUrl": "",
-        "sequenceItems": [
-          {
-            "id": "seq-1788877714381-1",
-            "text": "รับแจ้งเหตุและระบุขอบเขตผลกระทบ (Triage & Assess)"
-          },
-          {
-            "id": "seq-1788877714381-2",
-            "text": "ตรวจสอบสถานะอุปกรณ์และวิเคราะห์ Logs (Diagnose)"
-          },
-          {
-            "id": "seq-1788877714381-3",
-            "text": "ดำเนินการแก้ไขหรือ Failover ระบบสำรอง (Mitigate)"
-          },
-          {
-            "id": "seq-1788877714381-4",
-            "text": "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)"
-          },
-          {
-            "id": "seq-1788877714381-5",
-            "text": "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "id": "quiz-ai-1788879355425",
     "title": "แบบทดสอบความตระหนักรู้ด้านความปลอดภัยไซเบอร์สำหรับพนักงานใหม่",
     "description": "ชุดแบบทดสอบนี้ออกแบบมาเพื่อประเมินและเสริมสร้างความเข้าใจพื้นฐานด้านความปลอดภัยไซเบอร์ที่จำเป็นสำหรับพนักงานใหม่ทุกคน เพื่อปกป้องข้อมูลของบริษัทและส่วนบุคคล",
@@ -775,7 +399,578 @@
     ]
   },
   {
-    "id": "imported-1789622420088",
+    "id": "quiz-1",
+    "title": "แบบทดสอบทบทวนความรู้การทำงาน (General Work Review)",
+    "description": "ทดสอบความเข้าใจเกี่ยวกับกระบวนการทำงานและเป้าหมายองค์กร",
+    "questions": [
+      {
+        "id": "q1",
+        "questionType": "CHOICE",
+        "questionText": "หลักการ 5ส. ในการจัดระเบียบสถานที่ทำงานประกอบด้วยอะไรเป็นอันดับแรก?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "สะสาง (Sort)",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "สะดวก (Set in order)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "สะอาด (Shine)",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "สร้างมาตรฐาน (Standardize)",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q2",
+        "questionType": "CHOICE",
+        "questionText": "การสื่อสารที่ดีในการทำงานร่วมกันควรเน้นเรื่องใดมากที่สุด?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ความชัดเจนและความโปร่งใส",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "ความเร็วโดยไม่ตรวจทาน",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "การสั่งงานฝ่ายเดียว",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "การส่งอีเมลอย่างเดียว",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q3",
+        "questionType": "SEQUENCE",
+        "questionText": "จงเรียงลำดับขั้นตอนมาตรฐานการแก้ปัญหา Network Incident (SOP)",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq1",
+            "text": "รับแจ้งเหตุและระบุขอบเขตผลกระทบ (Triage & Assess)"
+          },
+          {
+            "id": "seq2",
+            "text": "ตรวจสอบสถานะอุปกรณ์และวิเคราะห์ Logs (Diagnose)"
+          },
+          {
+            "id": "seq3",
+            "text": "ดำเนินการแก้ไขหรือ Failover ระบบสำรอง (Mitigate)"
+          },
+          {
+            "id": "seq4",
+            "text": "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)"
+          },
+          {
+            "id": "seq5",
+            "text": "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "quiz-ai-1789616974390",
+    "title": "สุดยอดคู่มือ AI Copilot: ใช้ให้เป็น เห็นผลจริง",
+    "description": "แบบทดสอบนี้จะประเมินความเข้าใจและทักษะของคุณในการใช้ AI Copilot ในองค์กรอย่างมีประสิทธิภาพ โดยเน้นย้ำถึงหลักการสำคัญในการตรวจสอบข้อมูล การรักษาความปลอดภัยของข้อมูล และแนวปฏิบัติที่ดี",
+    "questions": [
+      {
+        "id": "q-ai-1789616974390-1",
+        "questionType": "CHOICE",
+        "questionText": "เหตุใดผู้ใช้จึงควรตรวจสอบข้อมูลที่ AI Copilot สร้างขึ้นเสมอ?",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "เพื่อเพิ่มความเร็วในการทำงาน",
+            "isCorrect": false
+          },
+          {
+            "id": "opt2",
+            "text": "เพื่อยืนยันความถูกต้องและหลีกเลี่ยงข้อมูลผิดพลาด (Hallucination)",
+            "isCorrect": true
+          },
+          {
+            "id": "opt3",
+            "text": "เพื่อลดภาระงานของ AI",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "เพื่อให้ AI เรียนรู้จากข้อผิดพลาด",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1789616974390-2",
+        "questionType": "SEQUENCE",
+        "questionText": "เรียงลำดับขั้นตอนที่ถูกต้องเพื่อป้องกันข้อมูลสำคัญขององค์กรเมื่อใช้ AI",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1789616974390-1-1",
+            "text": "ทำความเข้าใจนโยบายการใช้งาน AI ขององค์กร"
+          },
+          {
+            "id": "seq-1789616974390-1-4",
+            "text": "พิจารณาใช้ AI ที่ได้รับการอนุมัติและมีการรักษาความปลอดภัยข้อมูลระดับองค์กร"
+          },
+          {
+            "id": "seq-1789616974390-1-2",
+            "text": "หลีกเลี่ยงการป้อนข้อมูลส่วนบุคคลหรือข้อมูลลับของบริษัทโดยตรง"
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1789616974390-3",
+        "questionType": "CHOICE",
+        "questionText": "แนวคิดใดถูกต้องที่สุดเกี่ยวกับการเชื่อถือผลลัพธ์จาก AI Copilot?",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ควรเชื่อถือ 100% หาก AI มาจากผู้พัฒนาที่น่าเชื่อถือ",
+            "isCorrect": false
+          },
+          {
+            "id": "opt2",
+            "text": "ควรใช้เป็นข้อมูลอ้างอิงเบื้องต้นและตรวจสอบซ้ำกับแหล่งข้อมูลจริงเสมอ",
+            "isCorrect": true
+          },
+          {
+            "id": "opt3",
+            "text": "ไม่ควรเชื่อถือเลย ควรทำเองทั้งหมด",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "เชื่อถือได้เฉพาะข้อมูลที่ไม่สำคัญ",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1789616974390-4",
+        "questionType": "SEQUENCE",
+        "questionText": "เรียงลำดับขั้นตอนการสร้าง Prompt ที่มีประสิทธิภาพสำหรับ AI Copilot",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1789616974390-3-1",
+            "text": "กำหนดเป้าหมายและผลลัพธ์ที่ต้องการให้ชัดเจน"
+          },
+          {
+            "id": "seq-1789616974390-3-2",
+            "text": "ใส่รายละเอียด ข้อมูลประกอบ หรือข้อจำกัด เพื่อตีกรอบให้ตรงกับงาน"
+          },
+          {
+            "id": "seq-1789616974390-3-3",
+            "text": "ใช้ภาษาที่กระชับ ตรงประเด็น และหลีกเลี่ยงความกำกวม"
+          },
+          {
+            "id": "seq-1789616974390-3-4",
+            "text": "ตรวจสอบคำตอบและปรับแก้คำสั่งซ้ำจนกว่าจะได้ผลลัพธ์ตามต้องการ"
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1789616974390-5",
+        "questionType": "CHOICE",
+        "questionText": "ข้อมูลประเภทใดที่ผู้ใช้ควรหลีกเลี่ยงการป้อนเข้าสู่ AI Copilot ทั่วไปมากที่สุด?",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ข้อมูลสาธารณะที่หาได้ง่าย",
+            "isCorrect": false
+          },
+          {
+            "id": "opt2",
+            "text": "เอกสารสรุปการประชุมภายในที่ไม่เป็นความลับ",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "รหัสผ่าน, ข้อมูลบัตรเครดิต, หรือข้อมูลความลับทางการค้า",
+            "isCorrect": true
+          },
+          {
+            "id": "opt4",
+            "text": "รายชื่อลูกค้าที่ยินยอมให้เปิดเผยข้อมูล",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1789616974390-6",
+        "questionType": "CHOICE",
+        "questionText": "หากพนักงานต้องการนำ AI Copilot มาช่วยเพิ่มประสิทธิภาพในการทำงานประจำวัน ควรเริ่มต้นจากข้อใดเป็นอันดับแรก?",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "sequenceItems": [
+          {
+            "id": "seq-1789616974390-5-1",
+            "text": "ระบุงานหรือกระบวนการที่ AI Copilot สามารถช่วยเพิ่มประสิทธิภาพได้"
+          },
+          {
+            "id": "seq-1789616974390-5-2",
+            "text": "คัดเลือก AI Copilot ที่เหมาะสมกับความต้องการและข้อจำกัดขององค์กร"
+          },
+          {
+            "id": "seq-1789616974390-5-3",
+            "text": "จัดอบรมให้พนักงานมีความรู้และทักษะในการใช้งาน AI Copilot"
+          },
+          {
+            "id": "seq-1789616974390-5-4",
+            "text": "กำหนดแนวทางการใช้งานและตรวจสอบผลลัพธ์อย่างสม่ำเสมอ"
+          }
+        ],
+        "options": [
+          {
+            "id": "opt1",
+            "text": "มอบหมายให้ AI ทำงานสำคัญแทนทั้งหมดโดยไม่ต้องเข้าไปตรวจทาน",
+            "isCorrect": false
+          },
+          {
+            "id": "opt2",
+            "text": "อัปโหลดเอกสารทั้งหมดลงใน AI เพื่อให้ระบบเรียนรู้ข้อมูลให้เร็วที่สุด",
+            "isCorrect": false
+          },
+          {
+            "id": "opt3",
+            "text": "สำรวจงานประจำวัน เพื่อหาจุดที่ AI ช่วยลดเวลาและงานซ้ำซ้อนได้",
+            "isCorrect": true
+          },
+          {
+            "id": "opt4",
+            "text": "ดาวน์โหลดโปรแกรม AI เสริมภายนอกที่ไม่ได้รับอนุญาตมาติดตั้งเองทันที",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1789616974390-8",
+        "questionType": "CHOICE",
+        "questionText": "เมื่อ AI Copilot สร้างตัวเลขสถิติหรือข้อกฎหมายมาให้ พนักงานควรมีแนวทางปฏิบัติอย่างไรให้ถูกต้องที่สุด?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ถาม AI ตัวเดิมซ้ำ 3 ครั้ง หากผลลัพธ์ตรงกันถือว่าเชื่อถือได้ทันที",
+            "isCorrect": false
+          },
+          {
+            "id": "opt2",
+            "text": "ตรวจสอบและเทียบเคียงกับเอกสารต้นทางหรือแหล่งข้อมูลที่น่าเชื่อถือเสมอ",
+            "isCorrect": true
+          },
+          {
+            "id": "opt3",
+            "text": "นำไปใช้งานได้ทันทีหาก AI มีการอ้างอิงชื่อกฎหมายที่ฟังดูสมเหตุสมผล",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "แคปหน้าจอเก็บไว้เป็นหลักฐานแล้วส่งให้หัวหน้างานตัดสินใจ",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1789616974390-9",
+        "questionType": "CHOICE",
+        "questionText": "บทบาทสำคัญที่สุดของมนุษย์ในการทำงานร่วมกับ AI Copilot คืออะไร?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "การป้อนข้อมูลปริมาณมากอย่างต่อเนื่อง",
+            "isCorrect": false
+          },
+          {
+            "id": "opt2",
+            "text": "การเป็นผู้ควบคุมและตัดสินใจขั้นสุดท้าย",
+            "isCorrect": true
+          },
+          {
+            "id": "opt3",
+            "text": "การเป็นผู้เรียนรู้จาก AI โดยไม่ต้องตรวจสอบ",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "การทำซ้ำงานที่ AI ไม่สามารถทำได้",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-ai-1789616974390-10",
+        "questionType": "CHOICE",
+        "questionText": "หากจำเป็นต้องให้ AI Copilot ช่วยวิเคราะห์รายงานที่มีข้อมูลส่วนบุคคลหรือข้อมูลลูกค้า พนักงานควรทำอย่างไร?",
+        "timeLimitSeconds": 20,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ป้อนข้อมูลทั้งหมดได้ทันทีหากลบแชททิ้งหลังใช้งานเสร็จ",
+            "isCorrect": false
+          },
+          {
+            "id": "opt2",
+            "text": "ทำข้อมูลนิรนาม (Data Masking / Anonymization) โดยตัดข้อมูลระบุตัวตนออกก่อนป้อนให้ AI",
+            "isCorrect": true
+          },
+          {
+            "id": "opt3",
+            "text": "พิมพ์กำกับท้ายคำสั่งว่า 'ห้ามนำข้อมูลนี้ไปเผยแพร่หรือเทรนโมเดลต่อ'",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "เปลี่ยนชื่อไฟล์เป็นภาษาอื่นก่อนแนบไฟล์ลงในระบบ",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "id": "q-1789656846933-10",
+        "questionText": "ข้อใดคือข้อควรระวังที่สำคัญที่สุดเกี่ยวกับผลลัพธ์ที่ได้จากการใช้งาน AI Copilotในองกรค์?",
+        "timeLimitSeconds": 30,
+        "imageUrl": "",
+        "options": [
+          {
+            "id": "opt1",
+            "text": "ผลลัพธ์มีความยาวและละเอียดมากเกินไป",
+            "isCorrect": false
+          },
+          {
+            "id": "opt2",
+            "text": "ได้ข้อมูลที่คลาดเคลื่อนหรือไม่เป็นกลาง",
+            "isCorrect": true
+          },
+          {
+            "id": "opt3",
+            "text": "สำนวนภาษาดูเป็นทางการเกินความจำเป็น",
+            "isCorrect": false
+          },
+          {
+            "id": "opt4",
+            "text": "รูปแบบการจัดหน้าเอกสารไม่ตรงตามที่ต้องการ",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "imported-1789658541205",
+    "title": "Imported Quiz",
+    "description": "Import test",
+    "questions": [
+      {
+        "id": "imp-q1",
+        "questionType": "CHOICE",
+        "questionText": "Imported Q1",
+        "timeLimitSeconds": 20,
+        "options": [
+          {
+            "id": "opt1",
+            "text": "Correct",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "Wrong",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "imported-1789658570573",
+    "title": "Imported Quiz",
+    "description": "Import test",
+    "questions": [
+      {
+        "id": "imp-q1",
+        "questionType": "CHOICE",
+        "questionText": "Imported Q1",
+        "timeLimitSeconds": 20,
+        "options": [
+          {
+            "id": "opt1",
+            "text": "Correct",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "Wrong",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "imported-1789658581342",
+    "title": "Imported Quiz",
+    "description": "Import test",
+    "questions": [
+      {
+        "id": "imp-q1",
+        "questionType": "CHOICE",
+        "questionText": "Imported Q1",
+        "timeLimitSeconds": 20,
+        "options": [
+          {
+            "id": "opt1",
+            "text": "Correct",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "Wrong",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "imported-1789658611566",
+    "title": "Imported Quiz",
+    "description": "Import test",
+    "questions": [
+      {
+        "id": "imp-q1",
+        "questionType": "CHOICE",
+        "questionText": "Imported Q1",
+        "timeLimitSeconds": 20,
+        "options": [
+          {
+            "id": "opt1",
+            "text": "Correct",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "Wrong",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "imported-1789658963521",
+    "title": "Imported Quiz",
+    "description": "Import test",
+    "questions": [
+      {
+        "id": "imp-q1",
+        "questionType": "CHOICE",
+        "questionText": "Imported Q1",
+        "timeLimitSeconds": 20,
+        "options": [
+          {
+            "id": "opt1",
+            "text": "Correct",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "Wrong",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "imported-1789659014853",
+    "title": "Imported Quiz",
+    "description": "Import test",
+    "questions": [
+      {
+        "id": "imp-q1",
+        "questionType": "CHOICE",
+        "questionText": "Imported Q1",
+        "timeLimitSeconds": 20,
+        "options": [
+          {
+            "id": "opt1",
+            "text": "Correct",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "Wrong",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "imported-1789659523043",
+    "title": "Imported Quiz",
+    "description": "Import test",
+    "questions": [
+      {
+        "id": "imp-q1",
+        "questionType": "CHOICE",
+        "questionText": "Imported Q1",
+        "timeLimitSeconds": 20,
+        "options": [
+          {
+            "id": "opt1",
+            "text": "Correct",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "Wrong",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "imported-1789659549623",
     "title": "Imported Quiz",
     "description": "Import test",
     "questions": [

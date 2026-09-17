@@ -515,7 +515,7 @@ async function testRoomManager() {
   {
     console.log('  Testing Answer Streak & Comeback Gamification...');
     const rm = new RoomManager();
-    const room = rm.createRoom('host-gamify');
+    const room = rm.createRoom('host-gamify', rm.quizSets[0]);
     const p1 = rm.joinPlayer(room.pin, 's1', { name: 'Player 1' }).player;
     const p2 = rm.joinPlayer(room.pin, 's2', { name: 'Player 2' }).player;
 
@@ -611,7 +611,7 @@ async function testRoomManager() {
   {
     console.log('  Testing Score & Streak Reset on Replay and Reset to Lobby...');
     const rm = new RoomManager();
-    const room = rm.createRoom('host-reset-test');
+    const room = rm.createRoom('host-reset-test', rm.quizSets[0]);
     const p1 = rm.joinPlayer(room.pin, 'sock-reset-1', { name: 'Player One' }).player;
 
     rm.startQuestion(room.pin, 0);
@@ -960,6 +960,43 @@ async function testRoomManager() {
     assert.strictEqual(res2.pointsEarned, 0);
 
     console.log('    ✓ Cross-Type Payload Mismatch Resilience passed');
+  }
+
+  // 23. Timer Fallback Sanitize & Pulse Retention with clearPulse: false
+  {
+    console.log('  Testing Timer Duration Sanitize & Pulse Retention...');
+    const rm = new RoomManager();
+
+    // Verify createSafeQuestion sanitizes undefined, negative, or NaN timeLimitSeconds
+    const safeQ1 = rm.createSafeQuestion({ questionText: 'No time limit' }, 0);
+    assert.strictEqual(safeQ1.timeLimitSeconds, 30, 'Missing timeLimitSeconds must default to 30s');
+
+    const safeQ2 = rm.createSafeQuestion({ questionText: 'Clamp time limit', timeLimitSeconds: 3 }, 1);
+    assert.strictEqual(safeQ2.timeLimitSeconds, 5, 'Time limit < 5 must clamp to 5s minimum');
+
+    const safeQ3 = rm.createSafeQuestion({ questionText: 'Zero time limit', timeLimitSeconds: 0 }, 2);
+    assert.strictEqual(safeQ3.timeLimitSeconds, 30, 'Zero time limit must default to 30s');
+
+    const safeQ4 = rm.createSafeQuestion({ questionText: 'NaN time limit', timeLimitSeconds: 'invalid' }, 3);
+    assert.strictEqual(safeQ4.timeLimitSeconds, 30, 'NaN time limit must default to 30s');
+
+    // Verify resetRoomScores({ clearPulse: false }) preserves pulse votes & round
+    const room = rm.createRoom('host-pulse-retain');
+    const p1 = rm.joinPlayer(room.pin, 'sock-p-retain', { name: 'Alice' }).player;
+    rm.submitPulse(room.pin, p1.playerId, 'green');
+    assert.strictEqual(room.pulseVotes.green, 1);
+    assert.strictEqual(p1.pulseChoice, 'green');
+
+    // Reset with clearPulse: false
+    rm.resetRoomScores(room.pin, { clearPulse: false });
+    assert.strictEqual(room.pulseVotes.green, 1, 'Pulse votes should be retained when clearPulse=false');
+    assert.strictEqual(p1.pulseChoice, 'green', 'Player pulseChoice should be retained when clearPulse=false');
+
+    // Leaderboard attached pulseChoice
+    const lb = rm.getLeaderboard(room.pin);
+    assert.strictEqual(lb[0].pulseChoice, 'green');
+
+    console.log('    ✓ Timer Duration Sanitize & Pulse Retention passed');
   }
 
   console.log('✅ RoomManager tests passed cleanly!');

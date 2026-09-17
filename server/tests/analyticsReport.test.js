@@ -441,14 +441,34 @@ async function testAnalyticsReport() {
   ]);
   XLSX.utils.book_append_sheet(wb, wsItem, 'วิเคราะห์รายข้อ');
 
+  // Test Sheet 5: Pulse Assessment & Individual Scores
+  const pulseRows = [
+    ['📊 สรุปผลประเมินความเข้าใจรายรอบ (Pulse Check-in Rounds Summary)'],
+    ['รอบที่', 'เข้าใจดี (🟢)', 'ขอตัวอย่าง (🟡)', 'ทบทวนใหม่ (🔴)', 'รวมผู้ตอบ', 'ดัชนีความเข้าใจ (Clarity Index)'],
+    ['รอบที่ 1', '1 คน', '0 คน', '0 คน', '1 คน', '100%'],
+    [],
+    ['👥 ตารางผลประเมินความเข้าใจและคะแนนรายบุคคล (Individual Pulse Assessment & Scores)'],
+    ['อันดับ', 'ชื่อผู้เรียน', 'ระดับความเข้าใจ (Pulse)', 'คะแนนสะสม', 'สถานะผู้เรียน'],
+    [1, p1.name, '🟢 เข้าใจดีเยี่ยม', p1.score, 'ออนไลน์'],
+    [2, p2.name, '🟡 ขอตัวอย่างเพิ่ม', p2.score, 'ออนไลน์']
+  ];
+  const wsPulse = XLSX.utils.aoa_to_sheet(pulseRows);
+  XLSX.utils.book_append_sheet(wb, wsPulse, 'ผลประเมินความเข้าใจ');
+
   // Write buffer and verify integrity
   const excelBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
   assert.ok(excelBuffer && excelBuffer.length > 0, 'Excel buffer must be non-empty');
 
   const readBackWb = XLSX.read(excelBuffer, { type: 'buffer' });
-  assert.strictEqual(readBackWb.SheetNames.length, 3, 'Must have exactly 3 sheets');
-  assert.deepStrictEqual(readBackWb.SheetNames, ['ภาพรวมกิจกรรม', 'อันดับคะแนน', 'วิเคราะห์รายข้อ']);
-  console.log('    ✓ Excel multi-sheet structure and Thai character encoding passed');
+  assert.strictEqual(readBackWb.SheetNames.length, 4, 'Must have 4 sheets including ผลประเมินความเข้าใจ');
+  assert.deepStrictEqual(readBackWb.SheetNames, ['ภาพรวมกิจกรรม', 'อันดับคะแนน', 'วิเคราะห์รายข้อ', 'ผลประเมินความเข้าใจ']);
+
+  // Verify Sheet 5 contents
+  const pulseSheetData = XLSX.utils.sheet_to_json(readBackWb.Sheets['ผลประเมินความเข้าใจ'], { header: 1 });
+  assert.ok(pulseSheetData.some(row => row.includes('🟢 เข้าใจดีเยี่ยม')), 'Pulse sheet must record green vote');
+  assert.ok(pulseSheetData.some(row => row.includes('🟡 ขอตัวอย่างเพิ่ม')), 'Pulse sheet must record yellow vote');
+  assert.ok(pulseSheetData.some(row => row.includes(p1.name)), 'Pulse sheet must record player name');
+  console.log('    ✓ Excel multi-sheet structure, Pulse assessment sheet, and Thai character encoding passed');
 
   console.log('✅ Analytics & Export Report tests passed cleanly!');
 }

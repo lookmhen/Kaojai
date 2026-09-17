@@ -177,7 +177,8 @@ module.exports = function setupSocketHandlers(io) {
             const result = roomManager.startQuestion(pin, 0);
             if (result.isEnded) {
               const leaderboard = roomManager.getLeaderboard(pin);
-              return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true, quizMode: room.quizMode });
+              const quizAnalytics = roomManager.getQuizAnalytics(pin);
+              return io.to(pin).emit('quiz_ended', { leaderboard, quizAnalytics, status: 'ENDED', isEnded: true, quizMode: room.quizMode, pretestData: room.pretestData });
             }
 
             const counts = roomManager.getPlayerCounts(pin);
@@ -190,9 +191,11 @@ module.exports = function setupSocketHandlers(io) {
               quizMode: room.quizMode
             });
 
-            const timeLimitMs = (result.question.timeLimitSeconds + 1) * 1000;
+            const durationSec = Math.max(5, Number(result.question?.timeLimitSeconds) || 30);
+            const timeLimitMs = (durationSec + 1) * 1000;
             room.questionTimer = setTimeout(() => {
               try {
+                room.questionTimer = null;
                 const questionResult = roomManager.getQuestionResult(pin);
                 if (room.quizMode === 'PRETEST') {
                   io.to(pin).emit('question_result', maskPretestResult(questionResult));
@@ -220,7 +223,8 @@ module.exports = function setupSocketHandlers(io) {
 
         if (room.status === 'ENDED') {
           const leaderboard = roomManager.getLeaderboard(pin);
-          return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true });
+          const quizAnalytics = roomManager.getQuizAnalytics(pin);
+          return io.to(pin).emit('quiz_ended', { leaderboard, quizAnalytics, status: 'ENDED', isEnded: true, quizMode: room.quizMode, pretestData: room.pretestData });
         }
 
         if (room.questionTimer) {
@@ -292,13 +296,19 @@ module.exports = function setupSocketHandlers(io) {
             quizMode: room.quizMode
           });
 
-          const timeLimitMs = (result.question.timeLimitSeconds + 1) * 1000;
+          const durationSec = Math.max(5, Number(result.question?.timeLimitSeconds) || 30);
+          const timeLimitMs = (durationSec + 1) * 1000;
           room.questionTimer = setTimeout(() => {
-            const questionResult = roomManager.getQuestionResult(pin);
-            if (room.quizMode === 'PRETEST') {
-              io.to(pin).emit('question_result', maskPretestResult(questionResult));
-            } else {
-              io.to(pin).emit('question_result', questionResult);
+            try {
+              room.questionTimer = null;
+              const questionResult = roomManager.getQuestionResult(pin);
+              if (room.quizMode === 'PRETEST') {
+                io.to(pin).emit('question_result', maskPretestResult(questionResult));
+              } else {
+                io.to(pin).emit('question_result', questionResult);
+              }
+            } catch (tErr) {
+              console.error('[Socket Timer Error] next_question timer:', tErr);
             }
           }, timeLimitMs);
         }, prepareDurationMs);
@@ -354,6 +364,22 @@ module.exports = function setupSocketHandlers(io) {
         });
       } catch (err) {
         console.error('[Socket Error] show_leaderboard:', err);
+        socket.emit('error_message', { message: err.message });
+      }
+    });
+
+    socket.on('get_quiz_analytics', ({ pin }, ackCallback) => {
+      try {
+        const analytics = roomManager.getQuizAnalytics(pin);
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: true, quizAnalytics: analytics });
+        }
+        socket.emit('quiz_analytics_data', { success: true, quizAnalytics: analytics });
+      } catch (err) {
+        console.error('[Socket Error] get_quiz_analytics:', err);
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: false, message: err.message });
+        }
         socket.emit('error_message', { message: err.message });
       }
     });

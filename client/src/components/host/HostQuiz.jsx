@@ -11,11 +11,13 @@ const OPTION_STYLES = [
 ];
 
 export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNextQuestion, onShowLeaderboard }) => {
-  const [timeLeft, setTimeLeft] = useState(question?.timeLimitSeconds ?? 30);
+  const initialDuration = Math.max(5, Number(question?.timeLimitSeconds) || 30);
+  const [timeLeft, setTimeLeft] = useState(initialDuration);
   const isSequence = question?.questionType === 'SEQUENCE' || Boolean(question?.sequenceItems?.length);
 
   useEffect(() => {
-    setTimeLeft(question?.timeLimitSeconds ?? 30);
+    const duration = Math.max(5, Number(question?.timeLimitSeconds) || 30);
+    setTimeLeft(duration);
     const interval = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -30,13 +32,13 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [question?.id]);
+  }, [question?.id, question?.questionIndex, question?.timeLimitSeconds]);
 
   useEffect(() => {
-    if (result) {
+    if (result && (!result.questionId || !question?.id || result.questionId === question?.id)) {
       setTimeLeft(0);
     }
-  }, [result]);
+  }, [result, question?.id]);
 
   const isFinalQuestion = Boolean(result?.isLastQuestion || ((question?.questionIndex ?? 0) + 1 >= (question?.totalQuestions ?? 1)));
   const maxCount = Math.max(...(question?.options?.map(opt => result?.optionCounts?.[opt.id] || 0) || [1]), 1);

@@ -13,25 +13,70 @@ function prepareReportData({ pin, leaderboard = [], pulseVotes, totalPlayers, qu
   const cleanTitle = (quizAnalytics?.quizTitle || 'Game').replace(/[^a-zA-Z0-9ก-๙_-]/g, '_').slice(0, 30);
   const fileNameDate = now.toISOString().slice(0, 10);
 
+  // Fallback calculation if quizAnalytics was missing or partially populated
+  const totalQuestions = quizAnalytics?.totalQuestions || questionHistory.length || (pretestData?.totalQuestions || 0);
+
+  let averageScore = quizAnalytics?.averageScore;
+  if (averageScore === undefined || averageScore === null) {
+    const sumScore = leaderboard.reduce((acc, p) => acc + (Number(p.score) || 0), 0);
+    averageScore = leaderboard.length > 0 ? Math.round(sumScore / leaderboard.length) : (pretestData?.averageScore || 0);
+  }
+
+  let overallAccuracyPct = quizAnalytics?.overallAccuracyPct;
+  if (overallAccuracyPct === undefined || overallAccuracyPct === null) {
+    if (questionHistory.length > 0 && leaderboard.length > 0) {
+      let totalCorrect = 0;
+      let totalPossible = questionHistory.length * leaderboard.length;
+      questionHistory.forEach(q => {
+        totalCorrect += (q.correctCount || 0);
+      });
+      overallAccuracyPct = totalPossible > 0 ? Math.round((totalCorrect / totalPossible) * 100) : 0;
+    } else {
+      overallAccuracyPct = pretestData?.overallAccuracyPct ?? 0;
+    }
+  }
+
+  // Hardest / Easiest question fallback
+  let hardestQuestion = quizAnalytics?.hardestQuestion || null;
+  let easiestQuestion = quizAnalytics?.easiestQuestion || null;
+  if (!hardestQuestion && questionHistory.length > 0) {
+    const sorted = [...questionHistory].sort((a, b) => (a.accuracyPct || 0) - (b.accuracyPct || 0));
+    hardestQuestion = {
+      questionIndex: sorted[0].questionIndex ?? 0,
+      questionText: sorted[0].questionText || `ข้อที่ 1`,
+      accuracyPct: sorted[0].accuracyPct || 0
+    };
+    easiestQuestion = {
+      questionIndex: sorted[sorted.length - 1].questionIndex ?? (sorted.length - 1),
+      questionText: sorted[sorted.length - 1].questionText || `ข้อที่ ${sorted.length}`,
+      accuracyPct: sorted[sorted.length - 1].accuracyPct || 0
+    };
+  }
+
+  const effectivePulseVotes = pulseVotes || quizAnalytics?.pulseVotes || null;
+  const effectivePulseHistory = (quizAnalytics?.pulseHistory && quizAnalytics.pulseHistory.length > 0)
+    ? quizAnalytics.pulseHistory
+    : [];
+
   return {
     now,
     dateStr,
     timeStr,
     pin: pin || '-',
-    title: quizAnalytics?.quizTitle || 'แบบทดสอบ KaoJai',
+    title: quizAnalytics?.quizTitle || (pretestData?.quizTitle) || 'แบบทดสอบ KaoJai',
     cleanTitle,
     fileNameDate,
     totalCount,
     questionHistory,
-    totalQuestions: quizAnalytics?.totalQuestions || questionHistory.length,
-    averageScore: quizAnalytics?.averageScore || 0,
-    overallAccuracyPct: quizAnalytics?.overallAccuracyPct ?? 0,
-    hardestQuestion: quizAnalytics?.hardestQuestion,
-    easiestQuestion: quizAnalytics?.easiestQuestion,
+    totalQuestions,
+    averageScore,
+    overallAccuracyPct,
+    hardestQuestion,
+    easiestQuestion,
     leaderboard,
-    pulseVotes: pulseVotes || quizAnalytics?.pulseVotes,
+    pulseVotes: effectivePulseVotes,
     pulseRound: quizAnalytics?.pulseRound || 1,
-    pulseHistory: quizAnalytics?.pulseHistory || [],
+    pulseHistory: effectivePulseHistory,
     learningGain: quizAnalytics?.learningGain || null,
     pretestData
   };
@@ -64,13 +109,13 @@ export function exportGameReportExcel(params) {
   if (data.hardestQuestion) {
     overviewRows.push([
       'ข้อที่ยากที่สุด (ตอบถูกน้อยสุด)',
-      `ข้อ ${data.hardestQuestion.questionIndex + 1}: ${data.hardestQuestion.questionText} (ตอบถูก ${data.hardestQuestion.accuracyPct}%)`
+      `ข้อ ${(data.hardestQuestion.questionIndex ?? 0) + 1}: ${data.hardestQuestion.questionText} (ตอบถูก ${data.hardestQuestion.accuracyPct}%)`
     ]);
   }
   if (data.easiestQuestion) {
     overviewRows.push([
       'ข้อง่ายที่สุด (ตอบถูกมากสุด)',
-      `ข้อ ${data.easiestQuestion.questionIndex + 1}: ${data.easiestQuestion.questionText} (ตอบถูก ${data.easiestQuestion.accuracyPct}%)`
+      `ข้อ ${(data.easiestQuestion.questionIndex ?? 0) + 1}: ${data.easiestQuestion.questionText} (ตอบถูก ${data.easiestQuestion.accuracyPct}%)`
     ]);
   }
 
@@ -109,13 +154,24 @@ export function exportGameReportExcel(params) {
           correctCount++;
         }
       });
-      const totalQ = data.questionHistory.length || 1;
+      const totalQ = data.questionHistory.length || data.totalQuestions || 1;
       const accPct = Math.round((correctCount / totalQ) * 100);
+
+      // In pre-test mode where player.score is 0, check if rawScore or pretestData has score
+      let displayScore = player.score || 0;
+      if (displayScore === 0 && player.rawScore) {
+        displayScore = player.rawScore;
+      } else if (displayScore === 0 && data.pretestData?.playerScores) {
+        const ptPlayer = data.pretestData.playerScores.find(p => p.playerId === player.playerId || p.name === player.name);
+        if (ptPlayer && ptPlayer.score) {
+          displayScore = ptPlayer.score;
+        }
+      }
 
       lbRows.push([
         idx + 1,
         player.name || 'ไม่ระบุชื่อ',
-        player.score || 0,
+        displayScore,
         `${correctCount}/${totalQ}`,
         `${accPct}%`,
         player.highestStreak || 0,
@@ -195,10 +251,11 @@ export function exportGameReportExcel(params) {
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // SHEET 5: ผลประเมินความเข้าใจ (Pulse History)
+  // SHEET 5: ผลประเมินความเข้าใจ (Pulse History & Individual Responses)
   // ─────────────────────────────────────────────────────────────────────────────
-  if (data.pulseVotes || data.pulseHistory.length > 0) {
+  if (data.pulseVotes || data.pulseHistory.length > 0 || data.leaderboard.some(p => p.pulseChoice)) {
     const pulseRows = [
+      ['📊 สรุปผลประเมินความเข้าใจรายรอบ (Pulse Check-in Rounds Summary)'],
       ['รอบที่', 'เข้าใจดี (🟢)', 'ขอตัวอย่าง (🟡)', 'ทบทวนใหม่ (🔴)', 'รวมผู้ตอบ', 'ดัชนีความเข้าใจ (Clarity Index)']
     ];
 
@@ -229,8 +286,36 @@ export function exportGameReportExcel(params) {
       ]);
     }
 
+    // Individual Pulse Responses Table
+    pulseRows.push([]);
+    pulseRows.push(['👥 ตารางผลประเมินความเข้าใจและคะแนนรายบุคคล (Individual Pulse Assessment & Scores)']);
+    pulseRows.push(['อันดับ', 'ชื่อผู้เรียน', 'ระดับความเข้าใจ (Pulse)', 'คะแนนสะสม', 'สถานะผู้เรียน']);
+
+    if (data.leaderboard.length === 0) {
+      pulseRows.push(['-', 'ไม่มีข้อมูลผู้เรียน', '-', 0, '-']);
+    } else {
+      data.leaderboard.forEach((player, idx) => {
+        let pulseLabel = 'ยังไม่ประเมิน';
+        if (player.pulseChoice === 'green') {
+          pulseLabel = '🟢 เข้าใจดีเยี่ยม';
+        } else if (player.pulseChoice === 'yellow') {
+          pulseLabel = '🟡 ขอตัวอย่างเพิ่ม';
+        } else if (player.pulseChoice === 'red') {
+          pulseLabel = '🔴 ขอทบทวนใหม่';
+        }
+
+        pulseRows.push([
+          idx + 1,
+          player.name || 'ไม่ระบุชื่อ',
+          pulseLabel,
+          player.score || 0,
+          player.connected !== false ? 'ออนไลน์' : 'ออฟไลน์'
+        ]);
+      });
+    }
+
     const wsPulse = XLSX.utils.aoa_to_sheet(pulseRows);
-    wsPulse['!cols'] = [{ wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 28 }];
+    wsPulse['!cols'] = [{ wch: 18 }, { wch: 25 }, { wch: 25 }, { wch: 16 }, { wch: 16 }, { wch: 28 }];
     XLSX.utils.book_append_sheet(wb, wsPulse, 'ผลประเมินความเข้าใจ');
   }
 
@@ -280,10 +365,10 @@ export async function exportGameReportPDF(params) {
   // Generate HTML Template for PDF rendering with modern clean typography and responsive layout
   const container = document.createElement('div');
   container.id = 'pdf-report-container';
-  container.style.position = 'fixed';
-  container.style.left = '0';
+  container.style.position = 'absolute';
+  container.style.left = '-9999px';
   container.style.top = '0';
-  container.style.zIndex = '-99999';
+  container.style.zIndex = '1';
   container.style.opacity = '1';
   container.style.pointerEvents = 'none';
   container.style.width = '800px';
@@ -481,9 +566,10 @@ export async function exportGameReportPDF(params) {
       onclone: (clonedDoc) => {
         const el = clonedDoc.getElementById('pdf-report-container');
         if (el) {
-          el.style.position = 'relative';
+          el.style.position = 'static';
           el.style.left = '0';
           el.style.top = '0';
+          el.style.margin = '0 auto';
           el.style.zIndex = 'auto';
           el.style.pointerEvents = 'auto';
         }

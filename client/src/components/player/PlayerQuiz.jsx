@@ -17,7 +17,8 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
   const [selectedOptionId, setSelectedOptionId] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(question?.timeLimitSeconds ?? 30);
+  const initialDuration = Math.max(5, Number(question?.timeLimitSeconds) || 30);
+  const [timeLeft, setTimeLeft] = useState(initialDuration);
 
   const timerRef = useRef(null);
   const feedbackRef = useRef(null);
@@ -50,7 +51,8 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
     setSelectedOptionId(null);
     setFeedback(null);
     setIsSubmitting(false);
-    setTimeLeft(question.timeLimitSeconds ?? 30);
+    const duration = Math.max(5, Number(question.timeLimitSeconds) || 30);
+    setTimeLeft(duration);
 
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -80,17 +82,17 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
         timerRef.current = null;
       }
     };
-  }, [question?.id, isPretest]);
+  }, [question?.id, question?.questionIndex, question?.timeLimitSeconds, isPretest]);
 
   useEffect(() => {
-    if (result) {
+    if (result && (!result.questionId || !question?.id || result.questionId === question?.id)) {
       setTimeLeft(0);
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
     }
-  }, [result]);
+  }, [result, question?.id]);
 
   const isFinalQuestion = Boolean(result?.isLastQuestion || (question?.questionIndex + 1 >= question?.totalQuestions));
 
