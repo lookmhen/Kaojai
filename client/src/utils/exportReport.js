@@ -279,9 +279,13 @@ export async function exportGameReportPDF(params) {
 
   // Generate HTML Template for PDF rendering with modern clean typography and responsive layout
   const container = document.createElement('div');
+  container.id = 'pdf-report-container';
   container.style.position = 'fixed';
-  container.style.left = '-9999px';
+  container.style.left = '0';
   container.style.top = '0';
+  container.style.zIndex = '-99999';
+  container.style.opacity = '1';
+  container.style.pointerEvents = 'none';
   container.style.width = '800px';
   container.style.padding = '32px 36px';
   container.style.background = '#FFFFFF';
@@ -310,20 +314,20 @@ export async function exportGameReportPDF(params) {
     </div>
 
     <!-- Overview KPI Cards -->
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
-      <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px; text-align: center;">
+    <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+      <div style="flex: 1; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px; text-align: center;">
         <div style="font-size: 11px; color: #64748B; font-weight: 700;">ผู้เรียนทั้งหมด</div>
         <div style="font-size: 22px; font-weight: 900; color: #1E293B; margin-top: 2px;">${data.totalCount} คน</div>
       </div>
-      <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px; text-align: center;">
+      <div style="flex: 1; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px; text-align: center;">
         <div style="font-size: 11px; color: #64748B; font-weight: 700;">จำนวนข้อคำถาม</div>
         <div style="font-size: 22px; font-weight: 900; color: #1E293B; margin-top: 2px;">${data.totalQuestions} ข้อ</div>
       </div>
-      <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px; text-align: center;">
+      <div style="flex: 1; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px; text-align: center;">
         <div style="font-size: 11px; color: #64748B; font-weight: 700;">คะแนนเฉลี่ย</div>
         <div style="font-size: 22px; font-weight: 900; color: #1E293B; margin-top: 2px;">${data.averageScore} pts</div>
       </div>
-      <div style="background: ${data.overallAccuracyPct >= 70 ? '#DCFCE7' : '#FEF3C7'}; border: 1px solid ${data.overallAccuracyPct >= 70 ? '#86EFAC' : '#FDE68A'}; border-radius: 12px; padding: 14px; text-align: center;">
+      <div style="flex: 1; background: ${data.overallAccuracyPct >= 70 ? '#DCFCE7' : '#FEF3C7'}; border: 1px solid ${data.overallAccuracyPct >= 70 ? '#86EFAC' : '#FDE68A'}; border-radius: 12px; padding: 14px; text-align: center;">
         <div style="font-size: 11px; color: ${data.overallAccuracyPct >= 70 ? '#166534' : '#92400E'}; font-weight: 700;">ความแม่นยำรวม</div>
         <div style="font-size: 22px; font-weight: 900; color: ${data.overallAccuracyPct >= 70 ? '#166534' : '#92400E'}; margin-top: 2px;">${data.overallAccuracyPct}%</div>
       </div>
@@ -461,12 +465,32 @@ export async function exportGameReportPDF(params) {
 
   document.body.appendChild(container);
 
+  // Allow DOM to settle and fonts to layout
+  await new Promise(resolve => setTimeout(resolve, 80));
+
   const opt = {
     margin: [10, 10, 10, 10],
     filename: `KaoJai_Report_${data.cleanTitle}_PIN_${data.pin}_${data.fileNameDate}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: 800,
+      onclone: (clonedDoc) => {
+        const el = clonedDoc.getElementById('pdf-report-container');
+        if (el) {
+          el.style.position = 'relative';
+          el.style.left = '0';
+          el.style.top = '0';
+          el.style.zIndex = 'auto';
+          el.style.pointerEvents = 'auto';
+        }
+      }
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
   };
 
   try {
