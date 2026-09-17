@@ -11,11 +11,11 @@ const OPTION_STYLES = [
 ];
 
 export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNextQuestion, onShowLeaderboard }) => {
-  const [timeLeft, setTimeLeft] = useState(question.timeLimitSeconds);
+  const [timeLeft, setTimeLeft] = useState(question?.timeLimitSeconds ?? 30);
   const isSequence = question?.questionType === 'SEQUENCE' || Boolean(question?.sequenceItems?.length);
 
   useEffect(() => {
-    setTimeLeft(question.timeLimitSeconds);
+    setTimeLeft(question?.timeLimitSeconds ?? 30);
     const interval = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -38,15 +38,15 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
     }
   }, [result]);
 
-  const isFinalQuestion = Boolean(result?.isLastQuestion || (question?.questionIndex + 1 >= question?.totalQuestions));
-  const maxCount = Math.max(...(question.options?.map(opt => result?.optionCounts?.[opt.id] || 0) || [1]), 1);
+  const isFinalQuestion = Boolean(result?.isLastQuestion || ((question?.questionIndex ?? 0) + 1 >= (question?.totalQuestions ?? 1)));
+  const maxCount = Math.max(...(question?.options?.map(opt => result?.optionCounts?.[opt.id] || 0) || [1]), 1);
 
   return (
     <div style={{ maxWidth: '1000px', margin: '30px auto', padding: '0 24px' }}>
       {/* Status Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-          คำถามที่ {question.questionIndex + 1} / {question.totalQuestions}
+          คำถามที่ {(question?.questionIndex ?? 0) + 1} / {question?.totalQuestions ?? 1}
         </div>
 
         {/* Counter Badge */}

@@ -265,7 +265,7 @@ export function AppContent() {
       setPlayerData(prev => (prev ? { ...prev, score: 0 } : null));
       if (data?.players) setPlayers(data.players);
       if (data?.counts) setCounts(data.counts);
-      if (data?.pretestData) setPretestData(data.pretestData);
+      setPretestData(data?.pretestData || null);
       if (data?.pretestData?.quizId) {
         setSelectedQuizId(data.pretestData.quizId);
       } else if (data?.quizSet?.id) {
@@ -280,6 +280,10 @@ export function AppContent() {
       }
     };
 
+    const onPretestCleared = () => {
+      setPretestData(null);
+    };
+
     const onRoomClosed = (data) => {
       setErrorMessage(data.message || 'วิทยากรได้ปิดห้องหรือออกจากห้องแล้ว');
       clearSession();
@@ -291,6 +295,7 @@ export function AppContent() {
       setPin('');
       setStatus('LOBBY');
       setPlayerData(null);
+      setPretestData(null);
       setPrepareData(null);
       setCurrentQuestion(null);
       setQuestionResult(null);
@@ -315,6 +320,7 @@ export function AppContent() {
     socket.on('show_leaderboard', onShowLeaderboard);
     socket.on('quiz_ended', onQuizEnded);
     socket.on('quiz_selected', onQuizSelected);
+    socket.on('pretest_cleared', onPretestCleared);
     socket.on('pulse_updated', onPulseUpdated);
     socket.on('pulse_reset', onPulseReset);
     socket.on('mode_switched', onModeSwitched);
@@ -337,6 +343,7 @@ export function AppContent() {
       socket.off('show_leaderboard', onShowLeaderboard);
       socket.off('quiz_ended', onQuizEnded);
       socket.off('quiz_selected', onQuizSelected);
+      socket.off('pretest_cleared', onPretestCleared);
       socket.off('pulse_updated', onPulseUpdated);
       socket.off('pulse_reset', onPulseReset);
       socket.off('mode_switched', onModeSwitched);

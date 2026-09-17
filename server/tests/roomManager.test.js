@@ -876,6 +876,92 @@ async function testRoomManager() {
     console.log('    ✓ Multi-Round Pulse Check-in & Reset passed');
   }
 
+  // 21. Dynamic Quiz Selection and Status Enforcement
+  {
+    console.log('  Testing Dynamic Quiz Selection (setRoomQuiz) and Status Enforcement...');
+    const rm = new RoomManager();
+    const room = rm.createRoom('host-quiz-select');
+    
+    // Changing quiz with valid custom quiz
+    const customQuiz = {
+      id: 'quiz-math-dynamic',
+      title: 'Dynamic Math',
+      questions: [
+        { id: 'qm1', questionText: '1+1?', options: [{ id: 'o1', text: '2', isCorrect: true }] }
+      ]
+    };
+    rm.setRoomQuiz(room.pin, customQuiz);
+    assert.strictEqual(room.quizSet.id, 'quiz-math-dynamic');
+
+    // Throws on non-existent quiz ID
+    assert.throws(() => {
+      rm.setRoomQuiz(room.pin, 'completely-invalid-id-xyz');
+    }, /ชุดคำถามไม่ถูกต้อง/);
+
+    // Throws when room is active (status === 'QUESTION')
+    rm.startQuestion(room.pin, 0);
+    assert.strictEqual(room.status, 'QUESTION');
+    assert.throws(() => {
+      rm.setRoomQuiz(room.pin, customQuiz);
+    }, /สามารถเปลี่ยนชุดคำถามได้เฉพาะตอนอยู่ในล็อบบี้หรือจบเกมแล้วเท่านั้น/);
+
+    // After reset to lobby, switching to another quiz clears pretestData if quiz differs
+    rm.resetRoomToLobby(room.pin);
+    room.pretestData = { quizId: 'quiz-math-dynamic', overallAccuracyPct: 80 };
+    
+    // Switch to another quiz object
+    const quizB = {
+      id: 'quiz-science',
+      title: 'Science Quiz',
+      questions: [{ id: 'qs1', questionText: 'H2O?', options: [{ id: 'o1', text: 'Water', isCorrect: true }] }]
+    };
+    rm.setRoomQuiz(room.pin, quizB);
+    assert.strictEqual(room.quizSet.id, 'quiz-science');
+    assert.strictEqual(room.pretestData, null, 'Switching quiz must invalidate previous pretestData');
+
+    console.log('    ✓ Dynamic Quiz Selection and Status Enforcement passed');
+  }
+
+  // 22. Cross-Type Payload Mismatch Resilience
+  {
+    console.log('  Testing Cross-Type Payload Mismatch Resilience...');
+    const rm = new RoomManager();
+    const mixedQuiz = {
+      id: 'quiz-mixed',
+      title: 'Mixed Quiz',
+      questions: [
+        {
+          id: 'q-choice',
+          questionType: 'CHOICE',
+          questionText: 'Pick one',
+          options: [{ id: 'opt-a', text: 'A', isCorrect: true }]
+        },
+        {
+          id: 'q-seq',
+          questionType: 'SEQUENCE',
+          questionText: 'Order this',
+          sequenceItems: [{ id: 's1', text: 'First' }, { id: 's2', text: 'Second' }]
+        }
+      ]
+    };
+    const room = rm.createRoom('host-cross', mixedQuiz);
+    const p1 = rm.joinPlayer(room.pin, 's1', { name: 'Bob' }).player;
+
+    // 1. Submit SEQUENCE payload to a CHOICE question
+    rm.startQuestion(room.pin, 0);
+    const res1 = rm.submitAnswer(room.pin, p1.playerId, { orderedItemIds: ['s1', 's2'] });
+    assert.strictEqual(res1.isCorrect, false);
+    assert.strictEqual(res1.pointsEarned, 0);
+
+    // 2. Submit CHOICE payload to a SEQUENCE question
+    rm.startQuestion(room.pin, 1);
+    const res2 = rm.submitAnswer(room.pin, p1.playerId, { optionId: 'opt-a' });
+    assert.strictEqual(res2.isCorrect, false);
+    assert.strictEqual(res2.pointsEarned, 0);
+
+    console.log('    ✓ Cross-Type Payload Mismatch Resilience passed');
+  }
+
   console.log('✅ RoomManager tests passed cleanly!');
 }
 

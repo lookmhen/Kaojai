@@ -355,6 +355,68 @@ async function testPretestPosttest() {
     console.log('    ✓ PT-13 passed');
   }
 
+  // PT-14: Asymmetric Attendance Handling (Both Pre+Post vs Only Pre vs Only Post)
+  {
+    console.log('  [PT-14] Asymmetric Attendance Handling...');
+    const rm = new RoomManager();
+    const quiz = {
+      id: 'quiz-asym',
+      title: 'Asymmetric Test Quiz',
+      questions: [
+        { id: 'q1', questionText: 'Q1', options: [{ id: 'optA', text: 'A', isCorrect: true }, { id: 'optB', text: 'B', isCorrect: false }] }
+      ]
+    };
+    const room = rm.createRoom('host-asym', quiz);
+    room.quizMode = 'PRETEST';
+
+    // Alice and Bob join for Pre-test
+    const alice = rm.joinPlayer(room.pin, 'sock-alice', { name: 'Alice' }).player;
+    const bob = rm.joinPlayer(room.pin, 'sock-bob', { name: 'Bob' }).player;
+
+    rm.startQuestion(room.pin, 0);
+    rm.submitAnswer(room.pin, alice.playerId, 'optB'); // Alice wrong in Pre
+    rm.submitAnswer(room.pin, bob.playerId, 'optA');   // Bob right in Pre
+    rm.getQuestionResult(room.pin);
+    rm.savePretestSnapshot(room.pin);
+
+    // Reset to Lobby for Post-test
+    rm.resetRoomToLobby(room.pin, { clearPretest: false });
+    room.quizMode = 'POSTTEST';
+
+    // Bob disconnects/leaves
+    rm.removePlayer(room.pin, bob.playerId);
+
+    // Charlie joins freshly for Post-test only
+    const charlie = rm.joinPlayer(room.pin, 'sock-charlie', { name: 'Charlie' }).player;
+
+    // Run Post-test
+    rm.startQuestion(room.pin, 0);
+    rm.submitAnswer(room.pin, alice.playerId, 'optA');   // Alice right in Post (gained +100%)
+    rm.submitAnswer(room.pin, charlie.playerId, 'optA'); // Charlie right in Post (100%, but no Pre)
+    rm.getQuestionResult(room.pin);
+
+    const analytics = rm.getQuizAnalytics(room.pin);
+    assert.ok(analytics.learningGain, 'Learning gain should exist');
+    const comparisons = analytics.learningGain.learnerComparisons;
+
+    // Alice should have both Pre and Post
+    const aliceComp = comparisons.find(c => c.name === 'Alice');
+    assert.ok(aliceComp);
+    assert.strictEqual(aliceComp.hasPretest, true);
+    assert.strictEqual(aliceComp.preScore, 0);
+    assert.ok(aliceComp.postScore > 0, 'Alice post score should be positive');
+    assert.strictEqual(aliceComp.accuracyDiff, 100);
+
+    // Charlie should be flagged as hasPretest: false and cannot be Most Improved
+    const charlieComp = comparisons.find(c => c.name === 'Charlie');
+    assert.ok(charlieComp);
+    assert.strictEqual(charlieComp.hasPretest, false);
+
+    // Alice should be the Most Improved Learner
+    assert.strictEqual(analytics.learningGain.mostImprovedLearner?.name, 'Alice');
+    console.log('    ✓ PT-14 passed');
+  }
+
   console.log('  ✅ All Pre-test & Post-test tests passed!\n');
 }
 

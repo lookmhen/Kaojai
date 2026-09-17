@@ -113,6 +113,21 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
+    socket.on('clear_pretest', ({ pin, hostToken }, ackCallback) => {
+      try {
+        const room = verifyHost(pin, hostToken);
+        room.pretestData = null;
+        io.to(pin).emit('pretest_cleared');
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: true });
+        }
+      } catch (err) {
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: false, message: err.message });
+        }
+      }
+    });
+
     socket.on('start_quiz', ({ pin, hostToken, quizId, quizMode = 'NORMAL' }) => {
       try {
         const room = verifyHost(pin, hostToken);
@@ -157,32 +172,40 @@ module.exports = function setupSocketHandlers(io) {
         });
 
         room.prepareTimer = setTimeout(() => {
-          room.prepareTimer = null;
-          const result = roomManager.startQuestion(pin, 0);
-          if (result.isEnded) {
-            const leaderboard = roomManager.getLeaderboard(pin);
-            return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true, quizMode: room.quizMode });
-          }
-
-          const counts = roomManager.getPlayerCounts(pin);
-          io.to(pin).emit('question_start', {
-            question: result.question,
-            currentQuestionIndex: room.currentQuestionIndex,
-            totalQuestions: room.quizSet.questions.length,
-            answeredCount: 0,
-            totalPlayers: counts.totalPlayers,
-            quizMode: room.quizMode
-          });
-
-          const timeLimitMs = (result.question.timeLimitSeconds + 1) * 1000;
-          room.questionTimer = setTimeout(() => {
-            const questionResult = roomManager.getQuestionResult(pin);
-            if (room.quizMode === 'PRETEST') {
-              io.to(pin).emit('question_result', maskPretestResult(questionResult));
-            } else {
-              io.to(pin).emit('question_result', questionResult);
+          try {
+            room.prepareTimer = null;
+            const result = roomManager.startQuestion(pin, 0);
+            if (result.isEnded) {
+              const leaderboard = roomManager.getLeaderboard(pin);
+              return io.to(pin).emit('quiz_ended', { leaderboard, status: 'ENDED', isEnded: true, quizMode: room.quizMode });
             }
-          }, timeLimitMs);
+
+            const counts = roomManager.getPlayerCounts(pin);
+            io.to(pin).emit('question_start', {
+              question: result.question,
+              currentQuestionIndex: room.currentQuestionIndex,
+              totalQuestions: room.quizSet.questions.length,
+              answeredCount: 0,
+              totalPlayers: counts.totalPlayers,
+              quizMode: room.quizMode
+            });
+
+            const timeLimitMs = (result.question.timeLimitSeconds + 1) * 1000;
+            room.questionTimer = setTimeout(() => {
+              try {
+                const questionResult = roomManager.getQuestionResult(pin);
+                if (room.quizMode === 'PRETEST') {
+                  io.to(pin).emit('question_result', maskPretestResult(questionResult));
+                } else {
+                  io.to(pin).emit('question_result', questionResult);
+                }
+              } catch (tErr) {
+                console.error('[Socket Timer Error] questionTimer:', tErr);
+              }
+            }, timeLimitMs);
+          } catch (pErr) {
+            console.error('[Socket Timer Error] prepareTimer:', pErr);
+          }
         }, prepareDurationMs);
 
       } catch (err) {
@@ -567,6 +590,7 @@ module.exports = function setupSocketHandlers(io) {
           leaderboard: joinData.leaderboard,
           isReconnect: joinData.isReconnect,
           counts: joinData.counts,
+          quizMode: joinData.quizMode || 'NORMAL',
           teamsEnabled: joinData.room.teamsEnabled,
           teams: roomManager.getTeamList(cleanPin)
         };

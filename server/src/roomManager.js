@@ -438,9 +438,12 @@ class RoomManager {
     const currentQuestion = room.quizSet.questions[room.currentQuestionIndex];
     const isSequence = currentQuestion.questionType === 'SEQUENCE' || (Array.isArray(currentQuestion.sequenceItems) && currentQuestion.sequenceItems.length > 0);
 
-    const timeLimitMs = currentQuestion.timeLimitSeconds * 1000;
-    const timeUsedMs = Math.min(Date.now() - room.questionStartTime, timeLimitMs);
-    const speedRatio = Math.max(0, (timeLimitMs - timeUsedMs) / timeLimitMs);
+    const timeLimitSec = (typeof currentQuestion.timeLimitSeconds === 'number' && currentQuestion.timeLimitSeconds > 0)
+      ? currentQuestion.timeLimitSeconds
+      : 30;
+    const timeLimitMs = timeLimitSec * 1000;
+    const timeUsedMs = Math.min(Date.now() - (room.questionStartTime || Date.now()), timeLimitMs);
+    const speedRatio = timeLimitMs > 0 ? Math.max(0, (timeLimitMs - timeUsedMs) / timeLimitMs) : 0;
 
     let isCorrect = false;
     let pointsEarned = 0;
@@ -452,7 +455,9 @@ class RoomManager {
         ? answerData
         : (answerData?.orderedItemIds || (typeof answerData === 'string' ? [answerData] : []));
 
-      const correctIds = currentQuestion.sequenceItems.map(item => item.id);
+      const correctIds = Array.isArray(currentQuestion.sequenceItems)
+        ? currentQuestion.sequenceItems.map(item => item.id)
+        : [];
       const totalItems = correctIds.length;
       let correctPositions = 0;
 
@@ -462,10 +467,12 @@ class RoomManager {
         }
       }
 
-      isCorrect = correctPositions === totalItems;
+      isCorrect = totalItems > 0 && correctPositions === totalItems;
       const accuracyRatio = totalItems > 0 ? (correctPositions / totalItems) : 0;
       // Points formula: accuracy percentage of 500 base points + speed bonus scaled by accuracy
-      pointsEarned = Math.round((500 * accuracyRatio) + (500 * speedRatio * accuracyRatio));
+      pointsEarned = accuracyRatio > 0
+        ? Math.round((500 * accuracyRatio) + (500 * speedRatio * accuracyRatio))
+        : 0;
 
       details = {
         questionType: 'SEQUENCE',
@@ -1081,15 +1088,28 @@ class RoomManager {
     const room = this.rooms.get(pin);
     if (!room) throw new Error('ไม่พบห้องดังกล่าว');
 
+    if (room.status !== 'LOBBY' && room.status !== 'ENDED') {
+      throw new Error('สามารถเปลี่ยนชุดคำถามได้เฉพาะตอนอยู่ในล็อบบี้หรือจบเกมแล้วเท่านั้น');
+    }
+
     let resolvedQuiz = null;
     if (typeof quizSetOrId === 'string') {
       resolvedQuiz = getQuizById(quizSetOrId);
-    } else if (quizSetOrId && Array.isArray(quizSetOrId.questions)) {
-      resolvedQuiz = quizSetOrId;
+    } else if (quizSetOrId && typeof quizSetOrId === 'object') {
+      if (Array.isArray(quizSetOrId.questions)) {
+        resolvedQuiz = quizSetOrId;
+      } else if (quizSetOrId.quizId || quizSetOrId.customQuizId) {
+        resolvedQuiz = getQuizById(quizSetOrId.quizId || quizSetOrId.customQuizId);
+      }
     }
 
     if (!resolvedQuiz || !Array.isArray(resolvedQuiz.questions) || resolvedQuiz.questions.length === 0) {
       throw new Error('ชุดคำถามไม่ถูกต้องหรือไม่มีข้อคำถาม');
+    }
+
+    // If changing to a completely different quiz, clear any previous pretestData to prevent corrupted learning gain
+    if (room.pretestData && room.pretestData.quizId && resolvedQuiz.id && room.pretestData.quizId !== resolvedQuiz.id) {
+      room.pretestData = null;
     }
 
     room.quizSet = resolvedQuiz;

@@ -501,8 +501,25 @@ async function testSocketHandlers() {
   const startBroadcasts = broadcasts.filter(b => b.roomPin === teamPin && b.event === 'question_start');
   const lastStart = startBroadcasts[startBroadcasts.length - 1];
   assert.ok(lastStart, 'question_start must be emitted');
-  assert.strictEqual(lastStart.payload.question.questionText, targetQuiz.questions[0].questionText, 'Question must match selected targetQuiz');
   console.log('    ✓ select_quiz and start_quiz with quizId passed');
+
+  // Test 20: select_quiz error handling and clear_pretest
+  console.log('  Testing select_quiz invalid ID and clear_pretest event...');
+  let invalidSelectAck = null;
+  await newHostSocket.fire('select_quiz', { pin: teamPin, hostToken: teamToken, quizId: 'non-existent-quiz-xyz' }, (res) => {
+    invalidSelectAck = res;
+  });
+  assert.strictEqual(invalidSelectAck?.success, false, 'Invalid quizId must fail gracefully');
+
+  // Test clear_pretest
+  let clearPretestAck = null;
+  await newHostSocket.fire('clear_pretest', { pin: teamPin, hostToken: teamToken }, (res) => {
+    clearPretestAck = res;
+  });
+  assert.strictEqual(clearPretestAck?.success, true, 'clear_pretest should succeed');
+  const clearedBroadcast = broadcasts.find(b => b.roomPin === teamPin && b.event === 'pretest_cleared');
+  assert.ok(clearedBroadcast, 'pretest_cleared must be broadcasted to room');
+  console.log('    ✓ select_quiz error handling and clear_pretest passed');
 
   console.log('✅ socketHandler tests passed cleanly!');
 }

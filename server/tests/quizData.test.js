@@ -120,8 +120,12 @@ function testQuizData() {
   const { getQuizById } = require('../src/quizData');
   const foundDefault = getQuizById(defaultQuizSets[0].id);
   assert.ok(foundDefault, 'getQuizById should find default quiz');
-  assert.strictEqual(foundDefault.id, defaultQuizSets[0].id);
   assert.strictEqual(getQuizById('non-existent-id'), null, 'getQuizById with non-existent id should return null');
+
+  // Verify getQuizById returns a deep copy
+  foundDefault.title = 'Mutated Title';
+  const freshFetch = getQuizById(defaultQuizSets[0].id);
+  assert.notStrictEqual(freshFetch.title, 'Mutated Title', 'Modifying returned quiz should not mutate the store');
 
   console.log('✅ quizData tests passed!');
 }

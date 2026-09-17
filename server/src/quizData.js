@@ -126,7 +126,8 @@ function getAllQuizzes() {
 
 function getQuizById(quizId) {
   if (!quizId) return null;
-  return quizStore.find(q => q.id === quizId) || null;
+  const found = quizStore.find(q => q.id === quizId);
+  return found ? JSON.parse(JSON.stringify(found)) : null;
 }
 
 function saveQuiz(quiz) {
