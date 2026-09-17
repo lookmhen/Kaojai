@@ -436,6 +436,36 @@ async function testPretestPosttest() {
     console.log('    ✓ PT-15 passed');
   }
 
+  // PT-16: Player score and streak remain 0 in PRETEST mode
+  {
+    console.log('  [PT-16] Player score and streak remain 0 in PRETEST mode...');
+    const rm = new RoomManager();
+    const room = rm.createRoom('host-pt16', SAMPLE_QUIZ);
+    room.quizMode = 'PRETEST';
+    const p1 = rm.joinPlayer(room.pin, 'sock-pt16', { name: 'Kao' }).player;
+
+    rm.startQuestion(room.pin, 0);
+    // Submit correct answer ('q1b' is correct in SAMPLE_QUIZ)
+    const result = rm.submitAnswer(room.pin, p1.playerId, 'q1b');
+
+    assert.strictEqual(result.pointsEarned, 0, 'pointsEarned must be 0 in PRETEST');
+    assert.strictEqual(result.totalScore, 0, 'totalScore must be 0 in PRETEST');
+    assert.strictEqual(result.streak, 0, 'streak must be 0 in PRETEST');
+    assert.strictEqual(result.streakBonus, 0, 'streakBonus must be 0 in PRETEST');
+    assert.strictEqual(p1.score, 0, 'Player in-memory score must remain 0');
+    assert.strictEqual(p1.streak, 0, 'Player in-memory streak must remain 0');
+
+    // Leaderboard should also report 0
+    const lb = rm.getLeaderboard(room.pin);
+    assert.strictEqual(lb[0].score, 0, 'Leaderboard score must be 0 in PRETEST');
+
+    // Question result and snapshot should still track isCorrect=true
+    rm.getQuestionResult(room.pin);
+    const snap = rm.savePretestSnapshot(room.pin);
+    assert.strictEqual(snap.overallAccuracyPct, 100, 'Snapshot accuracy must still calculate correctly');
+    console.log('    ✓ PT-16 passed');
+  }
+
   console.log('  ✅ All Pre-test & Post-test tests passed!\n');
 }
 

@@ -1,13 +1,19 @@
 import React, { useEffect } from 'react';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
-import { Trophy, Home } from 'lucide-react';
+import { Trophy, Home, CheckCircle2, Sparkles } from 'lucide-react';
 
-export const PlayerEndedView = ({ player, leaderboard, onLeave }) => {
+export const PlayerEndedView = ({ player, leaderboard, quizMode = 'NORMAL', onLeave }) => {
+  const isPretest = quizMode === 'PRETEST';
+
   useEffect(() => {
-    fireConfetti();
-    sfx.playFanfare();
-  }, []);
+    if (!isPretest) {
+      fireConfetti();
+      sfx.playFanfare();
+    } else {
+      sfx.playCuteChime();
+    }
+  }, [isPretest]);
 
   const myEntry = leaderboard?.find(p => p.playerId === player?.playerId);
   const myRankIdx = leaderboard ? leaderboard.findIndex(p => p.playerId === player?.playerId) : -1;
@@ -17,43 +23,99 @@ export const PlayerEndedView = ({ player, leaderboard, onLeave }) => {
   return (
     <div style={{ maxWidth: '440px', margin: '40px auto', padding: '0 16px', textAlign: 'center' }}>
       <div className="glass-card animate-pop" style={{ padding: '36px 20px' }}>
-        <Trophy size={60} color="var(--accent-earth-orange)" style={{ marginBottom: '14px' }} />
-        <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-main)' }}>
-          จบกิจกรรมตอบคำถามแล้ว!
-        </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '4px', marginBottom: '24px' }}>
-          ขอบคุณสำหรับการมีส่วนร่วม ✨
-        </p>
+        {isPretest ? (
+          <>
+            <div style={{
+              width: '72px',
+              height: '72px',
+              borderRadius: '50%',
+              background: '#EFF6FF',
+              border: '3px solid #3B82F6',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 14px auto',
+              boxShadow: '0 4px 16px rgba(59, 130, 246, 0.2)'
+            }}>
+              <CheckCircle2 size={42} color="#2563EB" />
+            </div>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-main)' }}>
+              บันทึกผล Pre-test เรียบร้อยแล้ว! ✨
+            </h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginTop: '6px', marginBottom: '22px', lineHeight: 1.5 }}>
+              ระบบได้บันทึกคำตอบของคุณไว้เรียบร้อยแล้ว เพื่อนำไปวัดพัฒนาการการเรียนรู้ (Learning Gain) ร่วมกับ Post-test หลังเรียน
+            </p>
 
-        <div style={{ background: '#F8FAFC', borderRadius: '16px', padding: '20px', border: '1px solid #E2E8F0', marginBottom: '24px' }}>
-          <img
-            src={`/avatars/${player.avatar || '0291dcc0ce.svg'}`}
-            alt={player.name}
-            onError={(e) => { e.target.src = '/avatars/0291dcc0ce.svg'; }}
-            style={{ width: '76px', height: '76px', borderRadius: '50%', border: '3px solid var(--accent-earth-orange)', marginBottom: '10px', background: '#FFFFFF' }}
-          />
-          <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-main)' }}>{player.name}</h2>
-          
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '16px' }}>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>อันดับของคุณ</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--accent-earth-orange)' }}>
-                {myRank ? `#${myRank}` : '-'}
+            <div style={{ background: '#F8FAFC', borderRadius: '16px', padding: '20px', border: '1px solid #E2E8F0', marginBottom: '24px' }}>
+              <img
+                src={`/avatars/${player.avatar || '0291dcc0ce.svg'}`}
+                alt={player.name}
+                onError={(e) => { e.target.src = '/avatars/0291dcc0ce.svg'; }}
+                style={{ width: '76px', height: '76px', borderRadius: '50%', border: '3px solid #3B82F6', marginBottom: '10px', background: '#FFFFFF' }}
+              />
+              <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-main)' }}>{player.name}</h2>
+              
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: '#EFF6FF',
+                color: '#1D4ED8',
+                padding: '8px 18px',
+                borderRadius: '20px',
+                fontSize: '0.88rem',
+                fontWeight: 800,
+                marginTop: '12px'
+              }}>
+                <Sparkles size={16} /> บันทึกสถิติคำตอบครบถ้วน (ไม่แสดงคะแนน)
               </div>
             </div>
-            <div style={{ width: '1px', background: '#CBD5E1' }} />
-            <div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>คะแนนรวม</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--accent-earth-green)' }}>
-                {myScore.toLocaleString()} Pts
+
+            <div style={{ color: 'var(--accent-earth-blue)', fontWeight: 700, fontSize: '0.92rem', marginBottom: '16px' }}>
+              🌟 รอวิทยากรนำเข้าสู่บทเรียนและขั้นตอนถัดไป...
+            </div>
+          </>
+        ) : (
+          <>
+            <Trophy size={60} color="var(--accent-earth-orange)" style={{ marginBottom: '14px' }} />
+            <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-main)' }}>
+              จบกิจกรรมตอบคำถามแล้ว!
+            </h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '4px', marginBottom: '24px' }}>
+              ขอบคุณสำหรับการมีส่วนร่วม ✨
+            </p>
+
+            <div style={{ background: '#F8FAFC', borderRadius: '16px', padding: '20px', border: '1px solid #E2E8F0', marginBottom: '24px' }}>
+              <img
+                src={`/avatars/${player.avatar || '0291dcc0ce.svg'}`}
+                alt={player.name}
+                onError={(e) => { e.target.src = '/avatars/0291dcc0ce.svg'; }}
+                style={{ width: '76px', height: '76px', borderRadius: '50%', border: '3px solid var(--accent-earth-orange)', marginBottom: '10px', background: '#FFFFFF' }}
+              />
+              <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-main)' }}>{player.name}</h2>
+              
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '16px' }}>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>อันดับของคุณ</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--accent-earth-orange)' }}>
+                    {myRank ? `#${myRank}` : '-'}
+                  </div>
+                </div>
+                <div style={{ width: '1px', background: '#CBD5E1' }} />
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>คะแนนรวม</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--accent-earth-green)' }}>
+                    {myScore.toLocaleString()} Pts
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div style={{ color: 'var(--accent-earth-blue)', fontWeight: 700, fontSize: '0.9rem', marginBottom: '16px' }}>
-          🌟 รอวิทยากรสรุปกิจกรรมบนหน้าจอใหญ่...
-        </div>
+            <div style={{ color: 'var(--accent-earth-blue)', fontWeight: 700, fontSize: '0.9rem', marginBottom: '16px' }}>
+              🌟 รอวิทยากรสรุปกิจกรรมบนหน้าจอใหญ่...
+            </div>
+          </>
+        )}
 
         {onLeave && (
           <div style={{ marginTop: '20px' }}>

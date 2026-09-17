@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { sfx } from '../../utils/audioSFX';
 import { CheckCircle2, XCircle, Users, Clock, BarChart3, Flame, Zap } from 'lucide-react';
@@ -12,12 +12,26 @@ const OPTION_STYLES = [
   { bg: 'var(--choice-green-gradient)', symbol: '■' }
 ];
 
-export const PlayerQuiz = ({ question, result, pin, player, answeredCount, totalPlayers }) => {
+export const PlayerQuiz = ({ question, result, pin, player, answeredCount, totalPlayers, quizMode = 'NORMAL' }) => {
   const { socket } = useSocket();
   const [selectedOptionId, setSelectedOptionId] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(question?.timeLimitSeconds ?? 30);
+
+  const timerRef = useRef(null);
+  const feedbackRef = useRef(null);
+  const resultRef = useRef(null);
+
+  const isPretest = quizMode === 'PRETEST' || result?.quizMode === 'PRETEST' || feedback?.isPretest;
+
+  useEffect(() => {
+    feedbackRef.current = feedback;
+  }, [feedback]);
+
+  useEffect(() => {
+    resultRef.current = result;
+  }, [result]);
 
   const handleSubmitSequence = (orderedItemIds) => {
     if (isSubmitting) return;
@@ -38,25 +52,43 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
     setIsSubmitting(false);
     setTimeLeft(question.timeLimitSeconds ?? 30);
 
-    const interval = setInterval(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          clearInterval(interval);
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
           return 0;
         }
-        if (prev <= 6) {
+        // ONLY play tense tick if player has NOT answered yet, question is not over, and not in PRETEST
+        if (prev <= 6 && !feedbackRef.current && !resultRef.current && !isPretest) {
           sfx.playTenseTick(prev - 1);
         }
         return prev - 1;
       });
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, [question?.id]);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [question?.id, isPretest]);
 
   useEffect(() => {
     if (result) {
       setTimeLeft(0);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     }
   }, [result]);
 
@@ -67,8 +99,12 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
 
     const handleFeedback = (data) => {
       setFeedback(data);
+      if (data.isPretest && timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       if (data.isPretest) {
-        // In PRETEST mode — play neutral 'submitted' sound, no correct/wrong reveal
+        // In PRETEST mode — play soft neutral 'submitted' sound, no correct/wrong reveal
         sfx.playCorrect(); // use a soft sound; simply marks "recorded"
       } else if (data.isCorrect) {
         if (data.streak >= 2) {

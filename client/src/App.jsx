@@ -45,6 +45,7 @@ export function AppContent() {
   const [selectedQuizId, setSelectedQuizId] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [prepareData, setPrepareData] = useState(null);
+  const [quizMode, setQuizMode] = useState('NORMAL');
 
   // Team State
   const [teamsEnabled, setTeamsEnabled] = useState(false);
@@ -72,6 +73,7 @@ export function AppContent() {
       setPin(data.pin);
       setRoomMode(data.mode);
       setStatus(data.status || 'LOBBY');
+      if (data.quizMode) setQuizMode(data.quizMode);
       setPlayers(data.players || []);
       setCounts(data.counts || { totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 });
       if (data.currentQuestion) setCurrentQuestion(data.currentQuestion);
@@ -101,6 +103,7 @@ export function AppContent() {
       setPlayerData(data.player);
       setRoomMode(data.mode);
       setStatus(data.status || 'LOBBY');
+      if (data.quizMode) setQuizMode(data.quizMode);
       if (data.counts) setCounts(data.counts);
       if (data.currentQuestion) setCurrentQuestion(data.currentQuestion);
       if (data.questionResult) setQuestionResult(data.questionResult);
@@ -122,11 +125,13 @@ export function AppContent() {
     };
 
     const onQuestionPrepare = (data) => {
+      if (data.quizMode) setQuizMode(data.quizMode);
       setPrepareData(data);
     };
 
     const onQuestionStart = (data) => {
       setPrepareData(null);
+      if (data.quizMode) setQuizMode(data.quizMode);
       setCurrentQuestion(data.question);
       setQuestionResult(null);
       setStatus('QUESTION');
@@ -145,6 +150,7 @@ export function AppContent() {
 
     const onQuestionResult = (data) => {
       setPrepareData(null);
+      if (data.quizMode) setQuizMode(data.quizMode);
       setQuestionResult(data);
       setStatus('QUESTION_RESULT');
       if (data.answeredCount !== undefined) {
@@ -164,6 +170,7 @@ export function AppContent() {
 
     const onShowLeaderboard = (data) => {
       setPrepareData(null);
+      if (data.quizMode) setQuizMode(data.quizMode);
       const list = data.leaderboard || [];
       if (data.quizAnalytics) {
         setQuizAnalytics(data.quizAnalytics);
@@ -182,6 +189,7 @@ export function AppContent() {
 
     const onQuizEnded = (data) => {
       setPrepareData(null);
+      if (data.quizMode) setQuizMode(data.quizMode);
       const list = data.leaderboard || [];
       if (data.quizAnalytics) {
         setQuizAnalytics(data.quizAnalytics);
@@ -265,6 +273,7 @@ export function AppContent() {
       setPlayerData(prev => (prev ? { ...prev, score: 0 } : null));
       if (data?.players) setPlayers(data.players);
       if (data?.counts) setCounts(data.counts);
+      if (data?.quizMode) setQuizMode(data.quizMode);
       setPretestData(data?.pretestData || null);
       if (data?.pretestData?.quizId) {
         setSelectedQuizId(data.pretestData.quizId);
@@ -401,10 +410,11 @@ export function AppContent() {
     });
   };
 
-  const handleStartQuiz = (quizId, quizMode = 'NORMAL') => {
+  const handleStartQuiz = (quizId, startQuizMode = 'NORMAL') => {
     if (!socket) return;
     const effectiveQuizId = typeof quizId === 'string' ? quizId : selectedQuizId;
-    const effectiveQuizMode = typeof quizMode === 'string' ? quizMode : 'NORMAL';
+    const effectiveQuizMode = typeof startQuizMode === 'string' ? startQuizMode : 'NORMAL';
+    setQuizMode(effectiveQuizMode);
     socket.emit('start_quiz', { pin, hostToken: session.hostToken, quizId: effectiveQuizId, quizMode: effectiveQuizMode });
   };
 
@@ -444,6 +454,7 @@ export function AppContent() {
     setViewMode('PLAYER_JOIN');
     setPin('');
     setStatus('LOBBY');
+    setQuizMode('NORMAL');
     setPlayerData(null);
     setPrepareData(null);
     setCurrentQuestion(null);
@@ -562,6 +573,7 @@ export function AppContent() {
               quizAnalytics={quizAnalytics}
               pretestData={pretestData}
               isEnded={status === 'ENDED'}
+              quizMode={quizMode}
               onNextQuestion={handleNextQuestion}
               onResetToLobby={handleResetToLobby}
               onLeave={handleLeaveSession}
@@ -587,6 +599,7 @@ export function AppContent() {
             if (joinRes?.pin) setPin(joinRes.pin);
             if (joinRes?.status) setStatus(joinRes.status);
             if (joinRes?.mode) setRoomMode(joinRes.mode);
+            if (joinRes?.quizMode) setQuizMode(joinRes.quizMode);
             if (joinRes?.currentQuestion) setCurrentQuestion(joinRes.currentQuestion);
             if (joinRes?.leaderboard) setLeaderboard(joinRes.leaderboard);
             if (joinRes?.counts) setCounts(joinRes.counts);
@@ -625,12 +638,14 @@ export function AppContent() {
             <PlayerEndedView
               player={playerData}
               leaderboard={leaderboard}
+              quizMode={quizMode}
               onLeave={handleLeaveSession}
             />
           ) : status === 'LEADERBOARD' ? (
             <PlayerLeaderboardView
               player={playerData}
               leaderboard={leaderboard}
+              quizMode={quizMode}
               onLeave={handleLeaveSession}
             />
           ) : (
@@ -641,6 +656,7 @@ export function AppContent() {
               player={playerData}
               answeredCount={counts.answeredCount}
               totalPlayers={counts.totalPlayers}
+              quizMode={quizMode}
             />
           )}
         </div>

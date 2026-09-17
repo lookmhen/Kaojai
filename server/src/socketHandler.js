@@ -631,7 +631,7 @@ module.exports = function setupSocketHandlers(io) {
           streakBonus: isPretest ? 0 : result.streakBonus,
           comebackBonus: isPretest ? 0 : result.comebackBonus,
           isComeback: isPretest ? false : result.isComeback,
-          totalScore: result.totalScore,
+          totalScore: isPretest ? 0 : result.totalScore,
           alreadyAnswered: result.alreadyAnswered,
           details: result.details,
           isPretest

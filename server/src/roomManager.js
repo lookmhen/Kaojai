@@ -500,11 +500,22 @@ class RoomManager {
       };
     }
 
+    const isPretest = room.quizMode === 'PRETEST';
     const player = room.players.get(playerId);
     let streakBonus = 0;
     let comebackBonus = 0;
 
-    if (player) {
+    if (isPretest) {
+      pointsEarned = 0;
+      if (player) {
+        player.lastPointsEarned = 0;
+        player.streakBonus = 0;
+        player.comebackBonus = 0;
+        player.streak = 0;
+        player.highestStreak = 0;
+        // Do not accumulate score in PRETEST mode
+      }
+    } else if (player) {
       if (isCorrect) {
         player.streak = (player.streak || 0) + 1;
         player.highestStreak = Math.max(player.highestStreak || 0, player.streak);
@@ -532,9 +543,9 @@ class RoomManager {
       ...details,
       isCorrect,
       timeUsedMs,
-      pointsEarned,
-      streakBonus,
-      comebackBonus
+      pointsEarned: isPretest ? 0 : pointsEarned,
+      streakBonus: isPretest ? 0 : streakBonus,
+      comebackBonus: isPretest ? 0 : comebackBonus
     };
     room.currentAnswers.set(playerId, answerRecord);
 
@@ -544,14 +555,14 @@ class RoomManager {
     return {
       alreadyAnswered: false,
       isCorrect,
-      pointsEarned,
-      basePoints: pointsEarned - streakBonus - comebackBonus,
-      streak: player ? player.streak : 0,
-      highestStreak: player ? player.highestStreak : 0,
-      streakBonus,
-      comebackBonus,
-      isComeback: comebackBonus > 0,
-      totalScore: player ? player.score : 0,
+      pointsEarned: isPretest ? 0 : pointsEarned,
+      basePoints: isPretest ? 0 : (pointsEarned - streakBonus - comebackBonus),
+      streak: (player && !isPretest) ? player.streak : 0,
+      highestStreak: (player && !isPretest) ? player.highestStreak : 0,
+      streakBonus: isPretest ? 0 : streakBonus,
+      comebackBonus: isPretest ? 0 : comebackBonus,
+      isComeback: isPretest ? false : (comebackBonus > 0),
+      totalScore: (player && !isPretest) ? player.score : 0,
       answeredCount: counts.answeredCount,
       totalPlayers: counts.totalPlayers,
       allAnswered,
@@ -879,16 +890,18 @@ class RoomManager {
 
     room.status = 'LEADERBOARD';
 
+    const isPretest = room.quizMode === 'PRETEST';
+
     const playerList = Array.from(room.players.values()).map(p => ({
       playerId: p.playerId,
       name: p.name,
       avatar: p.avatar,
-      score: p.score,
-      previousScore: p.previousScore || 0,
-      lastPointsEarned: p.lastPointsEarned || 0,
-      streak: p.streak || 0,
-      highestStreak: p.highestStreak || 0,
-      streakBonus: p.streakBonus || 0,
+      score: isPretest ? 0 : p.score,
+      previousScore: isPretest ? 0 : (p.previousScore || 0),
+      lastPointsEarned: isPretest ? 0 : (p.lastPointsEarned || 0),
+      streak: isPretest ? 0 : (p.streak || 0),
+      highestStreak: isPretest ? 0 : (p.highestStreak || 0),
+      streakBonus: isPretest ? 0 : (p.streakBonus || 0),
       isConnected: p.isConnected
     }));
 
