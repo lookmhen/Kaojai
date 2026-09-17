@@ -773,5 +773,30 @@
         ]
       }
     ]
+  },
+  {
+    "id": "imported-1789622420088",
+    "title": "Imported Quiz",
+    "description": "Import test",
+    "questions": [
+      {
+        "id": "imp-q1",
+        "questionType": "CHOICE",
+        "questionText": "Imported Q1",
+        "timeLimitSeconds": 20,
+        "options": [
+          {
+            "id": "opt1",
+            "text": "Correct",
+            "isCorrect": true
+          },
+          {
+            "id": "opt2",
+            "text": "Wrong",
+            "isCorrect": false
+          }
+        ]
+      }
+    ]
   }
 ]
