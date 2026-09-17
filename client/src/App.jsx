@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSocket } from './context/SocketContext';
 import { JoinRoom } from './components/player/JoinRoom';
 import { PlayerLobby } from './components/player/PlayerLobby';
@@ -13,7 +13,7 @@ import { HostPulse } from './components/host/HostPulse';
 import { HostLeaderboard } from './components/host/HostLeaderboard';
 import { TeacherBackoffice } from './components/teacher/TeacherBackoffice';
 import { PrepareCountdown } from './components/common/PrepareCountdown';
-import { WifiOff } from 'lucide-react';
+import { WifiOff, AlertCircle, X } from 'lucide-react';
 import './styles/global.css';
 
 export function AppContent() {
@@ -44,6 +44,21 @@ export function AppContent() {
   const [pretestData, setPretestData] = useState(null);
   const [selectedQuizId, setSelectedQuizId] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const errorTimerRef = useRef(null);
+
+  const showNotificationError = (msg, durationMs = 4500) => {
+    if (errorTimerRef.current) {
+      clearTimeout(errorTimerRef.current);
+    }
+    setErrorMessage(msg);
+    if (durationMs > 0) {
+      errorTimerRef.current = setTimeout(() => {
+        setErrorMessage('');
+        errorTimerRef.current = null;
+      }, durationMs);
+    }
+  };
+
   const [prepareData, setPrepareData] = useState(null);
   const [quizMode, setQuizMode] = useState('NORMAL');
 
@@ -238,8 +253,7 @@ export function AppContent() {
     };
 
     const onErrorMessage = (data) => {
-      setErrorMessage(data.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
-      setTimeout(() => setErrorMessage(''), 4000);
+      showNotificationError(data.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ', 4000);
     };
 
     const onTeamsToggled = (data) => {
@@ -294,7 +308,7 @@ export function AppContent() {
     };
 
     const onRoomClosed = (data) => {
-      setErrorMessage(data.message || 'วิทยากรได้ปิดห้องหรือออกจากห้องแล้ว');
+      showNotificationError(data.message || 'วิทยากรได้ปิดห้องหรือออกจากห้องแล้ว', 5000);
       clearSession();
       if (window.history.replaceState) {
         const cleanUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
@@ -340,6 +354,10 @@ export function AppContent() {
     socket.on('room_closed', onRoomClosed);
 
     return () => {
+      if (errorTimerRef.current) {
+        clearTimeout(errorTimerRef.current);
+        errorTimerRef.current = null;
+      }
       socket.off('room_created', onRoomCreated);
       socket.off('host_reconnected', onHostReconnected);
       socket.off('room_updated', onRoomUpdated);
@@ -507,20 +525,53 @@ export function AppContent() {
       {/* Floating Error Alert */}
       {errorMessage && (
         <div
+          className="animate-pop"
           style={{
             position: 'fixed',
             top: '20px',
             right: '20px',
-            background: '#e74c3c',
-            color: '#fff',
-            padding: '12px 24px',
-            borderRadius: '12px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-            zIndex: 1100,
-            fontWeight: 600
+            background: '#DC2626',
+            color: '#FFFFFF',
+            padding: '12px 18px',
+            borderRadius: '14px',
+            boxShadow: '0 8px 24px rgba(220, 38, 38, 0.35)',
+            zIndex: 2500,
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            maxWidth: 'calc(100vw - 40px)'
           }}
         >
-          {errorMessage}
+          <AlertCircle size={20} style={{ flexShrink: 0 }} />
+          <span style={{ fontSize: '0.95rem' }}>{errorMessage}</span>
+          <button
+            type="button"
+            onClick={() => {
+              if (errorTimerRef.current) {
+                clearTimeout(errorTimerRef.current);
+                errorTimerRef.current = null;
+              }
+              setErrorMessage('');
+            }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#FFFFFF',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '4px',
+              marginLeft: '6px',
+              borderRadius: '6px',
+              opacity: 0.9
+            }}
+            title="ปิดการแจ้งเตือน"
+            aria-label="Close error message"
+          >
+            <X size={18} />
+          </button>
         </div>
       )}
 
