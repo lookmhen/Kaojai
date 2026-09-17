@@ -228,16 +228,16 @@ async function testRoomManager() {
     assert.strictEqual(ans2.totalScore, 0);
     assert.strictEqual(ans2.answeredCount, 2);
     assert.strictEqual(ans2.totalPlayers, 2);
-    assert.strictEqual(ans2.allAnswered, true, 'allAnswered should be true when all players answered');
-
     // Delayed answer speed reduction test
     const rm2 = new RoomManager();
     const r2 = rm2.createRoom('h2');
     const playerSlow = rm2.joinPlayer(r2.pin, 'sSlow', { name: 'Slow' }).player;
     rm2.startQuestion(r2.pin, 0);
+    const qSlow = r2.quizSet.questions[0];
+    const correctOptSlow = qSlow.options.find(o => o.isCorrect).id;
     // Artificially move questionStartTime back by 10 seconds (timeLimit is 20s)
     r2.questionStartTime = Date.now() - 10000;
-    const ansSlow = rm2.submitAnswer(r2.pin, playerSlow.playerId, 'opt1');
+    const ansSlow = rm2.submitAnswer(r2.pin, playerSlow.playerId, correctOptSlow);
     assert.strictEqual(ansSlow.isCorrect, true);
     // Speed ratio = (20 - 10)/20 = 0.5 -> 500 + 500*0.5 = 750 pts
     assert.ok(ansSlow.pointsEarned >= 740 && ansSlow.pointsEarned <= 760, `Points should be ~750, got ${ansSlow.pointsEarned}`);

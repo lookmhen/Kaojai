@@ -40,6 +40,22 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
     }
   }, [result, question?.id]);
 
+  if (!question) {
+    return (
+      <div style={{ maxWidth: '600px', margin: '60px auto', padding: '0 24px', textAlign: 'center' }}>
+        <div className="glass-card animate-pop" style={{ padding: '40px 24px' }}>
+          <Clock size={44} color="var(--accent-earth-blue)" style={{ marginBottom: '16px' }} />
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
+            กำลังโหลดข้อมูลคำถาม...
+          </h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+            ระบบกำลังเตรียมการแสดงผลคำถาม กรุณารอสักครู่ ✨
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const isFinalQuestion = Boolean(result?.isLastQuestion || ((question?.questionIndex ?? 0) + 1 >= (question?.totalQuestions ?? 1)));
   const maxCount = Math.max(...(question?.options?.map(opt => result?.optionCounts?.[opt.id] || 0) || [1]), 1);
 
@@ -68,7 +84,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
 
       {/* Question Card */}
       <div className="glass-card" style={{ textAlign: 'center', marginBottom: '32px', padding: '32px 24px' }}>
-        {question.imageUrl && (
+        {question?.imageUrl && (
           <div style={{ marginBottom: '20px', overflow: 'hidden', borderRadius: '14px', maxHeight: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '8px' }}>
             <img
               src={question.imageUrl}
@@ -79,7 +95,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
           </div>
         )}
         <h1 style={{ fontSize: '1.9rem', fontWeight: 800, lineHeight: 1.4, color: 'var(--text-main)' }}>
-          {question.questionText}
+          {question?.questionText}
         </h1>
       </div>
 
