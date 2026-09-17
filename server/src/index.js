@@ -31,6 +31,7 @@ function getLocalIpAddress() {
 }
 
 const app = express();
+app.set('trust proxy', true);
 app.use(cors());
 app.use(express.json({ limit: '25mb' }));
 
@@ -51,7 +52,11 @@ const io = new Server(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST']
-  }
+  },
+  transports: ['polling', 'websocket'],
+  allowUpgrades: true,
+  pingTimeout: 30000,
+  pingInterval: 10000
 });
 
 

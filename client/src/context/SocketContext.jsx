@@ -46,9 +46,11 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     const newSocket = io(window.location.origin, {
-      transports: ['websocket', 'polling'],
-      reconnectionAttempts: 15,
-      reconnectionDelay: 1000
+      transports: ['polling', 'websocket'],
+      upgrade: true,
+      reconnectionAttempts: 20,
+      reconnectionDelay: 1000,
+      timeout: 20000
     });
 
     newSocket.on('connect', () => {
