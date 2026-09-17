@@ -42,6 +42,7 @@ export function AppContent() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [quizAnalytics, setQuizAnalytics] = useState(null);
   const [pretestData, setPretestData] = useState(null);
+  const [selectedQuizId, setSelectedQuizId] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [prepareData, setPrepareData] = useState(null);
 
@@ -61,6 +62,7 @@ export function AppContent() {
       if (data.pulseRound) setPulseRound(data.pulseRound);
       if (data.teamsEnabled !== undefined) setTeamsEnabled(data.teamsEnabled);
       if (data.teams) setTeams(data.teams);
+      if (data.quizSet?.id) setSelectedQuizId(data.quizSet.id);
       setStatus('LOBBY');
       setViewMode('HOST_GAME');
       saveSessionData({ pin: data.pin, isHost: true, hostToken: data.hostToken });
@@ -79,6 +81,12 @@ export function AppContent() {
       if (data.leaderboard) setLeaderboard(data.leaderboard);
       if (data.teamsEnabled !== undefined) setTeamsEnabled(data.teamsEnabled);
       if (data.teams) setTeams(data.teams);
+      if (data.pretestData) setPretestData(data.pretestData);
+      if (data.pretestData?.quizId) {
+        setSelectedQuizId(data.pretestData.quizId);
+      } else if (data.quizSet?.id) {
+        setSelectedQuizId(data.quizSet.id);
+      }
       setViewMode('HOST_GAME');
       saveSessionData({ pin: data.pin, isHost: true, hostToken: data.hostToken || session.hostToken });
     };
@@ -257,7 +265,19 @@ export function AppContent() {
       setPlayerData(prev => (prev ? { ...prev, score: 0 } : null));
       if (data?.players) setPlayers(data.players);
       if (data?.counts) setCounts(data.counts);
+      if (data?.pretestData) setPretestData(data.pretestData);
+      if (data?.pretestData?.quizId) {
+        setSelectedQuizId(data.pretestData.quizId);
+      } else if (data?.quizSet?.id) {
+        setSelectedQuizId(data.quizSet.id);
+      }
       setStatus('LOBBY');
+    };
+
+    const onQuizSelected = (data) => {
+      if (data?.quizId) {
+        setSelectedQuizId(data.quizId);
+      }
     };
 
     const onRoomClosed = (data) => {
@@ -294,6 +314,7 @@ export function AppContent() {
     socket.on('question_result', onQuestionResult);
     socket.on('show_leaderboard', onShowLeaderboard);
     socket.on('quiz_ended', onQuizEnded);
+    socket.on('quiz_selected', onQuizSelected);
     socket.on('pulse_updated', onPulseUpdated);
     socket.on('pulse_reset', onPulseReset);
     socket.on('mode_switched', onModeSwitched);
@@ -315,6 +336,7 @@ export function AppContent() {
       socket.off('question_result', onQuestionResult);
       socket.off('show_leaderboard', onShowLeaderboard);
       socket.off('quiz_ended', onQuizEnded);
+      socket.off('quiz_selected', onQuizSelected);
       socket.off('pulse_updated', onPulseUpdated);
       socket.off('pulse_reset', onPulseReset);
       socket.off('mode_switched', onModeSwitched);
@@ -351,12 +373,29 @@ export function AppContent() {
   // Host Action Handlers
   const handleCreateRoom = (customQuizId) => {
     if (!socket) return;
-    socket.emit('create_room', null);
+    socket.emit('create_room', customQuizId ? { customQuizId } : null);
+  };
+
+  const handleSelectQuiz = (newQuizId) => {
+    setSelectedQuizId(newQuizId);
+    if (socket && pin && (session.isHost || session.hostToken)) {
+      socket.emit('select_quiz', { pin, hostToken: session.hostToken, quizId: newQuizId });
+    }
+  };
+
+  const handleClearPretest = () => {
+    if (!socket || !pin) return;
+    socket.emit('clear_pretest', { pin, hostToken: session.hostToken }, (res) => {
+      if (res && res.success) {
+        setPretestData(null);
+      }
+    });
   };
 
   const handleStartQuiz = (quizId, quizMode = 'NORMAL') => {
     if (!socket) return;
-    socket.emit('start_quiz', { pin, hostToken: session.hostToken, quizMode });
+    const effectiveQuizId = quizId || selectedQuizId;
+    socket.emit('start_quiz', { pin, hostToken: session.hostToken, quizId: effectiveQuizId, quizMode });
   };
 
   const handleNextQuestion = () => {
@@ -499,6 +538,9 @@ export function AppContent() {
               onRemoveTeam={handleRemoveTeam}
               onAssignTeam={handleAssignTeam}
               pretestData={pretestData}
+              selectedQuizId={selectedQuizId}
+              onSelectQuiz={handleSelectQuiz}
+              onClearPretest={handleClearPretest}
             />
           ) : status === 'LEADERBOARD' || status === 'ENDED' ? (
             <HostLeaderboard

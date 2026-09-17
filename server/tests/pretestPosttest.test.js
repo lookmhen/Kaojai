@@ -292,6 +292,69 @@ async function testPretestPosttest() {
     console.log('    ✓ PT-12 passed');
   }
 
+  /* ── 13. Pre-test custom quiz selection, Lobby reset, and Retest flow ── */
+  {
+    console.log('  [PT-13] Pre-test custom quiz selection, Lobby reset, and Retest flow...');
+    const rm = new RoomManager();
+    const CUSTOM_QUIZ = {
+      id: 'custom-math-quiz',
+      title: 'Custom Math Quiz',
+      questions: [
+        {
+          id: 'cm1',
+          questionText: 'Math Q1: 5 * 5 = ?',
+          timeLimitSeconds: 15,
+          options: [
+            { id: 'optA', text: '25', isCorrect: true },
+            { id: 'optB', text: '20', isCorrect: false }
+          ]
+        }
+      ]
+    };
+
+    // Create room and set custom quiz
+    const room = rm.createRoom('host-custom-pt');
+    rm.setRoomQuiz(room.pin, CUSTOM_QUIZ);
+    assert.strictEqual(room.quizSet.id, 'custom-math-quiz', 'Room quiz should be set to custom quiz');
+
+    // Add player
+    rm.joinPlayer(room.pin, 'p-sock-1', { name: 'Somchai', avatar: 'a.svg', playerId: 'p-1' });
+
+    // Step 1: Run PRETEST
+    room.quizMode = 'PRETEST';
+    rm.resetRoomScores(room.pin, { clearPretest: true });
+    rm.startQuestion(room.pin, 0);
+    // Player answers wrong
+    rm.submitAnswer(room.pin, 'p-1', 'optB');
+    rm.getQuestionResult(room.pin);
+    const pretestSnap = rm.savePretestSnapshot(room.pin);
+
+    assert.strictEqual(pretestSnap.completed, true);
+    assert.strictEqual(pretestSnap.quizId, 'custom-math-quiz');
+    assert.strictEqual(pretestSnap.overallAccuracyPct, 0);
+
+    // Step 2: Return to Lobby
+    rm.resetRoomToLobby(room.pin, { clearPretest: false });
+    assert.strictEqual(room.status, 'LOBBY');
+    assert.strictEqual(room.quizSet.id, 'custom-math-quiz', 'Quiz set must remain custom quiz upon returning to Lobby');
+    assert.ok(room.pretestData?.completed, 'Pre-test data must be preserved');
+
+    // Step 3: Run RETEST (POSTTEST)
+    room.quizMode = 'POSTTEST';
+    rm.resetRoomScores(room.pin, { clearPretest: false });
+    rm.startQuestion(room.pin, 0);
+    // Player now answers correctly
+    rm.submitAnswer(room.pin, 'p-1', 'optA');
+    rm.getQuestionResult(room.pin);
+
+    const analytics = rm.getQuizAnalytics(room.pin);
+    assert.ok(analytics.learningGain, 'Learning gain should be computed in Retest/Post-test');
+    assert.strictEqual(analytics.learningGain.preOverallAccuracyPct, 0);
+    assert.strictEqual(analytics.learningGain.postOverallAccuracyPct, 100);
+    assert.strictEqual(analytics.learningGain.classGainPct, 100);
+    console.log('    ✓ PT-13 passed');
+  }
+
   console.log('  ✅ All Pre-test & Post-test tests passed!\n');
 }
 

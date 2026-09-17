@@ -90,9 +90,41 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('start_quiz', ({ pin, hostToken, quizMode = 'NORMAL' }) => {
+    socket.on('select_quiz', ({ pin, hostToken, quizId }, ackCallback) => {
       try {
         const room = verifyHost(pin, hostToken);
+        const updatedQuiz = roomManager.setRoomQuiz(pin, quizId);
+
+        io.to(pin).emit('quiz_selected', {
+          quizId: updatedQuiz.id,
+          quizTitle: updatedQuiz.title,
+          totalQuestions: updatedQuiz.questions.length
+        });
+
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: true, quizId: updatedQuiz.id, quizTitle: updatedQuiz.title });
+        }
+      } catch (err) {
+        console.error('[Socket Error] select_quiz:', err);
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: false, message: err.message });
+        }
+        socket.emit('error_message', { message: err.message });
+      }
+    });
+
+    socket.on('start_quiz', ({ pin, hostToken, quizId, quizMode = 'NORMAL' }) => {
+      try {
+        const room = verifyHost(pin, hostToken);
+
+        // If host provided a specific quizId, update the room's quizSet
+        if (quizId) {
+          try {
+            roomManager.setRoomQuiz(pin, quizId);
+          } catch (qErr) {
+            console.warn(`[Socket Warn] start_quiz setRoomQuiz failed for ${quizId}:`, qErr.message);
+          }
+        }
 
         if (room.questionTimer) {
           clearTimeout(room.questionTimer);
@@ -409,6 +441,7 @@ module.exports = function setupSocketHandlers(io) {
           players: playerList,
           counts,
           quizMode: room.quizMode,
+          quizSet: room.quizSet,
           pretestData: room.pretestData
         });
         io.to(pin).emit('room_updated', { players: playerList, counts });

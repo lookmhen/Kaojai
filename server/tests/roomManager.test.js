@@ -65,6 +65,32 @@ async function testRoomManager() {
     console.log('    ✓ Custom quiz set passed');
   }
 
+  // Test 3.1: setRoomQuiz in RoomManager
+  {
+    console.log('  Testing setRoomQuiz dynamically...');
+    const rm = new RoomManager();
+    const room = rm.createRoom('host-socket-quiz-change');
+    const newQuiz = {
+      id: 'dynamic-quiz-1',
+      title: 'Dynamic Quiz',
+      questions: [
+        {
+          id: 'dq1',
+          questionText: 'Dynamic Question 1',
+          timeLimitSeconds: 20,
+          options: [
+            { id: 'dopt1', text: 'Yes', isCorrect: true },
+            { id: 'dopt2', text: 'No', isCorrect: false }
+          ]
+        }
+      ]
+    };
+    rm.setRoomQuiz(room.pin, newQuiz);
+    assert.strictEqual(room.quizSet.id, 'dynamic-quiz-1');
+    assert.strictEqual(room.quizSet.questions[0].questionText, 'Dynamic Question 1');
+    console.log('    ✓ setRoomQuiz passed');
+  }
+
   // Test 4: Player Joining, Nickname Trimming, Avatar Handling
   {
     console.log('  Testing Player Joining, Nickname Trimming, and Avatar Handling...');

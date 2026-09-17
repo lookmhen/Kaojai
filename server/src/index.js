@@ -240,6 +240,10 @@ if (activeDistDir) {
     }
     res.sendFile(path.join(activeDistDir, 'index.html'));
   });
+} else if (process.env.NODE_ENV === 'test') {
+  app.get('/', (req, res) => {
+    res.send('<!DOCTYPE html><html><body><h1>KaoJai Test Dummy</h1></body></html>');
+  });
 }
 
 setupSocketHandlers(io);

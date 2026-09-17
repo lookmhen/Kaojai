@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { defaultQuizSets } = require('./quizData');
+const { defaultQuizSets, getAllQuizzes, getQuizById } = require('./quizData');
 
 class RoomManager {
   constructor() {
@@ -15,9 +15,22 @@ class RoomManager {
     return pin;
   }
 
-  createRoom(hostSocketId, customQuizSet = null) {
+  createRoom(hostSocketId, customQuizSetOrId = null) {
     const pin = this.generatePin();
-    const quizSet = customQuizSet || this.quizSets[0];
+    let quizSet = null;
+    if (typeof customQuizSetOrId === 'string') {
+      quizSet = getQuizById(customQuizSetOrId);
+    } else if (customQuizSetOrId && typeof customQuizSetOrId === 'object') {
+      if (customQuizSetOrId.customQuizId) {
+        quizSet = getQuizById(customQuizSetOrId.customQuizId);
+      } else if (Array.isArray(customQuizSetOrId.questions)) {
+        quizSet = customQuizSetOrId;
+      }
+    }
+    if (!quizSet) {
+      const all = getAllQuizzes();
+      quizSet = (all && all.length > 0) ? all[0] : this.quizSets[0];
+    }
     const hostToken = crypto.randomUUID();
     
     const room = {
@@ -1009,6 +1022,8 @@ class RoomManager {
     room.pretestData = {
       completed: true,
       completedAt: Date.now(),
+      quizId: room.quizSet?.id || null,
+      quizTitle: room.quizSet?.title || null,
       totalQuestions,
       totalPlayers,
       averageScore,
@@ -1057,6 +1072,28 @@ class RoomManager {
       player.comebackBonus = 0;
       player.pulseChoice = null;
     }
+  }
+
+  /**
+   * Dynamically change or update the quiz set for an active room.
+   */
+  setRoomQuiz(pin, quizSetOrId) {
+    const room = this.rooms.get(pin);
+    if (!room) throw new Error('ไม่พบห้องดังกล่าว');
+
+    let resolvedQuiz = null;
+    if (typeof quizSetOrId === 'string') {
+      resolvedQuiz = getQuizById(quizSetOrId);
+    } else if (quizSetOrId && Array.isArray(quizSetOrId.questions)) {
+      resolvedQuiz = quizSetOrId;
+    }
+
+    if (!resolvedQuiz || !Array.isArray(resolvedQuiz.questions) || resolvedQuiz.questions.length === 0) {
+      throw new Error('ชุดคำถามไม่ถูกต้องหรือไม่มีข้อคำถาม');
+    }
+
+    room.quizSet = resolvedQuiz;
+    return room.quizSet;
   }
 
   /**

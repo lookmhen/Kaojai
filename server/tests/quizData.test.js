@@ -116,8 +116,12 @@ function testQuizData() {
   const afterImport = getAllQuizzes();
   assert.ok(afterImport.some(q => q.id === importSet[0].id), 'Imported quiz should be present');
 
-  // Clean up imported quiz
-  deleteQuiz(importSet[0].id);
+  // Test getQuizById
+  const { getQuizById } = require('../src/quizData');
+  const foundDefault = getQuizById(defaultQuizSets[0].id);
+  assert.ok(foundDefault, 'getQuizById should find default quiz');
+  assert.strictEqual(foundDefault.id, defaultQuizSets[0].id);
+  assert.strictEqual(getQuizById('non-existent-id'), null, 'getQuizById with non-existent id should return null');
 
   console.log('✅ quizData tests passed!');
 }

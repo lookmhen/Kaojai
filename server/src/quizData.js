@@ -124,6 +124,11 @@ function getAllQuizzes() {
   return quizStore;
 }
 
+function getQuizById(quizId) {
+  if (!quizId) return null;
+  return quizStore.find(q => q.id === quizId) || null;
+}
+
 function saveQuiz(quiz) {
   if (!quiz || !quiz.title) {
     throw new Error('ข้อมูลชุดคำถามไม่ถูกต้อง');
@@ -219,6 +224,7 @@ function importQuizzes(importedList, replaceAll = false) {
 module.exports = {
   defaultQuizSets: INITIAL_SEED_QUIZZES,
   getAllQuizzes,
+  getQuizById,
   saveQuiz,
   deleteQuiz,
   duplicateQuiz,

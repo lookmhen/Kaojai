@@ -10,10 +10,13 @@ export const HostLobby = ({
   pin, players, counts, onStartQuiz,
   teamsEnabled = false, teams = [],
   onToggleTeams, onAutoAssignTeams, onCreateTeam, onRemoveTeam, onAssignTeam,
-  pretestData = null
+  pretestData = null,
+  selectedQuizId: propSelectedQuizId = '',
+  onSelectQuiz = null,
+  onClearPretest = null
 }) => {
   const [quizzes, setQuizzes] = useState([]);
-  const [selectedQuizId, setSelectedQuizId] = useState('');
+  const [selectedQuizId, setSelectedQuizId] = useState(propSelectedQuizId || pretestData?.quizId || '');
   const [showCreateTeam, setShowCreateTeam] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamColor, setNewTeamColor] = useState(TEAM_COLOR_PRESETS[0]);
@@ -22,12 +25,24 @@ export const HostLobby = ({
   const [serverHost, setServerHost] = useState(null);
 
   useEffect(() => {
+    if (propSelectedQuizId && propSelectedQuizId !== selectedQuizId) {
+      setSelectedQuizId(propSelectedQuizId);
+    }
+  }, [propSelectedQuizId]);
+
+  useEffect(() => {
     fetch('/api/quizzes')
       .then(res => res.json())
       .then(data => {
-        if (data.quizzes) {
+        if (data.quizzes && data.quizzes.length > 0) {
           setQuizzes(data.quizzes);
-          if (data.quizzes.length > 0) setSelectedQuizId(data.quizzes[0].id);
+          const preferredId = pretestData?.quizId || propSelectedQuizId || selectedQuizId;
+          const found = data.quizzes.find(q => q.id === preferredId);
+          const finalId = found ? found.id : data.quizzes[0].id;
+          setSelectedQuizId(finalId);
+          if (onSelectQuiz && finalId !== propSelectedQuizId) {
+            onSelectQuiz(finalId);
+          }
         }
       })
       .catch(err => console.error('Fetch quizzes error:', err));
@@ -104,7 +119,13 @@ export const HostLobby = ({
           </label>
           <select
             value={selectedQuizId}
-            onChange={(e) => setSelectedQuizId(e.target.value)}
+            onChange={(e) => {
+              const newId = e.target.value;
+              setSelectedQuizId(newId);
+              if (onSelectQuiz) {
+                onSelectQuiz(newId);
+              }
+            }}
             style={{ width: '100%', padding: '12px 16px', fontSize: '1rem', borderRadius: '12px', background: '#F8FAFC', color: 'var(--text-main)', border: '1px solid #CBD5E1', cursor: 'pointer', fontWeight: 600 }}
           >
             {quizzes.map(q => (
@@ -118,10 +139,33 @@ export const HostLobby = ({
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '12px',
             padding: '8px 18px', borderRadius: '50px', fontWeight: 700, fontSize: '0.9rem',
-            background: '#DCFCE7', color: '#166534', border: '1.5px solid #22C55E'
+            background: '#DCFCE7', color: '#166534', border: '1.5px solid #22C55E', flexWrap: 'wrap', justifyContent: 'center'
           }}>
             <CheckCircle2 size={16} color="#166534" />
-            บันทึกผล Pre-test แล้ว ({pretestData.overallAccuracyPct}% ตอบถูก · {pretestData.playerCount || 0} คน)
+            <span>
+              บันทึกผล Pre-test แล้ว ({pretestData.overallAccuracyPct}% ตอบถูก · {pretestData.playerCount || 0} คน)
+              {pretestData.quizTitle && ` · ชุด: ${pretestData.quizTitle}`}
+            </span>
+            {onClearPretest && (
+              <button
+                type="button"
+                onClick={onClearPretest}
+                title="ล้างผล Pre-test นี้ออก เพื่อเริ่มทำ Pre-test ชุดใหม่"
+                style={{
+                  background: '#FEE2E2',
+                  color: '#991B1B',
+                  border: '1px solid #FCA5A5',
+                  borderRadius: '20px',
+                  padding: '2px 10px',
+                  fontSize: '0.8rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  marginLeft: '6px'
+                }}
+              >
+                ✕ ล้างผล
+              </button>
+            )}
           </div>
         )}
 

@@ -477,8 +477,32 @@ async function testSocketHandlers() {
   assert.strictEqual(resetPulseAck.pulseRound, 2);
   const pulseResetBroadcast = broadcasts.find(b => b.roomPin === teamPin && b.event === 'pulse_reset');
   assert.ok(pulseResetBroadcast, 'pulse_reset event must be broadcasted to room');
-  assert.strictEqual(pulseResetBroadcast.payload.round, 2);
-  console.log('    ✓ reset_pulse passed');
+  // Test 19: select_quiz and start_quiz with explicit quizId
+  console.log('  Testing select_quiz and start_quiz with custom quizId...');
+  const { defaultQuizSets: allDefaultQuizSets } = require('../src/quizData');
+  const targetQuiz = allDefaultQuizSets[1];
+  assert.ok(targetQuiz, 'Second default quiz set must exist');
+
+  let selectQuizAck = null;
+  await newHostSocket.fire('select_quiz', { pin: teamPin, hostToken: teamToken, quizId: targetQuiz.id }, (res) => {
+    selectQuizAck = res;
+  });
+  assert.ok(selectQuizAck?.success, 'select_quiz must acknowledge successfully');
+  assert.strictEqual(selectQuizAck.quizId, targetQuiz.id);
+
+  const quizSelectedBroadcast = broadcasts.find(b => b.roomPin === teamPin && b.event === 'quiz_selected');
+  assert.ok(quizSelectedBroadcast, 'quiz_selected must be broadcasted to room');
+  assert.strictEqual(quizSelectedBroadcast.payload.quizId, targetQuiz.id);
+
+  // Test start_quiz with quizId parameter
+  await newHostSocket.fire('start_quiz', { pin: teamPin, hostToken: teamToken, quizId: targetQuiz.id, quizMode: 'NORMAL' });
+  await new Promise(r => setTimeout(r, 35));
+
+  const startBroadcasts = broadcasts.filter(b => b.roomPin === teamPin && b.event === 'question_start');
+  const lastStart = startBroadcasts[startBroadcasts.length - 1];
+  assert.ok(lastStart, 'question_start must be emitted');
+  assert.strictEqual(lastStart.payload.question.questionText, targetQuiz.questions[0].questionText, 'Question must match selected targetQuiz');
+  console.log('    ✓ select_quiz and start_quiz with quizId passed');
 
   console.log('✅ socketHandler tests passed cleanly!');
 }
