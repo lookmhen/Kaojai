@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { sfx } from '../../utils/audioSFX';
 import { Users, Clock, ArrowRight, Trophy, BarChart3, Check, ListOrdered, Sparkles, CheckCircle2 } from 'lucide-react';
 import { getSequenceTheme } from '../../utils/sequenceThemes';
@@ -11,17 +11,30 @@ const OPTION_STYLES = [
 ];
 
 export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNextQuestion, onShowLeaderboard }) => {
-  const initialDuration = Math.max(5, Number(question?.timeLimitSeconds) || 30);
+  const getDuration = (q) => Math.max(5, Number(q?.timeLimitSeconds) || 30);
+  const initialDuration = getDuration(question);
   const [timeLeft, setTimeLeft] = useState(initialDuration);
+  const timerRef = useRef(null);
   const isSequence = question?.questionType === 'SEQUENCE' || Boolean(question?.sequenceItems?.length);
 
   useEffect(() => {
-    const duration = Math.max(5, Number(question?.timeLimitSeconds) || 30);
+    if (!question) return;
+    const duration = getDuration(question);
+    console.log('[HostQuiz] Timer init:', { questionId: question.id, timeLimitSeconds: question.timeLimitSeconds, duration });
     setTimeLeft(duration);
-    const interval = setInterval(() => {
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          clearInterval(interval);
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
           return 0;
         }
         if (prev <= 6) {
@@ -31,12 +44,21 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
       });
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [question?.id, question?.questionIndex, question?.timeLimitSeconds]);
 
   useEffect(() => {
-    if (result && (!result.questionId || !question?.id || result.questionId === question?.id)) {
+    if (result && question?.id && result.questionId === question.id) {
       setTimeLeft(0);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     }
   }, [result, question?.id]);
 

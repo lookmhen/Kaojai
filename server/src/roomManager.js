@@ -433,11 +433,19 @@ class RoomManager {
     room.currentAnswers.clear();
 
     const currentQuestion = room.quizSet.questions[room.currentQuestionIndex];
+    if (currentQuestion && !currentQuestion.id) {
+      currentQuestion.id = `q_${room.currentQuestionIndex}_${Date.now()}`;
+    }
     const safeQuestion = this.createSafeQuestion(
       currentQuestion,
       room.currentQuestionIndex,
       room.quizSet.questions.length
     );
+    // Ensure timeLimitSeconds is always present (defensive)
+    if (safeQuestion.timeLimitSeconds === undefined || safeQuestion.timeLimitSeconds === null) {
+      safeQuestion.timeLimitSeconds = 30;
+      console.warn('[RoomManager] startQuestion: timeLimitSeconds was missing, defaulted to 30', { questionIndex: room.currentQuestionIndex });
+    }
     room.currentSafeQuestion = safeQuestion;
 
     return { isEnded: false, question: safeQuestion, currentQuestion };
@@ -452,6 +460,10 @@ class RoomManager {
     }
 
     const currentQuestion = room.quizSet.questions[room.currentQuestionIndex];
+    if (answerData?.questionId && currentQuestion?.id && answerData.questionId !== currentQuestion.id) {
+      console.warn(`[Answer Ignored] Stale questionId: submitted ${answerData.questionId} vs current ${currentQuestion.id}`);
+      return { alreadyAnswered: true, staleQuestion: true };
+    }
     const isSequence = currentQuestion.questionType === 'SEQUENCE' || (Array.isArray(currentQuestion.sequenceItems) && currentQuestion.sequenceItems.length > 0);
 
     const timeLimitSec = (typeof currentQuestion.timeLimitSeconds === 'number' && currentQuestion.timeLimitSeconds > 0)
@@ -607,7 +619,7 @@ class RoomManager {
       }
 
       resultPayload = {
-        questionId: currentQuestion.id,
+        questionId: currentQuestion?.id || room.currentSafeQuestion?.id || null,
         questionType: 'SEQUENCE',
         correctSequence: currentQuestion.sequenceItems.map(item => ({
           id: item.id,
@@ -634,7 +646,7 @@ class RoomManager {
       }
 
       resultPayload = {
-        questionId: currentQuestion ? currentQuestion.id : null,
+        questionId: currentQuestion?.id || room.currentSafeQuestion?.id || null,
         questionType: 'CHOICE',
         correctOptionId: currentQuestion?.options?.find(o => o.isCorrect)?.id,
         optionCounts,

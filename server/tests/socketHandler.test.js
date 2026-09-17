@@ -521,6 +521,50 @@ async function testSocketHandlers() {
   assert.ok(clearedBroadcast, 'pretest_cleared must be broadcasted to room');
   console.log('    ✓ select_quiz error handling and clear_pretest passed');
 
+  // Test 21: next_question multi-question timer flow and stale questionId rejection
+  console.log('  Testing next_question flow and stale questionId answer rejection...');
+  const t21Host = mockIo.connectSocket('t21-host');
+  let t21HostAck;
+  await t21Host.fire('create_room', null, (r) => { t21HostAck = r; });
+  const t21Pin = t21HostAck.pin;
+  const t21Room = roomManager.getRoom(t21Pin);
+  roomManager.setRoomQuiz(t21Pin, 'quiz-1'); // 3 questions
+
+  const t21Player = mockIo.connectSocket('t21-player');
+  let t21PlayerAck;
+  await t21Player.fire('join_room', { pin: t21Pin, name: 'Tester', avatar: '1.png' }, (r) => { t21PlayerAck = r; });
+  const t21PlayerId = t21PlayerAck.player.playerId;
+
+  // Start quiz Q0
+  await t21Host.fire('start_quiz', { pin: t21Pin, hostToken: t21Room.hostToken, quizId: 'quiz-1' });
+  await new Promise(r => setTimeout(r, 35));
+
+  // Host triggers next_question to Q1
+  await t21Host.fire('next_question', { pin: t21Pin, hostToken: t21Room.hostToken });
+  const prepareBroadcast = broadcasts.filter(b => b.roomPin === t21Pin && b.event === 'question_prepare');
+  assert.ok(prepareBroadcast.length > 0, 'question_prepare must be emitted on next_question');
+  
+  // Wait for prepare timer
+  await new Promise(r => setTimeout(r, 35));
+  const starts = broadcasts.filter(b => b.roomPin === t21Pin && b.event === 'question_start');
+  const q2Start = starts[starts.length - 1];
+  assert.ok(q2Start, 'question_start must be emitted after prepare timer');
+  assert.strictEqual(q2Start.payload.currentQuestionIndex, 1, 'Should transition to question index 1');
+  assert.ok(q2Start.payload.question?.id, 'Question must have unique ID');
+
+  // Stale submit test: player submits answer with OLD questionId
+  await t21Player.fire('submit_answer', {
+    pin: t21Pin,
+    playerId: t21PlayerId,
+    optionId: 'opt1',
+    questionId: 'stale-old-question-id'
+  });
+
+  // Stale submission should NOT cause question_result to fire for the new question
+  const resultsAfterStale = broadcasts.filter(b => b.roomPin === t21Pin && b.event === 'question_result');
+  assert.strictEqual(resultsAfterStale.length, 0, 'Stale questionId submit must NOT trigger question_result');
+  console.log('    ✓ next_question flow and stale questionId rejection passed');
+
   console.log('✅ socketHandler tests passed cleanly!');
 }
 

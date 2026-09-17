@@ -17,7 +17,8 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
   const [selectedOptionId, setSelectedOptionId] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const initialDuration = Math.max(5, Number(question?.timeLimitSeconds) || 30);
+  const getDuration = (q) => Math.max(5, Number(q?.timeLimitSeconds) || 30);
+  const initialDuration = getDuration(question);
   const [timeLeft, setTimeLeft] = useState(initialDuration);
 
   const timerRef = useRef(null);
@@ -41,7 +42,8 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
       socket.emit('submit_answer', {
         pin,
         playerId: player.playerId,
-        orderedItemIds
+        orderedItemIds,
+        questionId: question?.id
       });
     }
   };
@@ -51,7 +53,8 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
     setSelectedOptionId(null);
     setFeedback(null);
     setIsSubmitting(false);
-    const duration = Math.max(5, Number(question.timeLimitSeconds) || 30);
+    const duration = getDuration(question);
+    console.log('[PlayerQuiz] Timer init:', { questionId: question.id, timeLimitSeconds: question.timeLimitSeconds, duration });
     setTimeLeft(duration);
 
     if (timerRef.current) {
@@ -85,7 +88,7 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
   }, [question?.id, question?.questionIndex, question?.timeLimitSeconds, isPretest]);
 
   useEffect(() => {
-    if (result && (!result.questionId || !question?.id || result.questionId === question?.id)) {
+    if (result && question?.id && result.questionId === question.id) {
       setTimeLeft(0);
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -137,7 +140,8 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
     socket.emit('submit_answer', {
       pin,
       playerId: player.playerId,
-      optionId
+      optionId,
+      questionId: question?.id
     });
   };
 

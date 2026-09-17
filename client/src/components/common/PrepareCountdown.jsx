@@ -17,9 +17,12 @@ export const PrepareCountdown = ({ nextQuestionIndex = 0, totalQuestions = 0, in
           return nextSec;
         } else {
           clearInterval(interval);
-          if (typeof onComplete === 'function') {
-            onComplete();
-          }
+          // Fallback safety: only call onComplete after an extra grace period (e.g. 2.5s) if server event is delayed
+          setTimeout(() => {
+            if (typeof onComplete === 'function') {
+              onComplete();
+            }
+          }, 2500);
           return 0;
         }
       });

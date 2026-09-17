@@ -269,7 +269,7 @@ module.exports = function setupSocketHandlers(io) {
 
         room.prepareTimer = setTimeout(() => {
           room.prepareTimer = null;
-          const result = roomManager.startQuestion(pin);
+          const result = roomManager.startQuestion(pin, nextIdx);
           if (result.isEnded) {
             if (room.quizMode === 'PRETEST') {
               roomManager.savePretestSnapshot(pin);
@@ -639,9 +639,9 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('submit_answer', ({ pin, playerId, optionId, orderedItemIds }) => {
+    socket.on('submit_answer', ({ pin, playerId, optionId, orderedItemIds, questionId }) => {
       try {
-        const answerPayload = orderedItemIds ? { orderedItemIds } : { optionId };
+        const answerPayload = orderedItemIds ? { orderedItemIds, questionId } : { optionId, questionId };
         const result = roomManager.submitAnswer(pin, playerId, answerPayload);
 
         const room = roomManager.getRoom(pin);

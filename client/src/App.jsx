@@ -143,6 +143,7 @@ export function AppContent() {
     const onQuestionPrepare = (data) => {
       if (data.quizMode) setQuizMode(data.quizMode);
       setQuestionResult(null);
+      setCurrentQuestion(null);
       setStatus('PREPARE');
       setPrepareData(data);
     };
@@ -188,6 +189,7 @@ export function AppContent() {
 
     const onShowLeaderboard = (data) => {
       setPrepareData(null);
+      setQuestionResult(null);
       if (data.quizMode) setQuizMode(data.quizMode);
       const list = data.leaderboard || [];
       if (data.quizAnalytics) {
@@ -207,6 +209,7 @@ export function AppContent() {
 
     const onQuizEnded = (data) => {
       setPrepareData(null);
+      setQuestionResult(null);
       if (data.quizMode) setQuizMode(data.quizMode);
       const list = data.leaderboard || [];
       if (data.quizAnalytics) {
@@ -446,7 +449,7 @@ export function AppContent() {
   };
 
   const handleNextQuestion = () => {
-    if (!socket || status === 'ENDED') return;
+    if (!socket || status === 'ENDED' || status === 'PREPARE') return;
     socket.emit('next_question', { pin, hostToken: session.hostToken });
   };
 
@@ -638,8 +641,20 @@ export function AppContent() {
               onResetToLobby={handleResetToLobby}
               onLeave={handleLeaveSession}
             />
+          ) : status === 'PREPARE' ? (
+            <div style={{ maxWidth: '600px', margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
+              <div className="glass-card animate-pop" style={{ padding: '40px 24px' }}>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
+                  เตรียมตัวให้พร้อมสำหรับคำถามถัดไป!
+                </h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+                  ระบบกำลังโหลดข้อมูลคำถาม กรุณารอสักครู่ ✨
+                </p>
+              </div>
+            </div>
           ) : (
             <HostQuiz
+              key={currentQuestion?.id || `host-q-${currentQuestion?.questionIndex ?? 0}`}
               question={currentQuestion}
               result={questionResult}
               answeredCount={counts.answeredCount}
@@ -708,8 +723,20 @@ export function AppContent() {
               quizMode={quizMode}
               onLeave={handleLeaveSession}
             />
+          ) : status === 'PREPARE' ? (
+            <div style={{ maxWidth: '440px', margin: '60px auto', padding: '0 16px', textAlign: 'center' }}>
+              <div className="glass-card animate-pop" style={{ padding: '36px 20px' }}>
+                <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
+                  เตรียมตัวให้พร้อม!
+                </h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: 1.5 }}>
+                  ระบบกำลังโหลดคำถามข้อถัดไป กรุณารอสักครู่ ✨
+                </p>
+              </div>
+            </div>
           ) : (
             <PlayerQuiz
+              key={currentQuestion?.id || `player-q-${currentQuestion?.questionIndex ?? 0}`}
               question={currentQuestion}
               result={questionResult}
               pin={pin}
