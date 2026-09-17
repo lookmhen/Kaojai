@@ -21,8 +21,11 @@ class RoomManager {
     if (typeof customQuizSetOrId === 'string') {
       quizSet = getQuizById(customQuizSetOrId);
     } else if (customQuizSetOrId && typeof customQuizSetOrId === 'object') {
-      if (customQuizSetOrId.customQuizId) {
-        quizSet = getQuizById(customQuizSetOrId.customQuizId);
+      const targetId = typeof customQuizSetOrId.customQuizId === 'string'
+        ? customQuizSetOrId.customQuizId
+        : (typeof customQuizSetOrId.quizId === 'string' ? customQuizSetOrId.quizId : null);
+      if (targetId) {
+        quizSet = getQuizById(targetId);
       } else if (Array.isArray(customQuizSetOrId.questions)) {
         quizSet = customQuizSetOrId;
       }

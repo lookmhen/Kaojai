@@ -362,7 +362,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: 'auto' }}>
             <button
               type="button"
-              onClick={onSwitchToHost}
+              onClick={() => onSwitchToHost?.()}
               style={{
                 width: '100%',
                 padding: '18px 24px',
@@ -384,7 +384,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
 
             <button
               type="button"
-              onClick={onOpenTeacherBackoffice}
+              onClick={() => onOpenTeacherBackoffice?.()}
               style={{
                 width: '100%',
                 padding: '14px 20px',

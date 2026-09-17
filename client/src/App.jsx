@@ -380,10 +380,12 @@ export function AppContent() {
   // Host Action Handlers
   const handleCreateRoom = (customQuizId) => {
     if (!socket) return;
-    socket.emit('create_room', customQuizId ? { customQuizId } : null);
+    const effectiveQuizId = typeof customQuizId === 'string' ? customQuizId : null;
+    socket.emit('create_room', effectiveQuizId ? { customQuizId: effectiveQuizId } : null);
   };
 
   const handleSelectQuiz = (newQuizId) => {
+    if (typeof newQuizId !== 'string') return;
     setSelectedQuizId(newQuizId);
     if (socket && pin && (session.isHost || session.hostToken)) {
       socket.emit('select_quiz', { pin, hostToken: session.hostToken, quizId: newQuizId });
@@ -401,8 +403,9 @@ export function AppContent() {
 
   const handleStartQuiz = (quizId, quizMode = 'NORMAL') => {
     if (!socket) return;
-    const effectiveQuizId = quizId || selectedQuizId;
-    socket.emit('start_quiz', { pin, hostToken: session.hostToken, quizId: effectiveQuizId, quizMode });
+    const effectiveQuizId = typeof quizId === 'string' ? quizId : selectedQuizId;
+    const effectiveQuizMode = typeof quizMode === 'string' ? quizMode : 'NORMAL';
+    socket.emit('start_quiz', { pin, hostToken: session.hostToken, quizId: effectiveQuizId, quizMode: effectiveQuizMode });
   };
 
   const handleNextQuestion = () => {
