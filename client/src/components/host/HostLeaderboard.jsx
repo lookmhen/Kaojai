@@ -307,7 +307,7 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
           <>
             <button
               type="button"
-              onClick={onResetToLobby}
+              onClick={() => onResetToLobby?.()}
               style={{
                 padding: '16px 32px',
                 borderRadius: '50px',
@@ -329,7 +329,7 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
             {onLeave && (
               <button
                 type="button"
-                onClick={onLeave}
+                onClick={() => onLeave?.()}
                 style={{
                   padding: '16px 32px',
                   borderRadius: '50px',
@@ -352,7 +352,7 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
         ) : (
           <button
             type="button"
-            onClick={onNextQuestion}
+            onClick={() => onNextQuestion?.()}
             style={{
               padding: '16px 36px',
               borderRadius: '50px',

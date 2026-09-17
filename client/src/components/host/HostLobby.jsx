@@ -149,7 +149,7 @@ export const HostLobby = ({
             {onClearPretest && (
               <button
                 type="button"
-                onClick={onClearPretest}
+                onClick={() => onClearPretest?.()}
                 title="ล้างผล Pre-test นี้ออก เพื่อเริ่มทำ Pre-test ชุดใหม่"
                 style={{
                   background: '#FEE2E2',

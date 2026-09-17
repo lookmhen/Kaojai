@@ -419,7 +419,7 @@ export function AppContent() {
   };
 
   const handleSwitchMode = (targetMode) => {
-    if (!socket) return;
+    if (!socket || typeof targetMode !== 'string') return;
     socket.emit('switch_mode', { pin, mode: targetMode, hostToken: session.hostToken });
   };
 
@@ -459,27 +459,29 @@ export function AppContent() {
 
   const handleToggleTeams = (enabled) => {
     if (!socket) return;
-    socket.emit('toggle_teams', { pin, enabled });
+    const isBool = typeof enabled === 'boolean' ? enabled : !teamsEnabled;
+    socket.emit('toggle_teams', { pin, enabled: isBool });
   };
 
   const handleAutoAssignTeams = (teamCount) => {
     if (!socket) return;
-    socket.emit('auto_assign_teams', { pin, teamCount });
+    const count = typeof teamCount === 'number' && Number.isFinite(teamCount) ? teamCount : 2;
+    socket.emit('auto_assign_teams', { pin, teamCount: count });
   };
 
   const handleCreateTeam = (name, color) => {
-    if (!socket) return;
-    socket.emit('create_team', { pin, name, color });
+    if (!socket || typeof name !== 'string' || !name.trim()) return;
+    socket.emit('create_team', { pin, name: name.trim(), color: typeof color === 'string' ? color : '#2563EB' });
   };
 
   const handleRemoveTeam = (teamId) => {
-    if (!socket) return;
+    if (!socket || typeof teamId !== 'string') return;
     socket.emit('remove_team', { pin, teamId });
   };
 
   const handleAssignTeam = (playerId, teamId) => {
-    if (!socket) return;
-    socket.emit('assign_team', { pin, playerId, teamId });
+    if (!socket || typeof playerId !== 'string') return;
+    socket.emit('assign_team', { pin, playerId, teamId: typeof teamId === 'string' ? teamId : null });
   };
 
   return (

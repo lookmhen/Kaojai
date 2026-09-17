@@ -84,7 +84,7 @@ export const PlayerLeaderboardView = ({ player, leaderboard, onLeave }) => {
           <div style={{ marginTop: '16px' }}>
             <button
               type="button"
-              onClick={onLeave}
+              onClick={() => onLeave?.()}
               style={{
                 width: '100%',
                 padding: '11px 18px',

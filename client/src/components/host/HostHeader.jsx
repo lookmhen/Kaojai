@@ -88,7 +88,7 @@ export const HostHeader = ({ pin, mode, counts, onSwitchMode, onLeave }) => {
 
         <button
           type="button"
-          onClick={onLeave}
+          onClick={() => onLeave?.()}
           style={{
             background: '#FEF2F2',
             border: '1px solid #FCA5A5',

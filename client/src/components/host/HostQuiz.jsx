@@ -418,7 +418,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
         <button
           type="button"
-          onClick={onShowLeaderboard}
+          onClick={() => onShowLeaderboard?.()}
           style={{
             padding: '14px 28px',
             borderRadius: '12px',
@@ -438,7 +438,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
 
         <button
           type="button"
-          onClick={onNextQuestion}
+          onClick={() => onNextQuestion?.()}
           style={{
             padding: '14px 28px',
             borderRadius: '12px',
