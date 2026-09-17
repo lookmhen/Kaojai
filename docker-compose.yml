@@ -10,7 +10,6 @@ services:
     environment:
       - PORT=4000
       - NODE_ENV=production
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
     volumes:
       - ./server/data:/app/server/data
       - server_uploads:/app/server/public/uploads
