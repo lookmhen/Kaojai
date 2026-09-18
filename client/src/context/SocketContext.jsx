@@ -53,11 +53,7 @@ export const SocketProvider = ({ children }) => {
       timeout: 20000
     });
 
-    newSocket.on('connect', () => {
-      console.log('Socket connected:', newSocket.id);
-      setIsConnected(true);
-
-      // Auto-reconnect session upon socket connect/reconnect
+    const syncSession = () => {
       const savedPin = getStorageItem('kaojai_pin');
       const savedPlayerId = getStorageItem('kaojai_playerId');
       const savedName = getStorageItem('kaojai_name');
@@ -69,17 +65,19 @@ export const SocketProvider = ({ children }) => {
       const queryPin = urlParams.get('pin');
       const targetPin = queryPin || savedPin;
 
-      if (targetPin) {
+      if (targetPin && newSocket && newSocket.connected) {
         if (isHost && targetPin === savedPin) {
-          console.log('Reconnecting as Host for PIN:', targetPin);
+          console.log('[Socket] Syncing host session for PIN:', targetPin);
           newSocket.emit('reconnect_host', { pin: targetPin, hostToken }, (res) => {
-            if (res && !res.success) {
+            if (res && res.success) {
+              newSocket.emit('host_reconnected', res);
+            } else if (res && !res.success) {
               console.log('Stale host session expired, clearing session...');
               clearSession();
             }
           });
         } else if (savedName && targetPin === savedPin) {
-          console.log('Reconnecting as Player:', savedName, 'for PIN:', targetPin);
+          console.log('[Socket] Syncing player session:', savedName, 'for PIN:', targetPin);
           newSocket.emit('join_room', {
             pin: targetPin,
             name: savedName,
@@ -93,10 +91,16 @@ export const SocketProvider = ({ children }) => {
           });
         }
       }
+    };
+
+    newSocket.on('connect', () => {
+      console.log('Socket connected:', newSocket.id);
+      setIsConnected(true);
+      syncSession();
     });
 
-    newSocket.on('disconnect', () => {
-      console.log('Socket disconnected');
+    newSocket.on('disconnect', (reason) => {
+      console.log('Socket disconnected, reason:', reason);
       setIsConnected(false);
     });
 
@@ -106,27 +110,26 @@ export const SocketProvider = ({ children }) => {
 
     setSocket(newSocket);
 
-    // Pagehide / Beforeunload cleanup so mobile browser navigating back or closing doesn't leave ghost socket
-    const handlePageHide = () => {
-      if (newSocket && newSocket.connected) {
-        newSocket.disconnect();
+    // Automatic wakeup when tab becomes visible or window regains focus (e.g. un-minimizing or switching back)
+    const handleWakeup = () => {
+      if (document.visibilityState === 'visible') {
+        if (newSocket && !newSocket.connected) {
+          console.log('[Socket] Tab visible/focused, reconnecting socket...');
+          newSocket.connect();
+        } else if (newSocket && newSocket.connected) {
+          syncSession();
+        }
       }
     };
 
-    const handlePageShow = (event) => {
-      if (event.persisted && newSocket && !newSocket.connected) {
-        newSocket.connect();
-      }
-    };
-
-    window.addEventListener('pagehide', handlePageHide);
-    window.addEventListener('beforeunload', handlePageHide);
-    window.addEventListener('pageshow', handlePageShow);
+    document.addEventListener('visibilitychange', handleWakeup);
+    window.addEventListener('focus', handleWakeup);
+    window.addEventListener('pageshow', handleWakeup);
 
     return () => {
-      window.removeEventListener('pagehide', handlePageHide);
-      window.removeEventListener('beforeunload', handlePageHide);
-      window.removeEventListener('pageshow', handlePageShow);
+      document.removeEventListener('visibilitychange', handleWakeup);
+      window.removeEventListener('focus', handleWakeup);
+      window.removeEventListener('pageshow', handleWakeup);
       newSocket.close();
     };
   }, []);

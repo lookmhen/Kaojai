@@ -20,7 +20,11 @@ export function AppContent() {
   const { socket, isConnected, session, saveSessionData, clearSession } = useSocket();
   
   // App Mode & Views: 'PLAYER_JOIN', 'PLAYER_GAME', 'HOST_LOBBY', 'HOST_GAME', 'TEACHER_BACKOFFICE'
-  const [viewMode, setViewMode] = useState('PLAYER_JOIN');
+  const [viewMode, setViewMode] = useState(() => {
+    if (session?.isHost && session?.pin) return 'HOST_GAME';
+    if (session?.playerId && session?.pin) return 'PLAYER_GAME';
+    return 'PLAYER_JOIN';
+  });
   
   // Room State
   const [pin, setPin] = useState(session.pin || '');

@@ -55,8 +55,8 @@ const io = new Server(server, {
   },
   transports: ['polling', 'websocket'],
   allowUpgrades: true,
-  pingTimeout: 30000,
-  pingInterval: 10000
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 
