@@ -27,21 +27,11 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
 
   const hasMatchingResult = Boolean(result && question?.id && result.questionId === question.id);
   const isPretest = quizMode === 'PRETEST' || (hasMatchingResult && result?.quizMode === 'PRETEST') || feedback?.isPretest;
+  const isPretestRef = useRef(isPretest);
 
-  console.log('[DEBUG PlayerQuiz Render]', {
-    quizMode,
-    qId: question?.id,
-    qText: question?.questionText?.slice(0, 20),
-    selectedOptionId,
-    isSubmitting,
-    hasFeedback: Boolean(feedback),
-    feedbackIsCorrect: feedback?.isCorrect,
-    feedbackIsPretest: feedback?.isPretest,
-    alreadyAnswered: feedback?.alreadyAnswered,
-    hasMatchingResult,
-    resultQuestionId: result?.questionId,
-    timeLeft
-  });
+  useEffect(() => {
+    isPretestRef.current = isPretest;
+  }, [isPretest]);
 
   useEffect(() => {
     feedbackRef.current = feedback;
@@ -54,6 +44,10 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
   const handleSubmitSequence = (orderedItemIds) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     if (socket) {
       socket.emit('submit_answer', {
         pin,
@@ -88,7 +82,7 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
           return 0;
         }
         // ONLY play tense tick if player has NOT answered yet, question is not over, and not in PRETEST
-        if (prev <= 6 && !feedbackRef.current && !resultRef.current && !isPretest) {
+        if (prev <= 6 && !feedbackRef.current && !resultRef.current && !isPretestRef.current) {
           sfx.playTenseTick(prev - 1);
         }
         return prev - 1;
@@ -101,7 +95,7 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
         timerRef.current = null;
       }
     };
-  }, [question?.id, question?.questionIndex, question?.timeLimitSeconds, isPretest]);
+  }, [question?.id, question?.questionIndex]);
 
   useEffect(() => {
     if (result && question?.id && result.questionId === question.id) {
@@ -121,7 +115,7 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
     const handleFeedback = (data) => {
       console.log('[DEBUG PlayerQuiz handleFeedback RECEIVED]', data);
       setFeedback(data);
-      if (data.isPretest && timerRef.current) {
+      if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
@@ -161,6 +155,10 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
 
     setSelectedOptionId(optionId);
     setIsSubmitting(true);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
 
     socket.emit('submit_answer', {
       pin,
@@ -348,6 +346,14 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
                 </p>
               </>
             )
+          ) : (isSubmitting || selectedOptionId) ? (
+            <>
+              <CheckCircle2 size={50} color="#1D4ED8" style={{ marginBottom: '10px' }} />
+              <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#1D4ED8' }}>บันทึกคำตอบแล้ว ✨</h3>
+              <p style={{ fontSize: '0.95rem', marginTop: '6px', color: 'var(--text-muted)' }}>
+                ส่งคำตอบเรียบร้อยแล้ว กำลังประมวลผลคะแนน...
+              </p>
+            </>
           ) : (
             <>
               <Clock size={50} color="#D97706" style={{ marginBottom: '10px' }} />
