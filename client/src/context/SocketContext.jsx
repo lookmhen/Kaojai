@@ -5,7 +5,7 @@ const SocketContext = createContext(null);
 
 const getStorageItem = (key) => {
   try {
-    return localStorage.getItem(key) || sessionStorage.getItem(key) || null;
+    return sessionStorage.getItem(key) || localStorage.getItem(key) || null;
   } catch (e) {
     return null;
   }
@@ -69,9 +69,7 @@ export const SocketProvider = ({ children }) => {
         if (isHost && targetPin === savedPin) {
           console.log('[Socket] Syncing host session for PIN:', targetPin);
           newSocket.emit('reconnect_host', { pin: targetPin, hostToken }, (res) => {
-            if (res && res.success) {
-              newSocket.emit('host_reconnected', res);
-            } else if (res && !res.success) {
+            if (res && !res.success) {
               console.log('Stale host session expired, clearing session...');
               clearSession();
             }
@@ -111,7 +109,12 @@ export const SocketProvider = ({ children }) => {
     setSocket(newSocket);
 
     // Automatic wakeup when tab becomes visible or window regains focus (e.g. un-minimizing or switching back)
+    let lastWakeup = 0;
     const handleWakeup = () => {
+      const now = Date.now();
+      if (now - lastWakeup < 1000) return; // ignore duplicate triggers within 1s
+      lastWakeup = now;
+
       if (document.visibilityState === 'visible') {
         if (newSocket && !newSocket.connected) {
           console.log('[Socket] Tab visible/focused, reconnecting socket...');
@@ -134,7 +137,9 @@ export const SocketProvider = ({ children }) => {
     };
   }, []);
 
-  const saveSessionData = ({ pin, playerId, name, avatar, isHost, hostToken }) => {
+  const saveSessionData = (patch) => {
+    if (!patch || typeof patch !== 'object') return;
+    const { pin, playerId, name, avatar, isHost, hostToken } = patch;
     if (pin) setStorageItem('kaojai_pin', pin);
     if (playerId) setStorageItem('kaojai_playerId', playerId);
     if (name) setStorageItem('kaojai_name', name);
@@ -142,7 +147,10 @@ export const SocketProvider = ({ children }) => {
     if (isHost !== undefined) setStorageItem('kaojai_isHost', String(isHost));
     if (hostToken) setStorageItem('kaojai_hostToken', hostToken);
 
-    setSession({ pin, playerId, name, avatar, isHost, hostToken });
+    setSession(prev => ({
+      ...prev,
+      ...Object.fromEntries(Object.entries(patch).filter(([_, v]) => v !== undefined))
+    }));
   };
 
   const clearSession = () => {

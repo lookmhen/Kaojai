@@ -441,17 +441,23 @@ export function AppContent() {
     socket.emit('create_room', effectiveQuizId ? { customQuizId: effectiveQuizId } : null);
   };
 
+  const getEffectiveHostToken = () => {
+    return session?.hostToken || sessionStorage.getItem('kaojai_hostToken') || localStorage.getItem('kaojai_hostToken') || null;
+  };
+
   const handleSelectQuiz = (newQuizId) => {
     if (typeof newQuizId !== 'string') return;
     setSelectedQuizId(newQuizId);
-    if (socket && pin && (session.isHost || session.hostToken)) {
-      socket.emit('select_quiz', { pin, hostToken: session.hostToken, quizId: newQuizId });
+    const token = getEffectiveHostToken();
+    if (socket && pin && (session.isHost || token)) {
+      socket.emit('select_quiz', { pin, hostToken: token, quizId: newQuizId });
     }
   };
 
   const handleClearPretest = () => {
     if (!socket || !pin) return;
-    socket.emit('clear_pretest', { pin, hostToken: session.hostToken }, (res) => {
+    const token = getEffectiveHostToken();
+    socket.emit('clear_pretest', { pin, hostToken: token }, (res) => {
       if (res && res.success) {
         setPretestData(null);
       }
@@ -463,33 +469,39 @@ export function AppContent() {
     const effectiveQuizId = typeof quizId === 'string' ? quizId : selectedQuizId;
     const effectiveQuizMode = typeof startQuizMode === 'string' ? startQuizMode : 'NORMAL';
     setQuizMode(effectiveQuizMode);
-    socket.emit('start_quiz', { pin, hostToken: session.hostToken, quizId: effectiveQuizId, quizMode: effectiveQuizMode });
+    const token = getEffectiveHostToken();
+    socket.emit('start_quiz', { pin, hostToken: token, quizId: effectiveQuizId, quizMode: effectiveQuizMode });
   };
 
   const handleNextQuestion = () => {
     if (!socket || status === 'ENDED' || status === 'PREPARE') return;
-    socket.emit('next_question', { pin, hostToken: session.hostToken });
+    const token = getEffectiveHostToken();
+    socket.emit('next_question', { pin, hostToken: token });
   };
 
   const handleShowLeaderboard = () => {
     if (!socket) return;
-    socket.emit('show_leaderboard', { pin, hostToken: session.hostToken });
+    const token = getEffectiveHostToken();
+    socket.emit('show_leaderboard', { pin, hostToken: token });
   };
 
   const handleSwitchMode = (targetMode) => {
     if (!socket || typeof targetMode !== 'string') return;
-    socket.emit('switch_mode', { pin, mode: targetMode, hostToken: session.hostToken });
+    const token = getEffectiveHostToken();
+    socket.emit('switch_mode', { pin, mode: targetMode, hostToken: token });
   };
 
   const handleResetToLobby = () => {
     if (!socket) return;
-    socket.emit('reset_to_lobby', { pin, hostToken: session.hostToken });
+    const token = getEffectiveHostToken();
+    socket.emit('reset_to_lobby', { pin, hostToken: token });
   };
 
   const handleLeaveSession = () => {
+    const token = getEffectiveHostToken();
     if (socket && pin) {
-      if (session?.isHost || session?.hostToken) {
-        socket.emit('close_room', { pin, hostToken: session.hostToken });
+      if (session?.isHost || token) {
+        socket.emit('close_room', { pin, hostToken: token });
       } else if (playerData?.playerId) {
         socket.emit('leave_room', { pin, playerId: playerData.playerId });
       }

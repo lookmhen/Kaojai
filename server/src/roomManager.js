@@ -238,7 +238,7 @@ class RoomManager {
     };
   }
 
-  handleDisconnect(socketId, gracePeriodMs = 60000, onExpired = null) {
+  handleDisconnect(socketId, gracePeriodMs = 15 * 60 * 1000, onExpired = null) {
     for (const room of this.rooms.values()) {
       if (room.hostSocketId === socketId) {
         console.log(`[Host Disconnected] Room PIN: ${room.pin}`);

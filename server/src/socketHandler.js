@@ -30,8 +30,17 @@ module.exports = function setupSocketHandlers(io) {
     function verifyHost(pin, token = null) {
       const room = roomManager.getRoom(pin);
       if (!room) throw new Error('ไม่พบห้องดังกล่าว');
-      if (token && room.hostToken && token === room.hostToken) return room;
-      if (room.hostSocketId === socket.id) return room;
+      if (token && room.hostToken && token === room.hostToken) {
+        if (room.hostSocketId !== socket.id) {
+          room.hostSocketId = socket.id;
+        }
+        socket.join(pin);
+        return room;
+      }
+      if (room.hostSocketId === socket.id) {
+        socket.join(pin);
+        return room;
+      }
       throw new Error('คุณไม่มีสิทธิ์ในการควบคุมห้องนี้ (Unauthorized Host Action)');
     }
 
