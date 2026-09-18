@@ -363,20 +363,28 @@ export async function exportGameReportPDF(params) {
   const data = prepareReportData(params);
 
   // Generate HTML Template for PDF rendering with modern clean typography and responsive layout
+  const wrapper = document.createElement('div');
+  wrapper.style.position = 'fixed';
+  wrapper.style.top = '0';
+  wrapper.style.left = '0';
+  wrapper.style.width = '100vw';
+  wrapper.style.height = '100vh';
+  wrapper.style.zIndex = '-99999';
+  wrapper.style.overflow = 'hidden';
+  wrapper.style.pointerEvents = 'none';
+  wrapper.style.background = '#FFFFFF';
+
   const container = document.createElement('div');
   container.id = 'pdf-report-container';
-  container.style.position = 'absolute';
-  container.style.left = '-9999px';
-  container.style.top = '0';
-  container.style.zIndex = '1';
-  container.style.opacity = '1';
-  container.style.pointerEvents = 'none';
-  container.style.width = '800px';
-  container.style.padding = '32px 36px';
+  container.style.width = '750px';
+  container.style.margin = '0 auto';
+  container.style.padding = '24px 28px';
   container.style.background = '#FFFFFF';
   container.style.color = '#1E293B';
-  container.style.fontFamily = "'Prompt', 'Sarabun', 'Segoe UI', sans-serif";
+  container.style.fontFamily = "'Prompt', 'Sarabun', 'Segoe UI', -apple-system, sans-serif";
   container.style.lineHeight = '1.45';
+  container.style.boxSizing = 'border-box';
+  wrapper.appendChild(container);
 
   container.innerHTML = `
     <div style="border-bottom: 3px solid #E2E8F0; padding-bottom: 18px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start;">
@@ -548,10 +556,17 @@ export async function exportGameReportPDF(params) {
     </div>
   `;
 
-  document.body.appendChild(container);
+  document.body.appendChild(wrapper);
 
   // Allow DOM to settle and fonts to layout
-  await new Promise(resolve => setTimeout(resolve, 80));
+  if (document.fonts && document.fonts.ready) {
+    try {
+      await document.fonts.ready;
+    } catch {
+      // ignore font readiness errors
+    }
+  }
+  await new Promise(resolve => setTimeout(resolve, 150));
 
   const opt = {
     margin: [10, 10, 10, 10],
@@ -562,27 +577,19 @@ export async function exportGameReportPDF(params) {
       useCORS: true,
       scrollX: 0,
       scrollY: 0,
-      windowWidth: 800,
-      onclone: (clonedDoc) => {
-        const el = clonedDoc.getElementById('pdf-report-container');
-        if (el) {
-          el.style.position = 'static';
-          el.style.left = '0';
-          el.style.top = '0';
-          el.style.margin = '0 auto';
-          el.style.zIndex = 'auto';
-          el.style.pointerEvents = 'auto';
-        }
-      }
+      backgroundColor: '#FFFFFF',
+      logging: false
     },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    pagebreak: { mode: ['css', 'legacy'] }
   };
 
   try {
     await html2pdf().set(opt).from(container).save();
   } finally {
-    document.body.removeChild(container);
+    if (document.body.contains(wrapper)) {
+      document.body.removeChild(wrapper);
+    }
   }
 }
 
