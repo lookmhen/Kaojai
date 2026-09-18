@@ -641,8 +641,32 @@ module.exports = function setupSocketHandlers(io) {
 
     socket.on('submit_answer', ({ pin, playerId, optionId, orderedItemIds, questionId }) => {
       try {
+        const roomBefore = roomManager.getRoom(pin);
+        const currentQ = roomBefore?.quizSet?.questions[roomBefore?.currentQuestionIndex];
+        console.log('[DEBUG Server submit_answer RECEIVED]', {
+          pin,
+          playerId,
+          optionId,
+          orderedItemIds,
+          submittedQuestionId: questionId,
+          currentQuestionId: currentQ?.id,
+          currentQuestionIndex: roomBefore?.currentQuestionIndex,
+          roomQuizMode: roomBefore?.quizMode,
+          roomStatus: roomBefore?.status
+        });
+
         const answerPayload = orderedItemIds ? { orderedItemIds, questionId } : { optionId, questionId };
         const result = roomManager.submitAnswer(pin, playerId, answerPayload);
+
+        console.log('[DEBUG Server submit_answer RESULT]', {
+          alreadyAnswered: result.alreadyAnswered,
+          staleQuestion: result.staleQuestion,
+          isCorrect: result.isCorrect,
+          pointsEarned: result.pointsEarned,
+          allAnswered: result.allAnswered,
+          answeredCount: result.answeredCount,
+          totalPlayers: result.totalPlayers
+        });
 
         const room = roomManager.getRoom(pin);
         const isPretest = room?.quizMode === 'PRETEST';

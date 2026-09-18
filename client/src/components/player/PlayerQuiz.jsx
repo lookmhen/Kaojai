@@ -28,6 +28,21 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
   const hasMatchingResult = Boolean(result && question?.id && result.questionId === question.id);
   const isPretest = quizMode === 'PRETEST' || (hasMatchingResult && result?.quizMode === 'PRETEST') || feedback?.isPretest;
 
+  console.log('[DEBUG PlayerQuiz Render]', {
+    quizMode,
+    qId: question?.id,
+    qText: question?.questionText?.slice(0, 20),
+    selectedOptionId,
+    isSubmitting,
+    hasFeedback: Boolean(feedback),
+    feedbackIsCorrect: feedback?.isCorrect,
+    feedbackIsPretest: feedback?.isPretest,
+    alreadyAnswered: feedback?.alreadyAnswered,
+    hasMatchingResult,
+    resultQuestionId: result?.questionId,
+    timeLeft
+  });
+
   useEffect(() => {
     feedbackRef.current = feedback;
   }, [feedback]);
@@ -104,6 +119,7 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
     if (!socket) return;
 
     const handleFeedback = (data) => {
+      console.log('[DEBUG PlayerQuiz handleFeedback RECEIVED]', data);
       setFeedback(data);
       if (data.isPretest && timerRef.current) {
         clearInterval(timerRef.current);
@@ -133,6 +149,14 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
   }, [socket]);
 
   const handleChooseOption = (optionId) => {
+    console.log('[DEBUG PlayerQuiz handleChooseOption clicked]', {
+      optionId,
+      questionId: question?.id,
+      selectedOptionId,
+      isSubmitting,
+      pin,
+      playerId: player?.playerId
+    });
     if (selectedOptionId || isSubmitting) return;
 
     setSelectedOptionId(optionId);

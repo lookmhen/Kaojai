@@ -149,6 +149,12 @@ export function AppContent() {
     };
 
     const onQuestionStart = (data) => {
+      console.log('[DEBUG App onQuestionStart]', {
+        qId: data?.question?.id,
+        qIndex: data?.currentQuestionIndex,
+        quizMode: data?.quizMode,
+        totalPlayers: data?.totalPlayers
+      });
       setPrepareData(null);
       if (data.quizMode) setQuizMode(data.quizMode);
       setCurrentQuestion(data.question);
@@ -160,6 +166,7 @@ export function AppContent() {
     };
 
     const onAnsweredCountUpdate = (data) => {
+      console.log('[DEBUG App onAnsweredCountUpdate]', data);
       setCounts(prev => ({
         ...prev,
         answeredCount: data.answeredCount,
@@ -168,6 +175,12 @@ export function AppContent() {
     };
 
     const onQuestionResult = (data) => {
+      console.log('[DEBUG App onQuestionResult]', {
+        resultQId: data?.questionId,
+        quizMode: data?.quizMode,
+        answeredCount: data?.answeredCount,
+        totalPlayers: data?.totalPlayers
+      });
       setPrepareData(null);
       if (data.quizMode) setQuizMode(data.quizMode);
       setQuestionResult(data);
@@ -182,6 +195,7 @@ export function AppContent() {
     };
 
     const onAnswerFeedback = (data) => {
+      console.log('[DEBUG App onAnswerFeedback]', data);
       if (data && data.totalScore !== undefined) {
         setPlayerData(prev => ({ ...prev, score: data.totalScore }));
       }
