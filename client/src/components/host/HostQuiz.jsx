@@ -16,6 +16,8 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
   const [timeLeft, setTimeLeft] = useState(initialDuration);
   const timerRef = useRef(null);
   const isSequence = question?.questionType === 'SEQUENCE' || Boolean(question?.sequenceItems?.length);
+  const hasMatchingResult = Boolean(result && question?.id && result.questionId === question.id);
+  const activeResult = hasMatchingResult ? result : null;
 
   useEffect(() => {
     if (!question) return;
@@ -53,14 +55,14 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
   }, [question?.id, question?.questionIndex, question?.timeLimitSeconds]);
 
   useEffect(() => {
-    if (result && question?.id && result.questionId === question.id) {
+    if (hasMatchingResult) {
       setTimeLeft(0);
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
     }
-  }, [result, question?.id]);
+  }, [hasMatchingResult]);
 
   if (!question) {
     return (
@@ -78,8 +80,8 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
     );
   }
 
-  const isFinalQuestion = Boolean(result?.isLastQuestion || ((question?.questionIndex ?? 0) + 1 >= (question?.totalQuestions ?? 1)));
-  const maxCount = Math.max(...(question?.options?.map(opt => result?.optionCounts?.[opt.id] || 0) || [1]), 1);
+  const isFinalQuestion = Boolean(activeResult?.isLastQuestion || ((question?.questionIndex ?? 0) + 1 >= (question?.totalQuestions ?? 1)));
+  const maxCount = Math.max(...(question?.options?.map(opt => activeResult?.optionCounts?.[opt.id] || 0) || [1]), 1);
 
   return (
     <div style={{ maxWidth: '1000px', margin: '30px auto', padding: '0 24px' }}>
@@ -123,8 +125,8 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
 
       {/* Options / Sequence Presentation */}
       {isSequence ? (
-        result ? (
-          result.quizMode === 'PRETEST' ? (
+        activeResult ? (
+          activeResult.quizMode === 'PRETEST' ? (
             /* Sequence Race PRETEST Mode: Neutral Waiting Summary (No Answers Revealed) */
             <div className="glass-card animate-pop" style={{ padding: '36px 28px', marginBottom: '32px', textAlign: 'center' }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(59, 130, 246, 0.1)', color: '#1D4ED8', padding: '6px 18px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 800, marginBottom: '12px' }}>
@@ -137,7 +139,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
                 (ซ่อนเฉลยและลำดับที่ถูกต้อง — ข้อมูลจะนำไปเปรียบเทียบผลสัมฤทธิ์หลังเรียนตอน Post-test)
               </p>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '16px', padding: '10px 24px', fontSize: '1.05rem', fontWeight: 800, color: '#1E40AF' }}>
-                <Users size={20} color="#2563EB" /> ผู้เรียนส่งคำตอบแล้ว {result.answeredCount || answeredCount} / {totalPlayers} คน
+                <Users size={20} color="#2563EB" /> ผู้เรียนส่งคำตอบแล้ว {activeResult.answeredCount || answeredCount} / {totalPlayers} คน
               </div>
             </div>
           ) : (
@@ -154,18 +156,18 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
                 {/* Perfect vs Partial Stats Badges */}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginTop: '12px', flexWrap: 'wrap' }}>
                   <span style={{ background: '#DCFCE7', color: '#166534', border: '1px solid #86EFAC', borderRadius: '16px', padding: '6px 16px', fontSize: '0.9rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <CheckCircle2 size={16} color="#166534" /> เรียงถูกต้องครบ 100%: <strong>{result.perfectCount || 0} คน</strong>
+                    <CheckCircle2 size={16} color="#166534" /> เรียงถูกต้องครบ 100%: <strong>{activeResult.perfectCount || 0} คน</strong>
                   </span>
                   <span style={{ background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A', borderRadius: '16px', padding: '6px 16px', fontSize: '0.9rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <Sparkles size={16} color="#D97706" /> เรียงถูกบางส่วน: <strong>{result.partialCount || 0} คน</strong>
+                    <Sparkles size={16} color="#D97706" /> เรียงถูกบางส่วน: <strong>{activeResult.partialCount || 0} คน</strong>
                   </span>
                 </div>
               </div>
 
               {/* Step-by-Step Flowchart Cards */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '840px', margin: '0 auto' }}>
-                {(result.correctSequence || question.sequenceItems || []).map((step, sIdx) => {
-                  const theme = getSequenceTheme(step, question.sequenceItems || result.correctSequence);
+                {(activeResult.correctSequence || question.sequenceItems || []).map((step, sIdx) => {
+                  const theme = getSequenceTheme(step, question.sequenceItems || activeResult.correctSequence);
                   return (
                     <div
                       key={step.id || sIdx}
@@ -299,8 +301,8 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
             </div>
           </div>
         )
-      ) : result ? (
-        result.quizMode === 'PRETEST' ? (
+      ) : activeResult ? (
+        activeResult.quizMode === 'PRETEST' ? (
           /* Regular Choice PRETEST Mode: Neutral Waiting Summary (No Answers Revealed) */
           <div className="glass-card animate-pop" style={{ padding: '36px 28px', marginBottom: '32px', textAlign: 'center' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(59, 130, 246, 0.1)', color: '#1D4ED8', padding: '6px 18px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 800, marginBottom: '12px' }}>
@@ -313,7 +315,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
               (ซ่อนเฉลยและสถิติตัวเลือก — ข้อมูลจะนำไปเปรียบเทียบผลสัมฤทธิ์หลังเรียนตอน Post-test)
             </p>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '16px', padding: '10px 24px', fontSize: '1.05rem', fontWeight: 800, color: '#1E40AF' }}>
-              <Users size={20} color="#2563EB" /> ผู้เรียนส่งคำตอบแล้ว {result.answeredCount || answeredCount} / {totalPlayers} คน
+              <Users size={20} color="#2563EB" /> ผู้เรียนส่งคำตอบแล้ว {activeResult.answeredCount || answeredCount} / {totalPlayers} คน
             </div>
           </div>
         ) : (
@@ -324,7 +326,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
                 <BarChart3 size={24} color="var(--accent-earth-blue)" /> สรุปผลคำตอบของผู้เข้าร่วมอบรม
               </h2>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: 600, marginTop: '4px' }}>
-                ส่งคำตอบแล้ว {result.answeredCount || answeredCount} จากทั้งหมด {totalPlayers} คน
+                ส่งคำตอบแล้ว {activeResult.answeredCount || answeredCount} จากทั้งหมด {totalPlayers} คน
               </div>
             </div>
 
@@ -343,8 +345,8 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
           >
             {question.options?.map((opt, idx) => {
               const styleObj = OPTION_STYLES[idx % OPTION_STYLES.length];
-              const isCorrect = result.correctOptionId === opt.id;
-              const count = result.optionCounts?.[opt.id] || 0;
+              const isCorrect = activeResult.correctOptionId === opt.id;
+              const count = activeResult.optionCounts?.[opt.id] || 0;
               const barHeight = Math.max(22, Math.round((count / maxCount) * 200));
 
               return (
@@ -396,7 +398,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${question.options?.length || 4}, 1fr)`, gap: '12px' }}>
             {question.options?.map((opt, idx) => {
               const styleObj = OPTION_STYLES[idx % OPTION_STYLES.length];
-              const isCorrect = result.correctOptionId === opt.id;
+              const isCorrect = activeResult.correctOptionId === opt.id;
 
               return (
                 <div

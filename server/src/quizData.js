@@ -86,13 +86,16 @@ function initQuizStore() {
       const fileData = fs.readFileSync(DATA_FILE, 'utf-8');
       const parsed = JSON.parse(fileData);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        quizStore = parsed
+        const loaded = parsed
           .filter(q => q && q.title)
           .map((q, idx) => ({
             ...q,
             id: q.id || `quiz-${Date.now()}-${idx}`,
             description: q.description || ''
           }));
+        const loadedIds = new Set(loaded.map(q => q.id));
+        const missingSeeds = INITIAL_SEED_QUIZZES.filter(s => !loadedIds.has(s.id));
+        quizStore = [...missingSeeds, ...loaded];
         return;
       }
     }

@@ -25,15 +25,16 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
   const feedbackRef = useRef(null);
   const resultRef = useRef(null);
 
-  const isPretest = quizMode === 'PRETEST' || result?.quizMode === 'PRETEST' || feedback?.isPretest;
+  const hasMatchingResult = Boolean(result && question?.id && result.questionId === question.id);
+  const isPretest = quizMode === 'PRETEST' || (hasMatchingResult && result?.quizMode === 'PRETEST') || feedback?.isPretest;
 
   useEffect(() => {
     feedbackRef.current = feedback;
   }, [feedback]);
 
   useEffect(() => {
-    resultRef.current = result;
-  }, [result]);
+    resultRef.current = hasMatchingResult ? result : null;
+  }, [hasMatchingResult, result]);
 
   const handleSubmitSequence = (orderedItemIds) => {
     if (isSubmitting) return;
@@ -97,7 +98,7 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
     }
   }, [result, question?.id]);
 
-  const isFinalQuestion = Boolean(result?.isLastQuestion || (question?.questionIndex + 1 >= question?.totalQuestions));
+  const isFinalQuestion = Boolean((hasMatchingResult && result?.isLastQuestion) || (question?.questionIndex + 1 >= question?.totalQuestions));
 
   useEffect(() => {
     if (!socket) return;
@@ -220,9 +221,9 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
           onSubmitOrder={handleSubmitSequence}
           isSubmitting={isSubmitting}
           feedback={feedback}
-          result={result}
+          result={hasMatchingResult ? result : null}
         />
-      ) : (feedback || result) ? (
+      ) : (feedback || hasMatchingResult) ? (
         <div
           className="glass-card animate-pop"
           style={{
@@ -333,14 +334,14 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
             </>
           )}
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '16px' }}>
-            {result
+            {hasMatchingResult
               ? (isFinalQuestion
                   ? '🏁 คำถามข้อสุดท้ายเสร็จสิ้นแล้ว! เตรียมดูสรุปผลคะแนนและผู้ชนะบนหน้าจอใหญ่...'
                   : 'สรุปผลคำตอบของเพื่อนๆ ทุกคนในข้อนี้:')
               : 'รอการสรุปผลคำตอบจากวิทยากร...'}
           </p>
 
-          {result && !result.isPretest && result.quizMode !== 'PRETEST' && result.optionCounts && (
+          {hasMatchingResult && !result.isPretest && result.quizMode !== 'PRETEST' && result.optionCounts && (
             <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed #CBD5E1' }}>
               <div
                 style={{

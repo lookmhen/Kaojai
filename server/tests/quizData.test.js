@@ -118,14 +118,18 @@ function testQuizData() {
 
   // Test getQuizById
   const { getQuizById } = require('../src/quizData');
-  const foundDefault = getQuizById(defaultQuizSets[0].id);
-  assert.ok(foundDefault, 'getQuizById should find default quiz');
+  const targetId = afterImport[0].id;
+  const foundQuiz = getQuizById(targetId);
+  assert.ok(foundQuiz, 'getQuizById should find existing quiz');
   assert.strictEqual(getQuizById('non-existent-id'), null, 'getQuizById with non-existent id should return null');
 
   // Verify getQuizById returns a deep copy
-  foundDefault.title = 'Mutated Title';
-  const freshFetch = getQuizById(defaultQuizSets[0].id);
+  foundQuiz.title = 'Mutated Title';
+  const freshFetch = getQuizById(targetId);
   assert.notStrictEqual(freshFetch.title, 'Mutated Title', 'Modifying returned quiz should not mutate the store');
+
+  // Clean up imported test quiz
+  deleteQuiz(importSet[0].id);
 
   console.log('✅ quizData tests passed!');
 }

@@ -293,7 +293,7 @@ export function AppContent() {
       setPlayerData(prev => (prev ? { ...prev, score: 0 } : null));
       if (data?.players) setPlayers(data.players);
       if (data?.counts) setCounts(data.counts);
-      if (data?.quizMode) setQuizMode(data.quizMode);
+      setQuizMode(data?.quizMode || 'NORMAL');
       setPretestData(data?.pretestData || null);
       if (data?.pretestData?.quizId) {
         setSelectedQuizId(data.pretestData.quizId);
@@ -654,7 +654,7 @@ export function AppContent() {
             </div>
           ) : (
             <HostQuiz
-              key={currentQuestion?.id || `host-q-${currentQuestion?.questionIndex ?? 0}`}
+              key={`${quizMode}-${currentQuestion?.id || (currentQuestion?.questionIndex ?? 0)}`}
               question={currentQuestion}
               result={questionResult}
               answeredCount={counts.answeredCount}
@@ -736,7 +736,7 @@ export function AppContent() {
             </div>
           ) : (
             <PlayerQuiz
-              key={currentQuestion?.id || `player-q-${currentQuestion?.questionIndex ?? 0}`}
+              key={`${quizMode}-${currentQuestion?.id || (currentQuestion?.questionIndex ?? 0)}`}
               question={currentQuestion}
               result={questionResult}
               pin={pin}

@@ -431,6 +431,8 @@ class RoomManager {
     room.status = 'QUESTION';
     room.questionStartTime = Date.now();
     room.currentAnswers.clear();
+    const initialCounts = this.getPlayerCounts(pin);
+    room.questionStartPlayerCount = initialCounts.totalPlayers;
 
     const currentQuestion = room.quizSet.questions[room.currentQuestionIndex];
     if (currentQuestion && !currentQuestion.id) {
@@ -456,13 +458,15 @@ class RoomManager {
     if (!room) throw new Error('Room not found');
     if (room.status !== 'QUESTION') throw new Error('ไม่ได้อยู่ในช่วงเวลาตอบคำถาม');
     if (room.currentAnswers.has(playerId)) {
-      return { alreadyAnswered: true };
+      const currentCounts = this.getPlayerCounts(pin);
+      return { alreadyAnswered: true, answeredCount: currentCounts.answeredCount, totalPlayers: currentCounts.totalPlayers };
     }
 
     const currentQuestion = room.quizSet.questions[room.currentQuestionIndex];
     if (answerData?.questionId && currentQuestion?.id && answerData.questionId !== currentQuestion.id) {
       console.warn(`[Answer Ignored] Stale questionId: submitted ${answerData.questionId} vs current ${currentQuestion.id}`);
-      return { alreadyAnswered: true, staleQuestion: true };
+      const currentCounts = this.getPlayerCounts(pin);
+      return { alreadyAnswered: true, staleQuestion: true, answeredCount: currentCounts.answeredCount, totalPlayers: currentCounts.totalPlayers };
     }
     const isSequence = currentQuestion.questionType === 'SEQUENCE' || (Array.isArray(currentQuestion.sequenceItems) && currentQuestion.sequenceItems.length > 0);
 
@@ -575,7 +579,8 @@ class RoomManager {
     room.currentAnswers.set(playerId, answerRecord);
 
     const counts = this.getPlayerCounts(pin);
-    const allAnswered = counts.answeredCount >= counts.totalPlayers && counts.totalPlayers > 0;
+    const expectedTotal = Math.max(counts.totalPlayers, room.questionStartPlayerCount || 0);
+    const allAnswered = counts.answeredCount >= expectedTotal && expectedTotal > 0;
 
     return {
       alreadyAnswered: false,
@@ -657,6 +662,7 @@ class RoomManager {
 
     const isLastQuestion = room.currentQuestionIndex >= (room.quizSet?.questions?.length || 1) - 1;
     resultPayload.isLastQuestion = isLastQuestion;
+    resultPayload.quizMode = room.quizMode || 'NORMAL';
 
     // Reset streak for players who timed out or did not submit answer
     for (const [pId, player] of room.players.entries()) {
@@ -1118,6 +1124,10 @@ class RoomManager {
     }
 
     for (const player of room.players.values()) {
+      if (player.disconnectTimeout) {
+        clearTimeout(player.disconnectTimeout);
+        player.disconnectTimeout = null;
+      }
       player.score = 0;
       player.previousScore = 0;
       player.lastPointsEarned = 0;
@@ -1174,6 +1184,7 @@ class RoomManager {
     if (!room) return null;
 
     room.status = 'LOBBY';
+    room.quizMode = 'NORMAL';
     room.currentQuestionIndex = -1;
     room.currentSafeQuestion = null;
     this.resetRoomScores(pin, { clearPretest });
