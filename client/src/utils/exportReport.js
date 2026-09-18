@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
-import html2pdf from 'html2pdf.js';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 /**
  * Common data structure preparation for Excel & PDF reports
@@ -362,29 +363,60 @@ export function exportGameReportExcel(params) {
 export async function exportGameReportPDF(params) {
   const data = prepareReportData(params);
 
-  // Generate HTML Template for PDF rendering with modern clean typography and responsive layout
-  const wrapper = document.createElement('div');
-  wrapper.style.position = 'fixed';
-  wrapper.style.top = '0';
-  wrapper.style.left = '0';
-  wrapper.style.width = '100vw';
-  wrapper.style.height = '100vh';
-  wrapper.style.zIndex = '-99999';
-  wrapper.style.overflow = 'hidden';
-  wrapper.style.pointerEvents = 'none';
-  wrapper.style.background = '#FFFFFF';
+  // Generate HTML Template for PDF rendering with visible export overlay modal
+  const overlay = document.createElement('div');
+  overlay.id = 'kaojai-pdf-export-overlay';
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100vw';
+  overlay.style.height = '100vh';
+  overlay.style.zIndex = '999999';
+  overlay.style.background = 'rgba(15, 23, 42, 0.75)';
+  overlay.style.backdropFilter = 'blur(4px)';
+  overlay.style.display = 'flex';
+  overlay.style.flexDirection = 'column';
+  overlay.style.alignItems = 'center';
+  overlay.style.overflowY = 'auto';
+  overlay.style.padding = '24px 16px';
+  overlay.style.boxSizing = 'border-box';
+  overlay.style.fontFamily = "'Prompt', 'Sarabun', -apple-system, sans-serif";
+
+  // Status banner with spinner
+  const statusBar = document.createElement('div');
+  statusBar.style.background = '#FFFFFF';
+  statusBar.style.borderRadius = '50px';
+  statusBar.style.padding = '10px 24px';
+  statusBar.style.marginBottom = '20px';
+  statusBar.style.boxShadow = '0 10px 25px rgba(0,0,0,0.25)';
+  statusBar.style.display = 'flex';
+  statusBar.style.alignItems = 'center';
+  statusBar.style.gap = '12px';
+  statusBar.style.color = '#1E293B';
+  statusBar.style.fontWeight = '800';
+  statusBar.style.fontSize = '15px';
+  statusBar.style.flexShrink = '0';
+  statusBar.innerHTML = `
+    <style>
+      @keyframes kaojai-spin { to { transform: rotate(360deg); } }
+    </style>
+    <div style="width: 20px; height: 20px; border: 3px solid #E2E8F0; border-top-color: #DC2626; border-radius: 50%; animation: kaojai-spin 0.8s linear infinite;"></div>
+    <span>กำลังจัดเตรียมและสร้างไฟล์ PDF... กรุณารอสักครู่</span>
+  `;
+  overlay.appendChild(statusBar);
 
   const container = document.createElement('div');
   container.id = 'pdf-report-container';
-  container.style.width = '750px';
-  container.style.margin = '0 auto';
-  container.style.padding = '24px 28px';
+  container.style.width = '794px';
   container.style.background = '#FFFFFF';
+  container.style.borderRadius = '8px';
+  container.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.3)';
+  container.style.padding = '32px 36px';
   container.style.color = '#1E293B';
   container.style.fontFamily = "'Prompt', 'Sarabun', 'Segoe UI', -apple-system, sans-serif";
   container.style.lineHeight = '1.45';
   container.style.boxSizing = 'border-box';
-  wrapper.appendChild(container);
+  overlay.appendChild(container);
 
   container.innerHTML = `
     <div style="border-bottom: 3px solid #E2E8F0; padding-bottom: 18px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start;">
@@ -556,7 +588,7 @@ export async function exportGameReportPDF(params) {
     </div>
   `;
 
-  document.body.appendChild(wrapper);
+  document.body.appendChild(overlay);
 
   // Allow DOM to settle and fonts to layout
   if (document.fonts && document.fonts.ready) {
@@ -566,29 +598,70 @@ export async function exportGameReportPDF(params) {
       // ignore font readiness errors
     }
   }
-  await new Promise(resolve => setTimeout(resolve, 150));
-
-  const opt = {
-    margin: [10, 10, 10, 10],
-    filename: `KaoJai_Report_${data.cleanTitle}_PIN_${data.pin}_${data.fileNameDate}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      scrollX: 0,
-      scrollY: 0,
-      backgroundColor: '#FFFFFF',
-      logging: false
-    },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['css', 'legacy'] }
-  };
+  await new Promise(resolve => setTimeout(resolve, 250));
 
   try {
-    await html2pdf().set(opt).from(container).save();
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#FFFFFF',
+      logging: false,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: 850
+    });
+
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 10;
+    const printableWidth = pageWidth - (margin * 2); // 190mm
+    const printableHeight = pageHeight - (margin * 2); // 277mm
+
+    // Calculate height of each page slice in canvas pixels
+    const pxPageHeight = Math.floor(canvas.width * (printableHeight / printableWidth));
+    const totalPages = Math.max(1, Math.ceil(canvas.height / pxPageHeight));
+
+    for (let page = 0; page < totalPages; page++) {
+      if (page > 0) {
+        pdf.addPage();
+      }
+
+      const sourceY = page * pxPageHeight;
+      const sourceHeight = Math.min(pxPageHeight, canvas.height - sourceY);
+
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = sourceHeight;
+      const pageCtx = pageCanvas.getContext('2d');
+
+      pageCtx.fillStyle = '#FFFFFF';
+      pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      pageCtx.drawImage(
+        canvas,
+        0, sourceY, canvas.width, sourceHeight,
+        0, 0, canvas.width, sourceHeight
+      );
+
+      const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.98);
+      const targetHeight = (sourceHeight * printableWidth) / canvas.width;
+
+      pdf.addImage(pageImgData, 'JPEG', margin, margin, printableWidth, targetHeight);
+    }
+
+    const fileName = `KaoJai_Report_${data.cleanTitle}_PIN_${data.pin}_${data.fileNameDate}.pdf`;
+    pdf.save(fileName);
+  } catch (err) {
+    console.error('PDF export error:', err);
+    alert('เกิดข้อผิดพลาดในการสร้างไฟล์ PDF: ' + (err?.message || 'Unknown error'));
   } finally {
-    if (document.body.contains(wrapper)) {
-      document.body.removeChild(wrapper);
+    if (document.body.contains(overlay)) {
+      document.body.removeChild(overlay);
     }
   }
 }
