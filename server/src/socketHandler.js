@@ -75,6 +75,19 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
+    socket.on('get_active_sessions', (ackCallback) => {
+      try {
+        const rooms = roomManager.getAllActiveSessions();
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: true, sessions: rooms });
+        }
+        socket.emit('active_sessions_data', { success: true, sessions: rooms });
+      } catch (err) {
+        console.error('[Socket Error] get_active_sessions:', err);
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: err.message });
+      }
+    });
+
     socket.on('reconnect_host', ({ pin, hostToken }, ackCallback) => {
       try {
         if (!pin) return;
@@ -575,6 +588,39 @@ module.exports = function setupSocketHandlers(io) {
     });
 
     // --- PLAYER HANDLERS ---
+    socket.on('get_roster', ({ pin }, ackCallback) => {
+      try {
+        if (!pin || !pin.trim()) {
+          const res = { success: false, message: 'กรุณาระบุ PIN' };
+          if (typeof ackCallback === 'function') ackCallback(res);
+          return socket.emit('error_message', res);
+        }
+        const cleanPin = pin.trim();
+        const room = roomManager.getRoom(cleanPin);
+        if (!room) {
+          const res = { success: false, message: 'ไม่พบห้องดังกล่าว' };
+          if (typeof ackCallback === 'function') ackCallback(res);
+          return;
+        }
+
+        const roster = roomManager.getRoster(cleanPin);
+        const res = {
+          success: true,
+          pin: cleanPin,
+          quizTitle: room.quizSet?.title || 'แบบทดสอบ KaoJai',
+          quizMode: room.quizMode || 'NORMAL',
+          hasPretest: Boolean(room.pretestData),
+          roster: roster || []
+        };
+        if (typeof ackCallback === 'function') ackCallback(res);
+        socket.emit('roster_data', res);
+      } catch (err) {
+        console.error('[Socket Error] get_roster:', err);
+        const res = { success: false, message: err.message };
+        if (typeof ackCallback === 'function') ackCallback(res);
+      }
+    });
+
     socket.on('join_room', ({ pin, name, avatar, playerId }, ackCallback) => {
       try {
         if (!pin || !pin.trim()) {

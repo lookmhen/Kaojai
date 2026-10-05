@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KaoJai (เข้าใจ) · UX/UI Design System & Interactive Prototype (Google Stitch Standard)</title>
+  <style>
+    /* ═════════════════════════════════════════════════════════════════════════════
+       1. GOOGLE STITCH DESIGN TOKENS (CSS VARIABLES) - NO CDN DEPENDENCY
+       ═════════════════════════════════════════════════════════════════════════════ */
+    :root {
+      /* Brand Foundations */
+      --brand-primary: #C05621;
+      --brand-primary-hover: #9C4221;
+      --brand-accent-orange: #D97706;
+      --brand-warm-surface: #FFFDF9;
+
+      /* Surfaces & Neutrals */
+      --bg-canvas: #F1F3F5;
+      --bg-surface: #FFFFFF;
+      --bg-surface-secondary: #F8FAFC;
+      --bg-surface-muted: #E2E8F0;
+      --border-subtle: #E2E8F0;
+      --border-strong: #CBD5E1;
+
+      /* Typography Tokens */
+      --text-main: #0F172A;
+      --text-muted: #475569;
+      --text-light: #94A3B8;
+      --text-inverse: #FFFFFF;
+
+      /* Kahoot-Style Choice Palette */
+      --choice-red: #E21B3C;
+      --choice-red-dark: #B3132D;
+      --choice-blue: #1368CE;
+      --choice-blue-dark: #0D47A1;
+      --choice-yellow: #D89E00;
+      --choice-yellow-dark: #A67900;
+      --choice-green: #26890C;
+      --choice-green-dark: #1A6007;
+
+      /* Pulse Survey System */
+      --pulse-green: #15803D;
+      --pulse-green-light: #DCFCE7;
+      --pulse-yellow: #B45309;
+      --pulse-yellow-light: #FEF3C7;
+      --pulse-red: #B91C1C;
+      --pulse-red-light: #FEE2E2;
+
+      /* Interactive Functional Colors */
+      --accent-earth-blue: #1E3A8A;
+      --accent-earth-blue-dark: #172554;
+      --accent-pretest: #2563EB;
+      --accent-pretest-dark: #1D4ED8;
+      --accent-posttest: #7C3AED;
+      --accent-posttest-dark: #6D28D9;
+      --accent-success: #16A34A;
+      --accent-streak-flame: #EA580C;
+
+      /* Typography Scale (System Fonts - 100% Offline No CDN) */
+      --font-family: -apple-system, BlinkMacSystemFont, "Sarabun", "Prompt", "Segoe UI", Roboto, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+      /* Radii Tokens */
+      --radius-xs: 4px;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+      --radius-pill: 9999px;
+
+      /* Elevation / Shadows */
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+      --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.12);
+      --shadow-tactile: 0 5px 0 rgba(0, 0, 0, 0.18);
+      --shadow-glow: 0 0 20px rgba(217, 119, 6, 0.35);
+
+      /* Motion & Transitions */
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-normal: 250ms cubic-bezier(0.25, 1, 0.5, 1);
+      --transition-bounce: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* ═════════════════════════════════════════════════════════════════════════════
+       2. BASE RESET & LAYOUT
+       ═════════════════════════════════════════════════════════════════════════════ */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Application Bar */
+    header.stitch-topbar {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+
+    .stitch-header-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand-cluster {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #EA580C 0%, #C05621 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      font-weight: 900;
+      font-size: 22px;
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+    }
+
+    .brand-title-group h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-title-group p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .stitch-tag {
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border: 1px solid #BFDBFE;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* Navigation Tabs */
+    nav.stitch-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #F1F5F9;
+      padding: 4px;
+      border-radius: var(--radius-pill);
+    }
+
+    .nav-btn {
+      padding: 8px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition-fast);
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+    }
+
+    .nav-btn.active {
+      background: #FFFFFF;
+      color: var(--brand-primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Viewport / Device Switcher */
+    .viewport-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mode-pill-btn {
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      background: #FFFFFF;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition-fast);
+    }
+
+    .mode-pill-btn.active {
+      background: #0F172A;
+      color: #FFFFFF;
+      border-color: #0F172A;
+    }
+
+    /* Main Container */
+    main.stitch-content {
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 28px 24px;
+      flex: 1;
+    }
+
+    .tab-section {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Section Headers */
+    .section-headline {
+      margin-bottom: 24px;
+    }
+
+    .section-headline h2 {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-headline p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ═════════════════════════════════════════════════════════════════════════════
+       3. TAB 1: DESIGN TOKENS GRID
+       ═════════════════════════════════════════════════════════════════════════════ */
+    .token-grid-two-col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .token-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .token-card h3 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .color-swatches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 12px;
+    }
+
+    .color-swatch-box {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform var(--transition-fast);
+    }
+
+    .color-swatch-box:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .swatch-fill {
+      height: 56px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #FFFFFF;
+    }
+
+    .swatch-info {
+      padding: 8px;
+      background: #FFFFFF;
+      font-size: 0.72rem;
+    }
+
+    .swatch-info .name {
+      font-weight: 800;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .swatch-info .hex {
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      font-size: 0.68rem;
+    }
+
+    /* Typo Table */
+    .token-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .token-table th {
+      text-align: left;
+      padding: 10px;
+      background: var(--bg-surface-secondary);
+      border-bottom: 2px solid var(--border-subtle);
+      font-weight: 800;
+      color: var(--text-muted);
+    }
+
+    .token-table td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    /* ═════════════════════════════════════════════════════════════════════════════
+       4. TAB 2: ATOMIC COMPONENT LIBRARY
+       ═════════════════════════════════════════════════════════════════════════════ */
+    .component-group {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .component-group-header {
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 12px;
+    }
+
+    .component-group-header h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .component-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Buttons with 3D tactile bottom border */
+    .btn-3d {
+      padding: 14px 28px;
+      border-radius: var(--radius-pill);
+      font-family: var(--font-family);
+      font-weight: 800;
+      font-size: 1rem;
+      color: #FFFFFF;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .btn-3d:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-green-action {
+      background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
+      border-bottom: 4px solid #14532D;
+    }
+    .btn-earth-blue {
+      background: linear-gradient(135deg, #1E3A8A 0%, #172554 100%);
+      border-bottom: 4px solid #0F172A;
+    }
+    .btn-pretest-blue {
+      background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+      border-bottom: 4px solid #1E40AF;
+    }
+    .btn-posttest-purple {
+      background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+      border-bottom: 4px solid #5B21B6;
+    }
+    .btn-destructive {
+      background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+      border-bottom: 4px solid #7F1D1D;
+    }
+    .btn-surface {
+      background: #FFFFFF;
+      color: var(--text-main);
+      border: 1.5px solid var(--border-strong);
+      border-bottom: 4px solid var(--border-strong);
+    }
+
+    /* 4-Color Tactile Choice Buttons (Kahoot Style) */
+    .choice-grid-demo {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .choice-card-btn {
+      position: relative;
+      min-height: 100px;
+      border-radius: var(--radius-md);
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 16px 20px;
+      gap: 16px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.15s ease;
+      text-align: left;
+    }
+
+    .choice-card-btn:active {
+      transform: translateY(3px);
+    }
+
+    .choice-red {
+      background: var(--choice-red);
+      border-bottom: 5px solid var(--choice-red-dark);
+    }
+    .choice-blue {
+      background: var(--choice-blue);
+      border-bottom: 5px solid var(--choice-blue-dark);
+    }
+    .choice-yellow {
+      background: var(--choice-yellow);
+      border-bottom: 5px solid var(--choice-yellow-dark);
+    }
+    .choice-green {
+      background: var(--choice-green);
+      border-bottom: 5px solid var(--choice-green-dark);
+    }
+
+    .choice-shape-icon {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Pulse Survey Option Chips */
+    .pulse-chips-row {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .pulse-chip {
+      flex: 1;
+      padding: 16px 12px;
+      border-radius: var(--radius-lg);
+      border: 2px solid transparent;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      font-weight: 800;
+    }
+
+    .pulse-chip.green {
+      background: var(--pulse-green-light);
+      border-color: #86EFAC;
+      color: var(--pulse-green);
+    }
+    .pulse-chip.yellow {
+      background: var(--pulse-yellow-light);
+      border-color: #FDE68A;
+      color: var(--pulse-yellow);
+    }
+    .pulse-chip.red {
+      background: var(--pulse-red-light);
+      border-color: #FECACA;
+      color: var(--pulse-red);
+    }
+
+    .pulse-chip:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Sequence Race Items */
+    .seq-demo-container {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .seq-item-card {
+      background: #FFFFFF;
+      border: 2px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+      cursor: grab;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .seq-item-card:hover {
+      border-color: #3B82F6;
+      background: #F8FAFC;
+    }
+
+    .seq-number-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-pill);
+      background: #1E293B;
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ═════════════════════════════════════════════════════════════════════════════
+       5. TAB 3: MULTI-SCREEN INTERACTIVE CANVAS (GOOGLE STITCH STANDARD)
+       ═════════════════════════════════════════════════════════════════════════════ */
+    .prototype-canvas-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .screen-selector-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: #FFFFFF;
+      padding: 10px 14px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .screen-pill-btn {
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      border: 1px solid transparent;
+      background: #F1F5F9;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .screen-pill-btn:hover {
+      background: #E2E8F0;
+      color: var(--text-main);
+    }
+
+    .screen-pill-btn.active {
+      background: var(--brand-primary);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(192, 86, 33, 0.35);
+    }
+
+    /* Dynamic Viewport Container */
+    .viewport-device-shell {
+      transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+      width: 100%;
+      max-width: 1024px; /* Default desktop display */
+      background: #FFFFFF;
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-strong);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      min-height: 640px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .viewport-device-shell.mobile-view {
+      max-width: 390px;
+      border: 8px solid #0F172A;
+      border-radius: 44px;
+      box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);
+    }
+
+    /* Screen Frame Top Status */
+    .device-status-header {
+      background: #0F172A;
+      color: #94A3B8;
+      padding: 8px 16px;
+      font-size: 0.72rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      letter-spacing: 0.5px;
+    }
+
+    .screen-content-area {
+      padding: 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #F8FAFC;
+    }
+
+    /* Screen 1: Join Room */
+    .join-hero-card {
+      background: #FFFFFF;
+      border-radius: var(--radius-lg);
+      padding: 36px 28px;
+      max-width: 420px;
+      margin: auto;
+      width: 100%;
+      box-shadow: var(--shadow-md);
+      text-align: center;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .pin-input-field {
+      width: 100%;
+      padding: 16px;
+      border: 2px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      font-size: 1.5rem;
+      font-weight: 900;
+      text-align: center;
+      letter-spacing: 4px;
+      margin-bottom: 14px;
+      outline: none;
+      transition: border-color var(--transition-fast);
+    }
+
+    .pin-input-field:focus {
+      border-color: var(--brand-accent-orange);
+    }
+
+    .avatar-picker-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .avatar-circle-btn {
+      width: 54px;
+      height: 54px;
+      border-radius: var(--radius-pill);
+      border: 3px solid transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      background: #F1F5F9;
+      transition: var(--transition-bounce);
+    }
+
+    .avatar-circle-btn.selected {
+      border-color: var(--brand-accent-orange);
+      transform: scale(1.15);
+      background: #FEF3C7;
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+    }
+
+    /* Screen 2: Host Lobby */
+    .lobby-header-badge {
+      background: #FFFFFF;
+      border: 2px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .lobby-pin-display {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--brand-accent-orange);
+      letter-spacing: 3px;
+    }
+
+    .player-chips-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+      min-height: 140px;
+      align-content: flex-start;
+    }
+
+    .player-bubble-chip {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      padding: 8px 16px;
+      border-radius: var(--radius-pill);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      box-shadow: var(--shadow-sm);
+      animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.6); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Screen 3: Live Quiz Question Screen */
+    .question-timer-bar-wrap {
+      width: 100%;
+      height: 10px;
+      background: #E2E8F0;
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+
+    .question-timer-progress {
+      height: 100%;
+      width: 70%;
+      background: linear-gradient(90deg, #10B981, #F59E0B, #EF4444);
+      border-radius: var(--radius-pill);
+      transition: width 0.5s linear;
+    }
+
+    .question-title-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text-main);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Screen 5: Question Result Bar Chart */
+    .result-bars-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      align-items: flex-end;
+      height: 240px;
+      padding: 20px 0;
+      margin-bottom: 24px;
+    }
+
+    .result-bar-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .bar-cylinder {
+      width: 100%;
+      border-radius: var(--radius-md) var(--radius-md) 0 0;
+      transition: height 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 8px;
+      color: #FFFFFF;
+      font-weight: 900;
+      font-size: 1.1rem;
+    }
+
+    /* Screen 6: Leaderboard Racing Tracks */
+    .racing-track-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 12px 18px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .rank-pill {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-pill);
+      background: #F1F5F9;
+      font-weight: 900;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .rank-1 { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
+    .rank-2 { background: #F1F5F9; color: #475569; }
+    .rank-3 { background: #FFEDD5; color: #C2410C; }
+
+    .track-runner-bar-wrap {
+      flex: 1;
+      height: 24px;
+      background: #F1F5F9;
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .track-runner-progress {
+      height: 100%;
+      border-radius: var(--radius-pill);
+      background: linear-gradient(90deg, #3B82F6, #1D4ED8);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+      color: #FFFFFF;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    /* ═════════════════════════════════════════════════════════════════════════════
+       6. TAB 4: STITCH DESIGN SPECIFICATION (DESIGN.MD PREVIEW)
+       ═════════════════════════════════════════════════════════════════════════════ */
+    .markdown-spec-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 32px 36px;
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: #334155;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .markdown-spec-card h2 {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--text-main);
+      margin-top: 24px;
+      margin-bottom: 12px;
+      border-bottom: 2px solid var(--border-subtle);
+      padding-bottom: 8px;
+    }
+
+    .markdown-spec-card h3 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--brand-primary);
+      margin-top: 18px;
+      margin-bottom: 8px;
+    }
+
+    .markdown-spec-card code {
+      background: #F1F5F9;
+      color: #0F172A;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.85em;
+    }
+
+    .markdown-spec-card pre {
+      background: #0F172A;
+      color: #F8FAFC;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      margin: 14px 0;
+    }
+
+    .markdown-spec-card ul {
+      padding-left: 24px;
+      margin-bottom: 14px;
+    }
+
+    /* Toast Notification */
+    .stitch-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0F172A;
+      color: #FFFFFF;
+      padding: 12px 20px;
+      border-radius: var(--radius-pill);
+      font-size: 0.85rem;
+      font-weight: 700;
+      box-shadow: var(--shadow-lg);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stitch-toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Application Header -->
+  <header class="stitch-topbar">
+    <div class="stitch-header-inner">
+      <div class="brand-cluster">
+        <div class="brand-logo-badge">🧡</div>
+        <div class="brand-title-group">
+          <h1>KaoJai (เข้าใจ) <span class="stitch-tag">Google Stitch Design Standard</span></h1>
+          <p>Real-time Interactive Classroom & Workshop Assessment System</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="stitch-nav">
+        <button type="button" class="nav-btn active" onclick="switchMainTab('tokens', this)">
+          <span>🎨</span> Design Tokens
+        </button>
+        <button type="button" class="nav-btn" onclick="switchMainTab('components', this)">
+          <span>🧩</span> UI Components
+        </button>
+        <button type="button" class="nav-btn" onclick="switchMainTab('prototype', this)">
+          <span>📱</span> Interactive Prototype
+        </button>
+        <button type="button" class="nav-btn" onclick="switchMainTab('specs', this)">
+          <span>📐</span> DESIGN.md Specs
+        </button>
+      </nav>
+
+      <!-- Viewport Display Switcher -->
+      <div class="viewport-controls">
+        <button type="button" id="btn-desktop-view" class="mode-pill-btn active" onclick="setDeviceViewport('desktop')">
+          <span>🖥️</span> Display
+        </button>
+        <button type="button" id="btn-mobile-view" class="mode-pill-btn" onclick="setDeviceViewport('mobile')">
+          <span>📱</span> Mobile
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Body -->
+  <main class="stitch-content">
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         TAB 1: DESIGN TOKENS
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="tab-tokens" class="tab-section active">
+      <div class="section-headline">
+        <h2>🎨 Google Stitch Design Tokens (Single Source of Truth)</h2>
+        <p>Tokenized color systems, geometry, typography and tactile elevations compiled for pure offline HTML/CSS without CDN dependencies.</p>
+      </div>
+
+      <div class="token-grid-two-col">
+        <!-- 4-Color Kahoot Palette -->
+        <div class="token-card">
+          <h3>
+            <span>🎮 Choice Color Palette</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Click swatch to copy CSS</span>
+          </h3>
+          <div class="color-swatches-grid">
+            <div class="color-swatch-box" onclick="copyToken('--choice-red: #E21B3C')">
+              <div class="swatch-fill" style="background: var(--choice-red);">▲</div>
+              <div class="swatch-info">
+                <div class="name">Choice Red</div>
+                <div class="hex">#E21B3C</div>
+              </div>
+            </div>
+            <div class="color-swatch-box" onclick="copyToken('--choice-blue: #1368CE')">
+              <div class="swatch-fill" style="background: var(--choice-blue);">◆</div>
+              <div class="swatch-info">
+                <div class="name">Choice Blue</div>
+                <div class="hex">#1368CE</div>
+              </div>
+            </div>
+            <div class="color-swatch-box" onclick="copyToken('--choice-yellow: #D89E00')">
+              <div class="swatch-fill" style="background: var(--choice-yellow);">●</div>
+              <div class="swatch-info">
+                <div class="name">Choice Yellow</div>
+                <div class="hex">#D89E00</div>
+              </div>
+            </div>
+            <div class="color-swatch-box" onclick="copyToken('--choice-green: #26890C')">
+              <div class="swatch-fill" style="background: var(--choice-green);">■</div>
+              <div class="swatch-info">
+                <div class="name">Choice Green</div>
+                <div class="hex">#26890C</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pulse Survey System -->
+        <div class="token-card">
+          <h3>
+            <span>💬 Pulse 3-Color Sentiment Tokens</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Understanding Meter</span>
+          </h3>
+          <div class="color-swatches-grid">
+            <div class="color-swatch-box" onclick="copyToken('--pulse-green: #15803D')">
+              <div class="swatch-fill" style="background: var(--pulse-green);">🟢</div>
+              <div class="swatch-info">
+                <div class="name">เข้าใจดีเยี่ยม</div>
+                <div class="hex">#15803D</div>
+              </div>
+            </div>
+            <div class="color-swatch-box" onclick="copyToken('--pulse-yellow: #B45309')">
+              <div class="swatch-fill" style="background: var(--pulse-yellow);">🟡</div>
+              <div class="swatch-info">
+                <div class="name">ขอตัวอย่างเพิ่ม</div>
+                <div class="hex">#B45309</div>
+              </div>
+            </div>
+            <div class="color-swatch-box" onclick="copyToken('--pulse-red: #B91C1C')">
+              <div class="swatch-fill" style="background: var(--pulse-red);">🔴</div>
+              <div class="swatch-info">
+                <div class="name">ขอทบทวนใหม่</div>
+                <div class="hex">#B91C1C</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Brand & Functional Accents -->
+        <div class="token-card">
+          <h3>
+            <span>🔥 Action & Assessment Tokens</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Learning Modes</span>
+          </h3>
+          <div class="color-swatches-grid">
+            <div class="color-swatch-box" onclick="copyToken('--accent-pretest: #2563EB')">
+              <div class="swatch-fill" style="background: var(--accent-pretest);">🎯</div>
+              <div class="swatch-info">
+                <div class="name">Pre-test (Blue)</div>
+                <div class="hex">#2563EB</div>
+              </div>
+            </div>
+            <div class="color-swatch-box" onclick="copyToken('--accent-posttest: #7C3AED')">
+              <div class="swatch-fill" style="background: var(--accent-posttest);">📈</div>
+              <div class="swatch-info">
+                <div class="name">Post-test (Purple)</div>
+                <div class="hex">#7C3AED</div>
+              </div>
+            </div>
+            <div class="color-swatch-box" onclick="copyToken('--brand-accent-orange: #D97706')">
+              <div class="swatch-fill" style="background: var(--brand-accent-orange);">⚡</div>
+              <div class="swatch-info">
+                <div class="name">Earth Orange</div>
+                <div class="hex">#D97706</div>
+              </div>
+            </div>
+            <div class="color-swatch-box" onclick="copyToken('--accent-streak-flame: #EA580C')">
+              <div class="swatch-fill" style="background: var(--accent-streak-flame);">🔥</div>
+              <div class="swatch-info">
+                <div class="name">Streak Flame</div>
+                <div class="hex">#EA580C</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Typography & Radius Scale -->
+        <div class="token-card">
+          <h3><span>📐 Geometry & Elevation Scale</span></h3>
+          <table class="token-table">
+            <thead>
+              <tr>
+                <th>Token</th>
+                <th>Value</th>
+                <th>Application</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--radius-sm</code></td>
+                <td><code>8px</code></td>
+                <td>Chips, Badges, Dropdown Items</td>
+              </tr>
+              <tr>
+                <td><code>--radius-md</code></td>
+                <td><code>14px</code></td>
+                <td>Quiz Choice Buttons, Cards</td>
+              </tr>
+              <tr>
+                <td><code>--radius-lg</code></td>
+                <td><code>20px</code></td>
+                <td>Glass Containers, Panels</td>
+              </tr>
+              <tr>
+                <td><code>--radius-pill</code></td>
+                <td><code>9999px</code></td>
+                <td>Action Buttons, Avatars, Runners</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         TAB 2: ATOMIC UI COMPONENT LIBRARY
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="tab-components" class="tab-section">
+      <div class="section-headline">
+        <h2>🧩 Reusable Component Library</h2>
+        <p>Tactile 3D components, high-contrast inputs, animated streak bars, and question cards built with pure CSS.</p>
+      </div>
+
+      <!-- 3D Tactile Buttons -->
+      <div class="component-group">
+        <div class="component-group-header">
+          <h3>1. 3D Tactile Action Buttons (Accessible Touch Targets)</h3>
+        </div>
+        <div class="component-row">
+          <button type="button" class="btn-3d btn-green-action">
+            <span>🚀</span> เริ่มเกมปกติ (Normal Quiz)
+          </button>
+          <button type="button" class="btn-3d btn-pretest-blue">
+            <span>🎯</span> เริ่ม Pre-test (ก่อนเรียน)
+          </button>
+          <button type="button" class="btn-3d btn-posttest-purple">
+            <span>📈</span> เริ่ม Post-test (หลังเรียน)
+          </button>
+          <button type="button" class="btn-3d btn-earth-blue">
+            <span>🏆</span> สรุปผล Leaderboard
+          </button>
+          <button type="button" class="btn-3d btn-destructive">
+            <span>✕</span> ปิดห้องกิจกรรม
+          </button>
+        </div>
+      </div>
+
+      <!-- 4-Color Tactile Choice Buttons -->
+      <div class="component-group">
+        <div class="component-group-header">
+          <h3>2. Four-Color Choice Blocks (High-Speed Selection)</h3>
+        </div>
+        <div class="choice-grid-demo">
+          <button type="button" class="choice-card-btn choice-red">
+            <span class="choice-shape-icon">▲</span>
+            <span>ก. สะสาง (Seiri) - ขจัดสิ่งไม่จำเป็น</span>
+          </button>
+          <button type="button" class="choice-card-btn choice-blue">
+            <span class="choice-shape-icon">◆</span>
+            <span>ข. สะดวก (Seiton) - จัดวางเป็นระเบียบ</span>
+          </button>
+          <button type="button" class="choice-card-btn choice-yellow">
+            <span class="choice-shape-icon">●</span>
+            <span>ค. สะอาด (Seiso) - ปัดกวาดเช็ดถู</span>
+          </button>
+          <button type="button" class="choice-card-btn choice-green">
+            <span class="choice-shape-icon">■</span>
+            <span>ง. ถูกทุกข้อที่กล่าวมา</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sequence Race Draggable Cards -->
+      <div class="component-group">
+        <div class="component-group-header">
+          <h3>3. Sequence Race Step Ordering Components</h3>
+        </div>
+        <div class="seq-demo-container">
+          <div class="seq-item-card">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span class="seq-number-badge">1</span>
+              <span style="font-weight: 700;">วิเคราะห์ปัญหาและความต้องการของผู้ใช้ (Empathize)</span>
+            </div>
+            <span style="color: #94A3B8;">≡</span>
+          </div>
+          <div class="seq-item-card">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span class="seq-number-badge">2</span>
+              <span style="font-weight: 700;">กำหนดกรอบปัญหาให้ชัดเจน (Define)</span>
+            </div>
+            <span style="color: #94A3B8;">≡</span>
+          </div>
+          <div class="seq-item-card">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span class="seq-number-badge">3</span>
+              <span style="font-weight: 700;">ระดมไอเดียแนวทางแก้ไข (Ideate)</span>
+            </div>
+            <span style="color: #94A3B8;">≡</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pulse Survey Chips -->
+      <div class="component-group">
+        <div class="component-group-header">
+          <h3>4. Real-time Pulse Check-in (Sentiment Voting)</h3>
+        </div>
+        <div class="pulse-chips-row">
+          <div class="pulse-chip green">
+            <span style="font-size: 26px;">🟢</span>
+            <span>เข้าใจดีเยี่ยม</span>
+            <span style="font-size: 0.8rem; font-weight: 600;">(พร้อมลุยต่อ)</span>
+          </div>
+          <div class="pulse-chip yellow">
+            <span style="font-size: 26px;">🟡</span>
+            <span>ขอตัวอย่างเพิ่ม</span>
+            <span style="font-size: 0.8rem; font-weight: 600;">(พอเข้าใจแล้ว)</span>
+          </div>
+          <div class="pulse-chip red">
+            <span style="font-size: 26px;">🔴</span>
+            <span>ขอทบทวนใหม่</span>
+            <span style="font-size: 0.8rem; font-weight: 600;">(ยังติดขัด)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         TAB 3: MULTI-SCREEN INTERACTIVE CANVAS (GOOGLE STITCH STANDARD)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="tab-prototype" class="tab-section">
+      <div class="section-headline">
+        <h2>📱 Interactive Screen Flow (Stitch Prototype Canvas)</h2>
+        <p>Switch between all 8 core platform views, inspect live layouts, and simulate participant vs instructor experiences.</p>
+      </div>
+
+      <div class="prototype-canvas-wrapper">
+        <!-- Sub-screen Selector Pills -->
+        <div class="screen-selector-bar">
+          <button type="button" class="screen-pill-btn active" onclick="loadScreenView('screen-join', this)">
+            1. ผู้เรียนเข้าห้อง (Join)
+          </button>
+          <button type="button" class="screen-pill-btn" onclick="loadScreenView('screen-lobby', this)">
+            2. ล็อบบี้ผู้สอน (Host Lobby)
+          </button>
+          <button type="button" class="screen-pill-btn" onclick="loadScreenView('screen-choice', this)">
+            3. คำถามปรนัย (Choice Quiz)
+          </button>
+          <button type="button" class="screen-pill-btn" onclick="loadScreenView('screen-sequence', this)">
+            4. เรียงขั้นตอน (Sequence Race)
+          </button>
+          <button type="button" class="screen-pill-btn" onclick="loadScreenView('screen-result', this)">
+            5. สถิติคำตอบ (Result Bar)
+          </button>
+          <button type="button" class="screen-pill-btn" onclick="loadScreenView('screen-leaderboard', this)">
+            6. ลีดเดอร์บอร์ด (Leaderboard)
+          </button>
+          <button type="button" class="screen-pill-btn" onclick="loadScreenView('screen-pulse', this)">
+            7. โหมด Pulse Check
+          </button>
+          <button type="button" class="screen-pill-btn" onclick="loadScreenView('screen-analytics', this)">
+            8. ผลประเมิน Pre/Post
+          </button>
+        </div>
+
+        <!-- Active Viewport Shell -->
+        <div id="viewport-shell" class="viewport-device-shell">
+          <div class="device-status-header">
+            <span>🧡 KaoJai Live Interactive Session</span>
+            <span id="shell-clock-status">9:41 AM · 5G Connected</span>
+          </div>
+
+          <div class="screen-content-area">
+
+            <!-- SCREEN 1: PARTICIPANT JOIN -->
+            <div id="screen-join" class="screen-view-pane" style="display: block;">
+              <div class="join-hero-card">
+                <div style="font-size: 42px; margin-bottom: 8px;">🧡</div>
+                <h2 style="font-size: 1.5rem; font-weight: 900; margin-bottom: 4px;">เข้าห้องกิจกรรม KaoJai</h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+                  กรอกรหัส PIN จากหน้าจอวิทยากรเพื่อเริ่มเล่น
+                </p>
+
+                <input type="text" class="pin-input-field" value="730136" placeholder="GAME PIN" maxlength="6">
+
+                <div style="text-align: left; margin-bottom: 8px; font-weight: 700; font-size: 0.85rem; color: var(--text-muted);">
+                  เลือกตัวละครของคุณ
+                </div>
+                <div class="avatar-picker-row">
+                  <div class="avatar-circle-btn selected">🦊</div>
+                  <div class="avatar-circle-btn">🐼</div>
+                  <div class="avatar-circle-btn">🦁</div>
+                  <div class="avatar-circle-btn">🦉</div>
+                  <div class="avatar-circle-btn">🚀</div>
+                </div>
+
+                <input type="text" class="pin-input-field" style="font-size: 1.1rem; letter-spacing: 0; padding: 12px;" value="สมชาย สายซิ่ง">
+
+                <button type="button" class="btn-3d btn-green-action" style="width: 100%; justify-content: center;" onclick="triggerToast('เข้าร่วมห้องสำเร็จ! รอยืนยันจากวิทยากร')">
+                  เข้าร่วมกิจกรรมทันที ➔
+                </button>
+              </div>
+            </div>
+
+            <!-- SCREEN 2: HOST LOBBY -->
+            <div id="screen-lobby" class="screen-view-pane" style="display: none;">
+              <div class="lobby-header-badge">
+                <div>
+                  <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-muted);">รหัสห้องกิจกรรม (GAME PIN)</div>
+                  <div class="lobby-pin-display">730136</div>
+                  <div style="font-size: 0.8rem; color: #15803D; font-weight: 700;">🟢 ห้องพร้อมเปิดรับผู้เรียน</div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700;">ผู้เรียนในห้องขณะนี้</div>
+                  <div style="font-size: 2rem; font-weight: 900; color: var(--text-main);">4 คน</div>
+                </div>
+              </div>
+
+              <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 12px;">
+                👥 รายชื่อผู้เรียนที่พร้อมแล้ว:
+              </div>
+              <div class="player-chips-grid">
+                <div class="player-bubble-chip"><span>🦊</span> สมชาย สายซิ่ง</div>
+                <div class="player-bubble-chip"><span>🐼</span> วรรณา ขยันเรียน</div>
+                <div class="player-bubble-chip"><span>🦁</span> นพดล นักคิด</div>
+                <div class="player-bubble-chip"><span>🦉</span> สุภาภรณ์ ชิวชิว</div>
+              </div>
+
+              <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: auto;">
+                <button type="button" class="btn-3d btn-green-action" onclick="loadScreenView('screen-choice')">
+                  <span>🚀</span> เริ่มเกมปกติ
+                </button>
+                <button type="button" class="btn-3d btn-pretest-blue" onclick="loadScreenView('screen-choice')">
+                  <span>🎯</span> เริ่ม Pre-test
+                </button>
+                <button type="button" class="btn-3d btn-posttest-purple" onclick="loadScreenView('screen-choice')">
+                  <span>📈</span> เริ่ม Post-test
+                </button>
+              </div>
+            </div>
+
+            <!-- SCREEN 3: LIVE CHOICE QUESTION -->
+            <div id="screen-choice" class="screen-view-pane" style="display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-weight: 800; color: var(--text-muted);">คำถามข้อที่ 1 / 5</span>
+                <span style="font-weight: 900; color: #C05621; font-size: 1.1rem;">⏱️ 14 วินาที</span>
+              </div>
+              <div class="question-timer-bar-wrap">
+                <div class="question-timer-progress"></div>
+              </div>
+
+              <div class="question-title-card">
+                หลักการ 5ส. ข้อใดที่เน้น "การจัดวางสิ่งของให้เป็นระเบียบ สะดวกต่อการหยิบใช้"?
+              </div>
+
+              <div class="choice-grid-demo" style="max-width: 100%; margin-bottom: 16px;">
+                <button type="button" class="choice-card-btn choice-red" onclick="triggerToast('ส่งคำตอบ: สะสาง แล้ว!')">
+                  <span class="choice-shape-icon">▲</span>
+                  <span>ก. สะสาง (Seiri)</span>
+                </button>
+                <button type="button" class="choice-card-btn choice-blue" onclick="triggerToast('ส่งคำตอบ: สะดวก แล้ว!')">
+                  <span class="choice-shape-icon">◆</span>
+                  <span>ข. สะดวก (Seiton)</span>
+                </button>
+                <button type="button" class="choice-card-btn choice-yellow" onclick="triggerToast('ส่งคำตอบ: สะอาด แล้ว!')">
+                  <span class="choice-shape-icon">●</span>
+                  <span>ค. สะอาด (Seiso)</span>
+                </button>
+                <button type="button" class="choice-card-btn choice-green" onclick="triggerToast('ส่งคำตอบ: สร้างมาตรฐาน แล้ว!')">
+                  <span class="choice-shape-icon">■</span>
+                  <span>ง. สร้างมาตรฐาน (Seiketsu)</span>
+                </button>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--text-muted);">
+                <span>ตอบแล้ว: <strong>3 / 4 คน</strong></span>
+                <button type="button" class="btn-3d btn-surface" style="padding: 8px 18px; font-size: 0.85rem;" onclick="loadScreenView('screen-result')">
+                  เฉลยคำตอบ ➔
+                </button>
+              </div>
+            </div>
+
+            <!-- SCREEN 4: SEQUENCE RACE -->
+            <div id="screen-sequence" class="screen-view-pane" style="display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-weight: 800; color: #7C3AED;">🏁 Sequence Race (เรียงลำดับขั้นตอน)</span>
+                <span style="font-weight: 900; color: #C05621;">⏱️ 20 วินาที</span>
+              </div>
+              <div class="question-title-card" style="font-size: 1.15rem; padding: 18px;">
+                จงเรียงลำดับกระบวนการคิดเชิงออกแบบ (Design Thinking) ให้ถูกต้องตามลำดับ:
+              </div>
+
+              <div class="seq-demo-container" style="max-width: 100%; margin-bottom: 20px;">
+                <div class="seq-item-card">
+                  <span class="seq-number-badge">1</span>
+                  <span style="flex: 1; font-weight: 700;">ทำความเข้าใจปัญหาของผู้ใช้อย่างลึกซึ้ง (Empathize)</span>
+                  <span>≡</span>
+                </div>
+                <div class="seq-item-card">
+                  <span class="seq-number-badge">2</span>
+                  <span style="flex: 1; font-weight: 700;">ระบุและตีกรอบปัญหาให้ชัดเจน (Define)</span>
+                  <span>≡</span>
+                </div>
+                <div class="seq-item-card">
+                  <span class="seq-number-badge">3</span>
+                  <span style="flex: 1; font-weight: 700;">สร้างต้นแบบเพื่อทดสอบแนวคิด (Prototype)</span>
+                  <span>≡</span>
+                </div>
+              </div>
+
+              <button type="button" class="btn-3d btn-posttest-purple" style="width: 100%; justify-content: center;" onclick="triggerToast('ส่งลำดับคำตอบเรียบร้อย! Perfect Match!')">
+                ยืนยันลำดับคำตอบ (Submit Sequence) ➔
+              </button>
+            </div>
+
+            <!-- SCREEN 5: QUESTION RESULT STATS -->
+            <div id="screen-result" class="screen-view-pane" style="display: none;">
+              <div style="text-align: center; margin-bottom: 12px;">
+                <span style="background: #DCFCE7; color: #166534; padding: 4px 12px; border-radius: var(--radius-pill); font-weight: 800; font-size: 0.85rem;">
+                  ✓ คำตอบที่ถูกต้อง: ข. สะดวก (Seiton)
+                </span>
+                <h3 style="font-size: 1.25rem; font-weight: 900; margin-top: 8px;">สถิติการตอบของผู้เรียนในห้อง</h3>
+              </div>
+
+              <div class="result-bars-grid">
+                <div class="result-bar-column">
+                  <div class="bar-cylinder" style="height: 35%; background: var(--choice-red);">1</div>
+                  <span style="font-weight: 800; font-size: 0.85rem;">▲ (25%)</span>
+                </div>
+                <div class="result-bar-column">
+                  <div class="bar-cylinder" style="height: 90%; background: var(--choice-blue); box-shadow: 0 0 16px rgba(19, 104, 206, 0.4);">3</div>
+                  <span style="font-weight: 800; font-size: 0.85rem; color: #1D4ED8;">◆ (75%) ✓</span>
+                </div>
+                <div class="result-bar-column">
+                  <div class="bar-cylinder" style="height: 10%; background: var(--choice-yellow);">0</div>
+                  <span style="font-weight: 800; font-size: 0.85rem;">● (0%)</span>
+                </div>
+                <div class="result-bar-column">
+                  <div class="bar-cylinder" style="height: 10%; background: var(--choice-green);">0</div>
+                  <span style="font-weight: 800; font-size: 0.85rem;">■ (0%)</span>
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn-3d btn-earth-blue" onclick="loadScreenView('screen-leaderboard')">
+                  ดูลีดเดอร์บอร์ด (Leaderboard) ➔
+                </button>
+              </div>
+            </div>
+
+            <!-- SCREEN 6: LEADERBOARD & RACING TRACKS -->
+            <div id="screen-leaderboard" class="screen-view-pane" style="display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="font-size: 1.3rem; font-weight: 900;">🏆 อันดับคะแนนเรียลไทม์ (Live Race)</h3>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">อัปเดตทันทีเมื่อส่งคำตอบ</span>
+              </div>
+
+              <div class="racing-track-card">
+                <div class="rank-pill rank-1">1</div>
+                <div style="font-size: 22px;">🦊</div>
+                <div style="width: 120px; font-weight: 800;">สมชาย สายซิ่ง</div>
+                <div class="track-runner-bar-wrap">
+                  <div class="track-runner-progress" style="width: 92%;">92%</div>
+                </div>
+                <div style="font-weight: 900; color: var(--brand-accent-orange); min-width: 80px; text-align: right;">
+                  4,820 pts
+                </div>
+                <span style="background: #FEF2F2; color: #EF4444; padding: 2px 8px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 900;">
+                  🔥 3
+                </span>
+              </div>
+
+              <div class="racing-track-card">
+                <div class="rank-pill rank-2">2</div>
+                <div style="font-size: 22px;">🐼</div>
+                <div style="width: 120px; font-weight: 800;">วรรณา ขยันเรียน</div>
+                <div class="track-runner-bar-wrap">
+                  <div class="track-runner-progress" style="width: 78%; background: linear-gradient(90deg, #10B981, #059669);">78%</div>
+                </div>
+                <div style="font-weight: 900; color: var(--brand-accent-orange); min-width: 80px; text-align: right;">
+                  3,910 pts
+                </div>
+              </div>
+
+              <div class="racing-track-card">
+                <div class="rank-pill rank-3">3</div>
+                <div style="font-size: 22px;">🦁</div>
+                <div style="width: 120px; font-weight: 800;">นพดล นักคิด</div>
+                <div class="track-runner-bar-wrap">
+                  <div class="track-runner-progress" style="width: 60%; background: linear-gradient(90deg, #F59E0B, #D97706);">60%</div>
+                </div>
+                <div style="font-weight: 900; color: var(--brand-accent-orange); min-width: 80px; text-align: right;">
+                  3,120 pts
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 18px;">
+                <button type="button" class="btn-3d btn-green-action" onclick="loadScreenView('screen-pulse')">
+                  สลับโหมด Pulse Check-in ➔
+                </button>
+              </div>
+            </div>
+
+            <!-- SCREEN 7: PULSE CHECK-IN -->
+            <div id="screen-pulse" class="screen-view-pane" style="display: none;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <span style="background: #FEF3C7; color: #B45309; padding: 4px 14px; border-radius: var(--radius-pill); font-weight: 800; font-size: 0.85rem;">
+                  💬 Pulse Survey Check-in
+                </span>
+                <h3 style="font-size: 1.4rem; font-weight: 900; margin-top: 8px;">
+                  ผู้เรียนเข้าใจหัวข้อ "หลักการและขั้นตอน 5ส." ระดับไหน?
+                </h3>
+              </div>
+
+              <div class="pulse-chips-row" style="max-width: 100%; margin-bottom: 24px;">
+                <div class="pulse-chip green" onclick="triggerToast('บันทึกความรู้สึก: เข้าใจดีเยี่ยม 🟢')">
+                  <span style="font-size: 32px;">🟢</span>
+                  <span style="font-size: 1.1rem;">เข้าใจดีเยี่ยม</span>
+                  <div style="font-size: 1.6rem; font-weight: 900; margin-top: 4px;">3 คน</div>
+                </div>
+                <div class="pulse-chip yellow" onclick="triggerToast('บันทึกความรู้สึก: ขอตัวอย่างเพิ่ม 🟡')">
+                  <span style="font-size: 32px;">🟡</span>
+                  <span style="font-size: 1.1rem;">ขอตัวอย่างเพิ่ม</span>
+                  <div style="font-size: 1.6rem; font-weight: 900; margin-top: 4px;">1 คน</div>
+                </div>
+                <div class="pulse-chip red" onclick="triggerToast('บันทึกความรู้สึก: ขอทบทวนใหม่ 🔴')">
+                  <span style="font-size: 32px;">🔴</span>
+                  <span style="font-size: 1.1rem;">ขอทบทวนใหม่</span>
+                  <div style="font-size: 1.6rem; font-weight: 900; margin-top: 4px;">0 คน</div>
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: flex-end;">
+                <button type="button" class="btn-3d btn-posttest-purple" onclick="loadScreenView('screen-analytics')">
+                  ดูรายงานสรุปผลสัมฤทธิ์ (Learning Gain) ➔
+                </button>
+              </div>
+            </div>
+
+            <!-- SCREEN 8: LEARNING GAIN & ANALYTICS REPORT -->
+            <div id="screen-analytics" class="screen-view-pane" style="display: none;">
+              <div style="background: #F5F3FF; border: 1.5px solid #DDD6FE; border-radius: var(--radius-lg); padding: 20px; margin-bottom: 20px;">
+                <div style="font-size: 1rem; font-weight: 800; color: #6D28D9; margin-bottom: 12px;">
+                  📈 ผลสัมฤทธิ์ทางการเรียนรู้ (Pre-test vs Post-test Learning Gain)
+                </div>
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                  <div>
+                    <div style="font-size: 0.8rem; color: #1D4ED8; font-weight: 700;">Pre-test Accuracy</div>
+                    <div style="font-size: 1.6rem; font-weight: 900; color: #1D4ED8;">45%</div>
+                  </div>
+                  <div style="font-size: 1.6rem; color: #8B5CF6; align-self: center;">➔</div>
+                  <div>
+                    <div style="font-size: 0.8rem; color: #7C3AED; font-weight: 700;">Post-test Accuracy</div>
+                    <div style="font-size: 1.6rem; font-weight: 900; color: #7C3AED;">85%</div>
+                  </div>
+                  <div style="font-size: 1.6rem; color: #8B5CF6; align-self: center;">=</div>
+                  <div>
+                    <div style="font-size: 0.8rem; color: #166534; font-weight: 700;">Learning Gain</div>
+                    <div style="font-size: 1.6rem; font-weight: 900; color: #166534;">+40%</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+                <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-md); padding: 14px;">
+                  <div style="font-size: 0.8rem; font-weight: 800; color: #991B1B;">🔥 ข้อที่ยากที่สุด (Accuracy ต่ำสุด)</div>
+                  <div style="font-weight: 700; margin-top: 4px; font-size: 0.95rem;">ข้อที่ 3: กระบวนการจัดมาตรฐาน 5ส. (ตอบถูก 33%)</div>
+                </div>
+                <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: var(--radius-md); padding: 14px;">
+                  <div style="font-size: 0.8rem; font-weight: 800; color: #166534;">🌟 ข้อง่ายที่สุด (Accuracy สูงสุด)</div>
+                  <div style="font-weight: 700; margin-top: 4px; font-size: 0.95rem;">ข้อที่ 1: ความหมายของสะสาง (ตอบถูก 100%)</div>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn-3d btn-surface" onclick="triggerToast('กำลังดาวน์โหลดรายงาน PDF...')">
+                  📄 ส่งออก PDF
+                </button>
+                <button type="button" class="btn-3d btn-green-action" onclick="triggerToast('กำลังดาวน์โหลดรายงาน Excel...')">
+                  📊 ส่งออก Excel (.xlsx)
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         TAB 4: STITCH DESIGN SPECIFICATION (DESIGN.MD PREVIEW)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="tab-specs" class="tab-section">
+      <div class="section-headline">
+        <h2>📐 Google Stitch DESIGN.md Specification</h2>
+        <p>Canonical design system tokens, design tenets, accessibility criteria, and engineering contracts.</p>
+      </div>
+
+      <div class="markdown-spec-card">
+        <h2># Design System Specification · KaoJai (เข้าใจ)</h2>
+        <p>
+          ระบบออกแบบ <strong>KaoJai Design System</strong> สร้างขึ้นตามมาตรฐาน <strong>Google Stitch AI-Native Standard</strong> โดยมุ่งเน้นความเป็นระบบโต้ตอบในห้องเรียนเรียลไทม์ (Interactive Real-Time Classroom) รองรับผู้เรียนทั้งบนสมาร์ตโฟนและจอฉายขนาดใหญ่ในห้องเรียน
+        </p>
+
+        <h3>1. Design Tenets & Core Principles</h3>
+        <ul>
+          <li><strong>Zero-Latency Feedback:</strong> ทุกการกดปุ่ม (Choice Button, Sequence Reorder, Pulse Reaction) ต้องตอบสนองทางสายตา (Visual Feedback) ทันทีในระดับ &lt; 50ms โดยไม่รอผลลัพธ์จากเครือข่าย</li>
+          <li><strong>Tactile 3D Depth:</strong> ใช้ปุ่มที่มีมิติยกนูน (3D Bottom Border) เพื่อสร้างความมั่นใจในการสัมผัสบนหน้าจอมือถือ (High Tactile Clarity)</li>
+          <li><strong>Accessible Contrast:</strong> ทุกตัวอักษรและสีพื้นหลังต้องผ่านเกณฑ์ <strong>WCAG 2.1 AA</strong> ด้วยอัตราส่วนความต่างสีอย่างน้อย 4.5:1</li>
+          <li><strong>Dual Form-Factor Harmony:</strong> หน้าจอแสดงผลแบ่งออกเป็น 2 มุมมองหลัก:
+            <ul>
+              <li><strong>Instructor View:</strong> ออกแบบสำหรับจอโปรเจกเตอร์/ทีวี 16:9 ขนาดตัวอักษรใหญ่ ชัดเจน อ่านได้จากระยะ 10 เมตร</li>
+              <li><strong>Learner Mobile View:</strong> ออกแบบสำหรับจอสัมผัสแนวตั้ง Touch Target ขั้นต่ำ 48x48px และวางตำแหน่งปุ่มให้อยู่ใน Thumb-Zone</li>
+            </ul>
+          </li>
+        </ul>
+
+        <h3>2. Color Token Hierarchy</h3>
+        <pre><code>/* Primary Game Choices */
+--choice-red: #E21B3C;      /* Triangle ▲ */
+--choice-blue: #1368CE;     /* Diamond ◆ */
+--choice-yellow: #D89E00;   /* Circle ● */
+--choice-green: #26890C;    /* Square ■ */
+
+/* Sentiment Pulse System */
+--pulse-green: #15803D;     /* เข้าใจดีเยี่ยม */
+--pulse-yellow: #B45309;    /* ขอตัวอย่างเพิ่ม */
+--pulse-red: #B91C1C;       /* ขอทบทวนใหม่ */
+
+/* Assessment Tracks */
+--accent-pretest: #2563EB;  /* Pre-test Diagnostic (Blue) */
+--accent-posttest: #7C3AED; /* Post-test Evaluative (Purple) */</code></pre>
+
+        <h3>3. Resilience & Connection Tenets</h3>
+        <ul>
+          <li><strong>Tab Inactivity Tolerance:</strong> ไม่ตัดการเชื่อมต่อ Socket เมื่อผู้เรียนหรือผู้สอนย่อหน้าต่างหรือสลับแอป (No <code>pagehide.disconnect</code>)</li>
+          <li><strong>Self-Healing Authorization:</strong> ฝั่ง Server มีระบบตรวจจับ <code>hostToken</code> เพื่อรักษาและสลับ <code>socket.id</code> ให้ผู้สอนอัตโนมัติเมื่อเกิดการเชื่อมต่อใหม่</li>
+          <li><strong>Long-term Grace Period:</strong> ให้เวลาผ่อนปรนผู้เรียนบนมือถืออย่างน้อย 15 นาที เพื่อป้องกันการถูกลบคะแนนและสตรีคเมื่อสลับไปตอบแชทหรือหน้าจอดับ</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Notification Popup -->
+  <div id="stitch-toast" class="stitch-toast">
+    <span id="toast-icon">✨</span>
+    <span id="toast-msg">คัดลอก Token เรียบร้อยแล้ว!</span>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════════════
+       7. CLIENT JAVASCRIPT (ZERO CDN - PURE VANILLA JS)
+       ═════════════════════════════════════════════════════════════════════════════ -->
+  <script>
+    // Main Tab Switching
+    function switchMainTab(tabId, btn) {
+      document.querySelectorAll('.tab-section').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+      const target = document.getElementById('tab-' + tabId);
+      if (target) target.classList.add('active');
+      if (btn) btn.classList.add('active');
+    }
+
+    // Viewport Mode Switcher (Desktop vs Mobile)
+    function setDeviceViewport(mode) {
+      const shell = document.getElementById('viewport-shell');
+      const btnDesk = document.getElementById('btn-desktop-view');
+      const btnMobile = document.getElementById('btn-mobile-view');
+      const clock = document.getElementById('shell-clock-status');
+
+      if (mode === 'mobile') {
+        shell.classList.add('mobile-view');
+        btnMobile.classList.add('active');
+        btnDesk.classList.remove('active');
+        if (clock) clock.textContent = '9:41 · 5G (Mobile 390px)';
+      } else {
+        shell.classList.remove('mobile-view');
+        btnDesk.classList.add('active');
+        btnMobile.classList.remove('active');
+        if (clock) clock.textContent = 'Classroom Display (16:9)';
+      }
+    }
+
+    // Interactive Prototype Screen Switching
+    function loadScreenView(screenId, btn) {
+      document.querySelectorAll('.screen-view-pane').forEach(p => p.style.display = 'none');
+      const target = document.getElementById(screenId);
+      if (target) target.style.display = 'block';
+
+      if (btn) {
+        document.querySelectorAll('.screen-pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      }
+    }
+
+    // Toast Notification Utility
+    let toastTimeout = null;
+    function triggerToast(msg, icon = '✨') {
+      const toast = document.getElementById('stitch-toast');
+      const msgEl = document.getElementById('toast-msg');
+      const iconEl = document.getElementById('toast-icon');
+
+      if (!toast || !msgEl) return;
+      msgEl.textContent = msg;
+      if (iconEl) iconEl.textContent = icon;
+
+      toast.classList.add('show');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2200);
+    }
+
+    // Copy Token to Clipboard
+    function copyToken(tokenCss) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(tokenCss).then(() => {
+          triggerToast('คัดลอก: ' + tokenCss, '📋');
+        }).catch(() => {
+          triggerToast(tokenCss, '📋');
+        });
+      } else {
+        triggerToast(tokenCss, '📋');
+      }
+    }
+
+    // Avatar Selection Interaction
+    document.querySelectorAll('.avatar-circle-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.avatar-circle-btn').forEach(b => b.classList.remove('selected'));
+        this.classList.add('selected');
+        triggerToast('เลือกตัวละคร: ' + this.textContent, '🎭');
+      });
+    });
+  </script>
+</body>
+</html>

@@ -17,7 +17,7 @@ import { WifiOff, AlertCircle, X } from 'lucide-react';
 import './styles/global.css';
 
 export function AppContent() {
-  const { socket, isConnected, session, saveSessionData, clearSession } = useSocket();
+  const { socket, isConnected, session, saveSessionData, clearSession, syncSession, needsSyncRef } = useSocket();
   
   // App Mode & Views: 'PLAYER_JOIN', 'PLAYER_GAME', 'HOST_LOBBY', 'HOST_GAME', 'TEACHER_BACKOFFICE'
   const [viewMode, setViewMode] = useState(() => {
@@ -382,7 +382,22 @@ export function AppContent() {
     socket.on('room_reset_to_lobby', onRoomResetToLobby);
     socket.on('room_closed', onRoomClosed);
 
+    // ─── SYNC SESSION: Call syncSession now that all listeners are registered ───
+    // This fixes the race condition where host_reconnected/join_success events
+    // were emitted before App.jsx listeners were attached (e.g. on page refresh).
+    if (needsSyncRef?.current) {
+      syncSession();
+    }
+
+    // Periodically check if a sync is needed (e.g. from visibility wakeup or socket reconnect)
+    const syncCheckInterval = setInterval(() => {
+      if (needsSyncRef?.current && socket?.connected) {
+        syncSession();
+      }
+    }, 500);
+
     return () => {
+      clearInterval(syncCheckInterval);
       if (errorTimerRef.current) {
         clearTimeout(errorTimerRef.current);
         errorTimerRef.current = null;
@@ -410,7 +425,7 @@ export function AppContent() {
       socket.off('room_reset_to_lobby', onRoomResetToLobby);
       socket.off('room_closed', onRoomClosed);
     };
-  }, [socket, session.hostToken]);
+  }, [socket, session.hostToken, syncSession, needsSyncRef]);
 
   // Intercept browser back button when player is in game
   useEffect(() => {
@@ -439,6 +454,16 @@ export function AppContent() {
     if (!socket) return;
     const effectiveQuizId = typeof customQuizId === 'string' ? customQuizId : null;
     socket.emit('create_room', effectiveQuizId ? { customQuizId: effectiveQuizId } : null);
+  };
+
+  const handleResumeRoom = (targetPin) => {
+    if (!socket || !targetPin) return;
+    const savedToken = localStorage.getItem('kaojai_hostToken') || sessionStorage.getItem('kaojai_hostToken');
+    socket.emit('reconnect_host', { pin: targetPin, hostToken: savedToken }, (res) => {
+      if (res && res.success) {
+        saveSessionData({ pin: res.pin, isHost: true, hostToken: res.hostToken });
+      }
+    });
   };
 
   const getEffectiveHostToken = () => {
@@ -713,6 +738,7 @@ export function AppContent() {
             setViewMode('PLAYER_GAME');
           }}
           onSwitchToHost={handleCreateRoom}
+          onResumeRoom={handleResumeRoom}
           onOpenTeacherBackoffice={() => setViewMode('TEACHER_BACKOFFICE')}
         />
       )}

@@ -3,7 +3,7 @@ import { useSocket } from '../../context/SocketContext';
 import { AvatarPicker, getRandomAvatar } from './AvatarPicker';
 import { LogIn, Crown, BookOpen, Gamepad2, MonitorPlay, ArrowLeft, Rocket, Sparkles, Tv, Users } from 'lucide-react';
 
-export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) => {
+export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacherBackoffice }) => {
   const { socket, session, saveSessionData } = useSocket();
   
   // Internal Screen State: 'MODE_SELECT' or 'PLAYER_FORM'
@@ -15,8 +15,42 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
   });
   const [name, setName] = useState(() => session?.name || '');
   const [selectedAvatar, setSelectedAvatar] = useState(() => session?.avatar || getRandomAvatar());
+  const [claimedPlayerId, setClaimedPlayerId] = useState(null);
+  const [roster, setRoster] = useState([]);
+  const [hasPretestRoster, setHasPretestRoster] = useState(false);
+  const [isManualInput, setIsManualInput] = useState(false);
+  const [activeSessions, setActiveSessions] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch active sessions for teacher to resume
+  useEffect(() => {
+    if (!socket) return;
+    socket.emit('get_active_sessions', (res) => {
+      if (res && res.success && Array.isArray(res.sessions)) {
+        setActiveSessions(res.sessions);
+      }
+    });
+  }, [socket, screen]);
+
+  // Fetch roster when 6-digit PIN is entered
+  useEffect(() => {
+    if (!socket || !pin || pin.trim().length !== 6) {
+      setRoster([]);
+      setHasPretestRoster(false);
+      return;
+    }
+
+    socket.emit('get_roster', { pin: pin.trim() }, (res) => {
+      if (res && res.success && Array.isArray(res.roster) && res.roster.length > 0) {
+        setRoster(res.roster);
+        setHasPretestRoster(Boolean(res.hasPretest));
+      } else {
+        setRoster([]);
+        setHasPretestRoster(false);
+      }
+    });
+  }, [socket, pin]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -52,6 +86,37 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
     }
   }, [socket, session]);
 
+  const handleClaimRosterPlayer = (rosterPlayer) => {
+    setName(rosterPlayer.name);
+    setSelectedAvatar(rosterPlayer.avatar || '0291dcc0ce.svg');
+    setClaimedPlayerId(rosterPlayer.playerId);
+    setIsManualInput(false);
+    setError('');
+
+    // Instant One-Click Join with claimed identity
+    setIsLoading(true);
+    socket.emit('join_room', {
+      pin: pin.trim(),
+      name: rosterPlayer.name,
+      avatar: rosterPlayer.avatar || '0291dcc0ce.svg',
+      playerId: rosterPlayer.playerId
+    }, (response) => {
+      setIsLoading(false);
+      if (response && response.success) {
+        saveSessionData({
+          pin: response.pin,
+          playerId: response.player.playerId,
+          name: response.player.name,
+          avatar: response.player.avatar,
+          isHost: false
+        });
+        onJoined(response);
+      } else {
+        setError(response?.message || 'ไม่สามารถเข้าร่วมห้องได้');
+      }
+    });
+  };
+
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
     setError('');
@@ -68,7 +133,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
 
     setIsLoading(true);
 
-    const existingPlayerId = (session?.pin === pin.trim() && session?.playerId) ? session.playerId : undefined;
+    const existingPlayerId = claimedPlayerId || ((session?.pin === pin.trim() && session?.playerId) ? session.playerId : undefined);
 
     socket.emit('join_room', {
       pin: pin.trim(),
@@ -206,6 +271,118 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
                 }}
               />
             </div>
+
+            {/* Roster Selection for Pre-test / Retest participants */}
+            {roster.length > 0 && !isManualInput && (
+              <div
+                className="animate-pop"
+                style={{
+                  background: '#F0FDF4',
+                  border: '1.5px solid #86EFAC',
+                  borderRadius: '16px',
+                  padding: '16px',
+                  marginTop: '4px',
+                  marginBottom: '8px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#166534', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Users size={18} /> เลือกชื่อของคุณเพื่อเข้าเล่นต่อทันที (1-Click)
+                  </span>
+                  <span style={{ fontSize: '0.78rem', background: '#DCFCE7', color: '#15803D', padding: '2px 8px', borderRadius: '10px', fontWeight: 700 }}>
+                    {roster.length} คน
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.82rem', color: '#166534', margin: '0 0 12px 0' }}>
+                  แตะที่ชื่อของคุณเพื่อทำ Post-test ต่อโดยไม่ต้องพิมพ์ใหม่
+                </p>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                    gap: '8px',
+                    maxHeight: '190px',
+                    overflowY: 'auto',
+                    padding: '4px'
+                  }}
+                >
+                  {roster.map((player) => (
+                    <button
+                      key={player.playerId}
+                      type="button"
+                      onClick={() => handleClaimRosterPlayer(player)}
+                      disabled={isLoading}
+                      style={{
+                        background: claimedPlayerId === player.playerId ? '#22C55E' : '#FFFFFF',
+                        color: claimedPlayerId === player.playerId ? '#FFFFFF' : 'var(--text-main)',
+                        border: '1px solid #BBF7D0',
+                        borderRadius: '12px',
+                        padding: '8px 10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                        transition: 'transform 0.1s, box-shadow 0.1s',
+                        fontSize: '0.88rem',
+                        fontWeight: 700
+                      }}
+                      onMouseDown={(e) => { e.currentTarget.style.transform = 'scale(0.97)'; }}
+                      onMouseUp={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                    >
+                      <img
+                        src={`/avatars/${player.avatar || '0291dcc0ce.svg'}`}
+                        alt={player.name}
+                        onError={(e) => { e.target.src = '/avatars/0291dcc0ce.svg'; }}
+                        style={{ width: '26px', height: '26px', borderRadius: '50%', flexShrink: 0 }}
+                      />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {player.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ marginTop: '12px', textAlign: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsManualInput(true)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#15803D',
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    + ฉันเป็นผู้เรียนใหม่ (ไม่ได้ทำ Pre-test / พิมพ์ชื่อใหม่)
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {isManualInput && roster.length > 0 && (
+              <div style={{ textAlign: 'right', marginTop: '-8px', marginBottom: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsManualInput(false)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#2563EB',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  ← กลับไปเลือกจากรายชื่อเดิม
+                </button>
+              </div>
+            )}
 
             <div>
               <label style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 700, display: 'block', marginBottom: '6px' }}>
@@ -402,6 +579,83 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onOpenTeacherBackoffice }) 
             >
               <BookOpen size={18} color="var(--accent-earth-blue)" /> ระบบจัดการคลังคำถาม (Teacher Backoffice)
             </button>
+
+            {/* List of Resumable / Pending Sessions */}
+            {activeSessions.length > 0 && (
+              <div
+                style={{
+                  marginTop: '16px',
+                  background: '#F8FAFC',
+                  border: '1.5px solid #CBD5E1',
+                  borderRadius: '16px',
+                  padding: '16px',
+                  textAlign: 'left'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--accent-earth-blue)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Users size={16} /> ห้องที่เปิดค้างไว้ / รอทำ Post-test:
+                  </span>
+                  <span style={{ fontSize: '0.75rem', background: '#DBEAFE', color: '#1E40AF', padding: '2px 8px', borderRadius: '10px', fontWeight: 700 }}>
+                    {activeSessions.length} ห้อง
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
+                  {activeSessions.map((sess) => (
+                    <div
+                      key={sess.pin}
+                      style={{
+                        background: '#FFFFFF',
+                        border: '1px solid #E2E8F0',
+                        borderRadius: '12px',
+                        padding: '10px 14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '12px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.03)'
+                      }}
+                    >
+                      <div style={{ overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontWeight: 900, color: 'var(--accent-earth-orange)', fontSize: '1.05rem', letterSpacing: '1px' }}>
+                            PIN: {sess.pin}
+                          </span>
+                          {sess.hasPretest && (
+                            <span style={{ background: '#DCFCE7', color: '#15803D', fontSize: '0.72rem', fontWeight: 700, padding: '1px 6px', borderRadius: '6px' }}>
+                              Pre-test ✓
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', marginTop: '2px' }}>
+                          {sess.quizTitle} • {sess.pretestPlayerCount || sess.rosterCount || 0} คน
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => onResumeRoom?.(sess.pin)}
+                        style={{
+                          background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '8px 12px',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          boxShadow: '0 2px 6px rgba(37,99,235,0.25)'
+                        }}
+                      >
+                        ⚡ เปิดห้องต่อ
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

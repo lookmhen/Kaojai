@@ -1,10 +1,16 @@
 const crypto = require('crypto');
 const { defaultQuizSets, getAllQuizzes, getQuizById } = require('./quizData');
+const db = require('./db');
 
 class RoomManager {
   constructor() {
     this.rooms = new Map();
     this.quizSets = [...defaultQuizSets];
+    try {
+      db.initSchema();
+    } catch (e) {
+      console.warn('[RoomManager] DB init warning:', e.message);
+    }
   }
 
   generatePin() {
@@ -60,11 +66,47 @@ class RoomManager {
     };
 
     this.rooms.set(pin, room);
+    try {
+      db.saveRoom(room);
+    } catch (dbErr) {
+      console.warn('[RoomManager] saveRoom to DB failed:', dbErr.message);
+    }
     return room;
   }
 
   getRoom(pin) {
-    return this.rooms.get(pin);
+    let room = this.rooms.get(pin);
+    if (!room) {
+      // Rehydrate room from SQLite database if memory was cleared (e.g. after server restart)
+      const persisted = db.getRoom(pin);
+      if (persisted) {
+        room = {
+          pin: persisted.pin,
+          hostSocketId: null, // Host will reconnect and update socket id
+          hostToken: persisted.hostToken,
+          mode: persisted.mode || 'QUIZ',
+          quizSet: persisted.quizSet || this.quizSets[0],
+          currentQuestionIndex: -1,
+          questionStartTime: null,
+          questionTimer: null,
+          players: new Map(),
+          teams: new Map((persisted.teams || []).map(t => [t.id, { ...t, memberIds: new Set(t.memberIds || []) }])),
+          teamsEnabled: persisted.teamsEnabled || false,
+          votedPulseUsers: new Set(),
+          pulseVotes: persisted.pulseVotes || { green: 0, yellow: 0, red: 0 },
+          pulseRound: persisted.pulseRound || 1,
+          pulseHistory: [],
+          status: persisted.status === 'ENDED' ? 'LOBBY' : (persisted.status || 'LOBBY'),
+          quizMode: persisted.quizMode || 'NORMAL',
+          pretestData: persisted.pretestData || null,
+          currentAnswers: new Map(),
+          questionHistory: []
+        };
+        this.rooms.set(pin, room);
+        console.log(`[RoomManager] Rehydrated room ${pin} from SQLite database`);
+      }
+    }
+    return room;
   }
 
   getRoomByHostSocketId(hostSocketId) {
@@ -77,7 +119,7 @@ class RoomManager {
   }
 
   reconnectHost(pin, hostSocketId, hostToken = null) {
-    const room = this.rooms.get(pin);
+    const room = this.getRoom(pin);
     if (!room) {
       throw new Error('ไม่พบห้องหรือเซสชันของคุณหมดอายุแล้ว');
     }
@@ -128,20 +170,71 @@ class RoomManager {
 
   deleteRoom(pin) {
     const room = this.rooms.get(pin);
-    if (!room) return false;
-
-    if (room.questionTimer) clearTimeout(room.questionTimer);
-    if (room.prepareTimer) clearTimeout(room.prepareTimer);
-    for (const player of room.players.values()) {
-      if (player.disconnectTimeout) clearTimeout(player.disconnectTimeout);
+    const persisted = db.getRoom(pin);
+    try {
+      db.deleteRoom(pin);
+    } catch (dbErr) {
+      console.warn('[RoomManager] deleteRoom from DB failed:', dbErr.message);
     }
-    this.rooms.delete(pin);
+    if (!room && !persisted) return false;
+
+    if (room) {
+      if (room.questionTimer) clearTimeout(room.questionTimer);
+      if (room.prepareTimer) clearTimeout(room.prepareTimer);
+      for (const player of room.players.values()) {
+        if (player.disconnectTimeout) clearTimeout(player.disconnectTimeout);
+      }
+      this.rooms.delete(pin);
+    }
     console.log(`[Room Cleaned] Deleted room ${pin}`);
     return true;
   }
 
+  /**
+   * Get all active or persisted sessions available for host to resume
+   */
+  getAllActiveSessions() {
+    const dbRooms = db.getAllRooms() || [];
+    const sessionsMap = new Map();
+
+    // From SQLite
+    for (const r of dbRooms) {
+      const roster = db.getRosterByPin(r.pin) || [];
+      sessionsMap.set(r.pin, {
+        pin: r.pin,
+        quizTitle: r.quizSet?.title || 'แบบทดสอบ KaoJai',
+        quizMode: r.quizMode || 'NORMAL',
+        status: r.status || 'LOBBY',
+        hasPretest: Boolean(r.pretestData),
+        pretestCompleted: Boolean(r.pretestData?.completed),
+        pretestPlayerCount: r.pretestData?.totalPlayers || roster.length || 0,
+        rosterCount: roster.length,
+        updatedAt: r.updatedAt || Date.now()
+      });
+    }
+
+    // Merge in-memory active rooms
+    for (const r of this.rooms.values()) {
+      const counts = this.getPlayerCounts(r.pin);
+      const existing = sessionsMap.get(r.pin) || {};
+      sessionsMap.set(r.pin, {
+        pin: r.pin,
+        quizTitle: r.quizSet?.title || 'แบบทดสอบ KaoJai',
+        quizMode: r.quizMode || 'NORMAL',
+        status: r.status || 'LOBBY',
+        hasPretest: Boolean(r.pretestData),
+        pretestCompleted: Boolean(r.pretestData?.completed),
+        pretestPlayerCount: r.pretestData?.totalPlayers || existing.pretestPlayerCount || counts.totalPlayers,
+        rosterCount: Math.max(existing.rosterCount || 0, counts.totalPlayers),
+        updatedAt: Date.now()
+      });
+    }
+
+    return Array.from(sessionsMap.values()).sort((a, b) => b.updatedAt - a.updatedAt);
+  }
+
   joinPlayer(pin, socketId, { name, avatar, playerId: clientPlayerId }) {
-    const room = this.rooms.get(pin);
+    const room = this.getRoom(pin);
     if (!room) {
       throw new Error('ไม่พบห้องดังกล่าว หรือรหัส PIN ไม่ถูกต้อง');
     }
@@ -1091,23 +1184,64 @@ class RoomManager {
       questionAccuracy
     };
 
+    try {
+      db.saveRoom(room);
+      db.savePretestRoster(pin, playerScores);
+    } catch (dbErr) {
+      console.warn('[RoomManager] savePretestSnapshot to DB failed:', dbErr.message);
+    }
+
     return room.pretestData;
+  }
+
+  /**
+   * Get participants roster who completed pretest or registered in this PIN.
+   * Merges in-memory player list with persistent roster in SQLite.
+   */
+  getRoster(pin) {
+    const room = this.getRoom(pin);
+    const dbRoster = db.getRosterByPin(pin);
+    
+    // Create map from DB roster
+    const rosterMap = new Map();
+    dbRoster.forEach(r => rosterMap.set(r.playerId, r));
+
+    // If room is active in memory and has pretestData, merge it
+    if (room && room.pretestData && Array.isArray(room.pretestData.playerScores)) {
+      room.pretestData.playerScores.forEach(ps => {
+        const existing = rosterMap.get(ps.playerId);
+        rosterMap.set(ps.playerId, {
+          playerId: ps.playerId,
+          name: ps.name,
+          avatar: ps.avatar,
+          teamId: existing?.teamId || null,
+          pretestScore: ps.score || 0,
+          pretestAccuracy: ps.accuracyPct || 0,
+          hasPretest: true
+        });
+      });
+    }
+
+    return Array.from(rosterMap.values());
   }
 
   /**
    * Clear pretest data for a room.
    */
   clearPretestData(pin) {
-    const room = this.rooms.get(pin);
+    const room = this.getRoom(pin);
     if (!room) return;
     room.pretestData = null;
+    try {
+      db.saveRoom(room);
+    } catch (e) {}
   }
 
   /**
    * Reset all player scores, streaks, and question history for a room.
    */
   resetRoomScores(pin, { clearPretest = false, clearPulse = true } = {}) {
-    const room = this.rooms.get(pin);
+    const room = this.getRoom(pin);
     if (!room) return;
 
     room.questionHistory = [];
@@ -1139,13 +1273,17 @@ class RoomManager {
         player.pulseChoice = null;
       }
     }
+
+    try {
+      db.saveRoom(room);
+    } catch (e) {}
   }
 
   /**
    * Dynamically change or update the quiz set for an active room.
    */
   setRoomQuiz(pin, quizSetOrId) {
-    const room = this.rooms.get(pin);
+    const room = this.getRoom(pin);
     if (!room) throw new Error('ไม่พบห้องดังกล่าว');
 
     if (room.status !== 'LOBBY' && room.status !== 'ENDED') {
@@ -1173,6 +1311,9 @@ class RoomManager {
     }
 
     room.quizSet = resolvedQuiz;
+    try {
+      db.saveRoom(room);
+    } catch (e) {}
     return room.quizSet;
   }
 
@@ -1180,7 +1321,7 @@ class RoomManager {
    * Reset room status and all player states back to Lobby.
    */
   resetRoomToLobby(pin, { clearPretest = false } = {}) {
-    const room = this.rooms.get(pin);
+    const room = this.getRoom(pin);
     if (!room) return null;
 
     room.status = 'LOBBY';
@@ -1188,6 +1329,9 @@ class RoomManager {
     room.currentQuestionIndex = -1;
     room.currentSafeQuestion = null;
     this.resetRoomScores(pin, { clearPretest });
+    try {
+      db.saveRoom(room);
+    } catch (e) {}
     return room;
   }
 

@@ -8,3 +8,7 @@ dist/
 # Ignore uploaded user images
 server/public/uploads/*
 !server/public/uploads/.gitkeep
+
+# Ignore local SQLite databases
+*.sqlite*
+server/data/*.sqlite*

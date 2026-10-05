@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
 const SocketContext = createContext(null);
@@ -44,6 +44,11 @@ export const SocketProvider = ({ children }) => {
     };
   });
 
+  // Track whether the initial sync is still pending (App.jsx hasn't called syncSession yet)
+  const needsSyncRef = useRef(false);
+  // Store clearSession in ref so syncSession callback can access it without stale closure
+  const clearSessionRef = useRef(null);
+
   useEffect(() => {
     const newSocket = io(window.location.origin, {
       transports: ['polling', 'websocket'],
@@ -53,48 +58,11 @@ export const SocketProvider = ({ children }) => {
       timeout: 20000
     });
 
-    const syncSession = () => {
-      const savedPin = getStorageItem('kaojai_pin');
-      const savedPlayerId = getStorageItem('kaojai_playerId');
-      const savedName = getStorageItem('kaojai_name');
-      const savedAvatar = getStorageItem('kaojai_avatar');
-      const isHost = getStorageItem('kaojai_isHost') === 'true';
-      const hostToken = getStorageItem('kaojai_hostToken');
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const queryPin = urlParams.get('pin');
-      const targetPin = queryPin || savedPin;
-
-      if (targetPin && newSocket && newSocket.connected) {
-        if (isHost && targetPin === savedPin) {
-          console.log('[Socket] Syncing host session for PIN:', targetPin);
-          newSocket.emit('reconnect_host', { pin: targetPin, hostToken }, (res) => {
-            if (res && !res.success) {
-              console.log('Stale host session expired, clearing session...');
-              clearSession();
-            }
-          });
-        } else if (savedName && targetPin === savedPin) {
-          console.log('[Socket] Syncing player session:', savedName, 'for PIN:', targetPin);
-          newSocket.emit('join_room', {
-            pin: targetPin,
-            name: savedName,
-            avatar: savedAvatar,
-            playerId: savedPlayerId
-          }, (res) => {
-            if (res && !res.success) {
-              console.log('Stale player session expired, clearing session...');
-              clearSession();
-            }
-          });
-        }
-      }
-    };
-
     newSocket.on('connect', () => {
       console.log('Socket connected:', newSocket.id);
       setIsConnected(true);
-      syncSession();
+      // Mark that a sync is needed — App.jsx will call syncSession() after its listeners are ready
+      needsSyncRef.current = true;
     });
 
     newSocket.on('disconnect', (reason) => {
@@ -108,11 +76,11 @@ export const SocketProvider = ({ children }) => {
 
     setSocket(newSocket);
 
-    // Automatic wakeup when tab becomes visible or window regains focus (e.g. un-minimizing or switching back)
+    // Automatic wakeup when tab becomes visible or window regains focus
     let lastWakeup = 0;
     const handleWakeup = () => {
       const now = Date.now();
-      if (now - lastWakeup < 1000) return; // ignore duplicate triggers within 1s
+      if (now - lastWakeup < 1000) return;
       lastWakeup = now;
 
       if (document.visibilityState === 'visible') {
@@ -120,7 +88,8 @@ export const SocketProvider = ({ children }) => {
           console.log('[Socket] Tab visible/focused, reconnecting socket...');
           newSocket.connect();
         } else if (newSocket && newSocket.connected) {
-          syncSession();
+          // On visibility/focus wakeup, mark sync needed — App.jsx will handle it
+          needsSyncRef.current = true;
         }
       }
     };
@@ -153,7 +122,7 @@ export const SocketProvider = ({ children }) => {
     }));
   };
 
-  const clearSession = () => {
+  const clearSession = useCallback(() => {
     removeStorageItem('kaojai_pin');
     removeStorageItem('kaojai_playerId');
     removeStorageItem('kaojai_name');
@@ -161,10 +130,59 @@ export const SocketProvider = ({ children }) => {
     removeStorageItem('kaojai_isHost');
     removeStorageItem('kaojai_hostToken');
     setSession({ pin: null, playerId: null, name: null, avatar: null, isHost: false, hostToken: null });
-  };
+  }, []);
+
+  // Keep ref up to date
+  clearSessionRef.current = clearSession;
+
+  /**
+   * syncSession — call this from App.jsx AFTER socket event listeners are registered.
+   * Re-emits reconnect_host or join_room so the server response events are caught properly.
+   */
+  const syncSession = useCallback(() => {
+    if (!socket || !socket.connected) return;
+
+    const savedPin = getStorageItem('kaojai_pin');
+    const savedPlayerId = getStorageItem('kaojai_playerId');
+    const savedName = getStorageItem('kaojai_name');
+    const savedAvatar = getStorageItem('kaojai_avatar');
+    const isHost = getStorageItem('kaojai_isHost') === 'true';
+    const hostToken = getStorageItem('kaojai_hostToken');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryPin = urlParams.get('pin');
+    const targetPin = queryPin || savedPin;
+
+    needsSyncRef.current = false;
+
+    if (targetPin) {
+      if (isHost && targetPin === savedPin) {
+        console.log('[Socket] Syncing host session for PIN:', targetPin);
+        socket.emit('reconnect_host', { pin: targetPin, hostToken }, (res) => {
+          if (res && !res.success) {
+            console.log('Stale host session expired, clearing session...');
+            if (clearSessionRef.current) clearSessionRef.current();
+          }
+        });
+      } else if (savedName && targetPin === savedPin) {
+        console.log('[Socket] Syncing player session:', savedName, 'for PIN:', targetPin);
+        socket.emit('join_room', {
+          pin: targetPin,
+          name: savedName,
+          avatar: savedAvatar,
+          playerId: savedPlayerId
+        }, (res) => {
+          if (res && !res.success) {
+            console.log('Stale player session expired, clearing session...');
+            if (clearSessionRef.current) clearSessionRef.current();
+          }
+        });
+      }
+    }
+  }, [socket]);
 
   return (
-    <SocketContext.Provider value={{ socket, isConnected, session, saveSessionData, clearSession }}>
+    <SocketContext.Provider value={{ socket, isConnected, session, saveSessionData, clearSession, syncSession, needsSyncRef }}>
       {children}
     </SocketContext.Provider>
   );
