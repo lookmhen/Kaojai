@@ -196,24 +196,32 @@ class RoomManager {
   getAllActiveSessions() {
     const dbRooms = db.getAllRooms() || [];
     const sessionsMap = new Map();
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const now = Date.now();
 
-    // From SQLite
+    // From SQLite: only include rooms that have a completed pre-test waiting for post-test within the last 24 hours
     for (const r of dbRooms) {
-      const roster = db.getRosterByPin(r.pin) || [];
-      sessionsMap.set(r.pin, {
-        pin: r.pin,
-        quizTitle: r.quizSet?.title || 'แบบทดสอบ KaoJai',
-        quizMode: r.quizMode || 'NORMAL',
-        status: r.status || 'LOBBY',
-        hasPretest: Boolean(r.pretestData),
-        pretestCompleted: Boolean(r.pretestData?.completed),
-        pretestPlayerCount: r.pretestData?.totalPlayers || roster.length || 0,
-        rosterCount: roster.length,
-        updatedAt: r.updatedAt || Date.now()
-      });
+      const hasCompletedPretest = Boolean(r.pretestData && r.pretestData.completed);
+      const isRecent = (now - (r.updatedAt || r.createdAt || 0)) <= ONE_DAY_MS;
+
+      // Only show rooms that actually have a pending pre-test to resume
+      if (hasCompletedPretest && isRecent) {
+        const roster = db.getRosterByPin(r.pin) || [];
+        sessionsMap.set(r.pin, {
+          pin: r.pin,
+          quizTitle: r.quizSet?.title || 'แบบทดสอบ KaoJai',
+          quizMode: r.quizMode || 'NORMAL',
+          status: r.status || 'LOBBY',
+          hasPretest: true,
+          pretestCompleted: true,
+          pretestPlayerCount: r.pretestData?.totalPlayers || roster.length || 0,
+          rosterCount: roster.length,
+          updatedAt: r.updatedAt || now
+        });
+      }
     }
 
-    // Merge in-memory active rooms
+    // Merge in-memory active rooms (currently live sessions)
     for (const r of this.rooms.values()) {
       const counts = this.getPlayerCounts(r.pin);
       const existing = sessionsMap.get(r.pin) || {};
@@ -226,11 +234,14 @@ class RoomManager {
         pretestCompleted: Boolean(r.pretestData?.completed),
         pretestPlayerCount: r.pretestData?.totalPlayers || existing.pretestPlayerCount || counts.totalPlayers,
         rosterCount: Math.max(existing.rosterCount || 0, counts.totalPlayers),
-        updatedAt: Date.now()
+        updatedAt: now
       });
     }
 
-    return Array.from(sessionsMap.values()).sort((a, b) => b.updatedAt - a.updatedAt);
+    // Sort by most recently updated and limit to top 10 sessions
+    return Array.from(sessionsMap.values())
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .slice(0, 10);
   }
 
   joinPlayer(pin, socketId, { name, avatar, playerId: clientPlayerId }) {

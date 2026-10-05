@@ -3,7 +3,7 @@ const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
 
 const DATA_DIR = path.resolve(__dirname, '../data');
-const DB_PATH = path.resolve(DATA_DIR, 'kaojai.sqlite');
+const DB_PATH = process.env.NODE_ENV === 'test' ? ':memory:' : path.resolve(DATA_DIR, 'kaojai.sqlite');
 
 let db = null;
 let activeDbPath = null;
