@@ -24,6 +24,7 @@
 
 ระบบใช้สถาปัตยกรรมแบบ **Hybrid Real-time Architecture**:
 - **Live Game State (ระหว่างเล่นกิจกรรม)**: จัดการผ่าน **Node.js + Socket.io (In-Memory Engine)** ภายในคลาส `RoomManager` เพื่อให้ได้ความเร็วสูงสุดระดับมิลลิวินาที (Sub-second Latency) ทั้งการส่งคำตอบ, จับเวลา, และคำนวณคะแนนตามความเร็ว
+- **Persistence & Session Recovery (จัดเก็บข้อมูลถาวร)**: บันทึกสถานะห้อง, ผลสอบ Pre-test, และรายชื่อผู้เรียนลง **SQLite (Node.js Built-in `node:sqlite`)** ป้องกันข้อมูลสูญหายเมื่อเซิร์ฟเวอร์รีสตาร์ตหรือพักการอบรมข้ามมื้อเที่ยง
 - **Management & Assets (การจัดการและสื่อประกอบ)**: ทำงานผ่าน Express REST API สำหรับสร้าง/แก้ไข/คัดลอกชุดคำถาม และให้บริการ Static Uploads สำหรับรูปภาพประกอบคำถาม
 
 ```
@@ -41,13 +42,14 @@
 │  │   • /api/quizzes (CRUD) │    │   • Room Management     │  │
 │  │   • /api/upload (Image) │    │   • Real-time Timers    │  │
 │  │   • /uploads (Static)   │    │   • Score & Pulse Votes │  │
-│  └─────────────────────────┘    │   • Teams Management    │  │
+│  └─────────────────────────┘    │   • Roster & Claiming   │  │
 │                                 └────────────┬────────────┘  │
 │                                              │               │
-│                                 ┌────────────▼────────────┐  │
-│                                 │   RoomManager Engine    │  │
-│                                 │   (In-Memory State)     │  │
-│                                 └─────────────────────────┘  │
+│  ┌─────────────────────────┐    ┌────────────▼────────────┐  │
+│  │  SQLite (node:sqlite)   │◄───┤   RoomManager Engine    │  │
+│  │  • rooms (Snapshot)     │    │   (In-Memory + Rehydrate│  │
+│  │  • roster_players       │    └─────────────────────────┘  │
+│  └─────────────────────────┘                                 │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -62,17 +64,15 @@ KaoJai/
 │   │   └── avatars/                  # ไฟล์ไอคอน Avatar ผู้เรียน 30 รูปแบบ (.svg)
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── common/               # คอมโพเนนต์ส่วนกลาง
-│   │   │   │   ├── PrepareCountdown.jsx # หน้าต่างนับถอยหลัง 5 วินาทีก่อนเริ่มคำถาม
-│   │   │   │   └── SoundToggle.jsx      # ปุ่มเปิด/ปิดเสียง SFX ประจำเซสชัน
+│   │   │   ├── common/               # คอมโพเนนต์ส่วนกลาง (PrepareCountdown, SoundToggle)
 │   │   │   ├── host/                 # หน้าจอสำหรับผู้สอน/วิทยากร (Host Views)
 │   │   │   │   ├── HostHeader.jsx       # แถบหัวแสดง PIN, สลับโหมด, ยอดคนตอบ
-│   │   │   │   ├── HostLobby.jsx        # ห้องรอเริ่มเกม, จัดทีม (Drag & Drop), สุ่มทีม
+│   │   │   │   ├── HostLobby.jsx        # ห้องรอเริ่มเกม, QR Code, จัดทีม, สุ่มทีม, โหมด Pre/Post-test
 │   │   │   │   ├── HostQuiz.jsx         # จอแสดงคำถามปกติ & Sequence Race พร้อม Bar Chart
 │   │   │   │   ├── HostPulse.jsx        # หน้ารับผลโหวตความเข้าใจ พร้อมปุ่มเรียกตาม (Nudge)
-│   │   │   │   └── HostLeaderboard.jsx  # สรุปคะแนนเรซซิ่ง และปุ่ม Export CSV
+│   │   │   │   └── HostLeaderboard.jsx  # สรุปคะแนนเรซซิ่ง, Learning Gain, และปุ่ม Export
 │   │   │   ├── player/               # หน้าจอสำหรับผู้เรียนบนมือถือ (Player Views)
-│   │   │   │   ├── JoinRoom.jsx         # หน้าแรกสำหรับกรอก PIN และเลือกบทบาท
+│   │   │   │   ├── JoinRoom.jsx         # หน้าแรก: กรอก PIN, 1-Click Roster Claim, และเลือกบทบาท
 │   │   │   │   ├── AvatarPicker.jsx     # ตัวเลือกรูปโปรไฟล์ 30 แบบ (พร้อมสุ่มอัตโนมัติ)
 │   │   │   │   ├── PlayerLobby.jsx      # หน้ารอวิทยากรเริ่มกิจกรรม พร้อมตัวเลือกทีม
 │   │   │   │   ├── PlayerQuiz.jsx       # หน้ากดเลือกคำตอบ 4 สี
@@ -82,36 +82,41 @@ KaoJai/
 │   │   │   │   └── PlayerEndedView.jsx  # หน้าสรุปผลคะแนนส่วนตัวเมื่อจบกิจกรรม
 │   │   │   └── teacher/
 │   │   │       └── TeacherBackoffice.jsx # จัดการชุดคำถาม (สร้าง/แก้ไข/โคลน/อัปโหลดรูป)
-│   │   ├── context/                  # Socket.io Context & Custom Hooks
+│   │   ├── context/                  # Socket.io Context & Session Recovery Hooks
 │   │   ├── styles/                   # สไตล์หลักและตัวแปรกำหนดชุดสี
-│   │   ├── utils/                    # ยูทิลิตี้และเอฟเฟกต์
-│   │   │   ├── audioSFX.js           # Web Audio API Sound Synthesizer & SFX
-│   │   │   ├── sequenceThemes.js     # ธีมสีแยกเฉพาะสำหรับตัวเลือก Sequence Race
-│   │   │   ├── confetti.js           # เอฟเฟกต์เปเปอร์ชูตเฉลิมฉลอง
-│   │   │   └── exportReport.js       # ส่งออกรายงานผลคะแนน UTF-8 BOM (.csv)
+│   │   ├── utils/                    # Audio SFX, QR Generator, Export Reports
 │   │   ├── App.jsx                   # Main Router & State Orchestrator
 │   │   └── main.jsx
 │   ├── nginx.conf                    # Nginx Configuration สำหรับ Production Container
 │   ├── Dockerfile                    # Multi-stage Build สำหรับ React Client
 │   └── vite.config.js                # Vite Config รองรับ allowedHosts & Proxy
 │
-├── server/                           # Backend (Node.js Express + Socket.io)
+├── server/                           # Backend (Node.js Express + Socket.io + SQLite)
+│   ├── data/
+│   │   ├── quizzes.json              # ฐานข้อมูลชุดคำถาม JSON
+│   │   └── kaojai.sqlite             # ฐานข้อมูล SQLite เก็บ Rooms และ Roster Players
 │   ├── public/
 │   │   └── uploads/                  # ที่จัดเก็บรูปประกอบคำถาม (Persistent Volume)
 │   ├── src/
 │   │   ├── index.js                  # Entrypoint, Express API, และ Static Serving
-│   │   ├── roomManager.js            # Core In-Memory Engine (Rooms, Scores, Teams, Shuffling)
-│   │   ├── socketHandler.js          # จัดการ WebSocket Events ทั้งหมด
+│   │   ├── db.js                     # SQLite Engine (node:sqlite) รองรับ WAL mode
+│   │   ├── roomManager.js            # Core Engine (Rooms, Scores, Teams, Rehydration, Roster)
+│   │   ├── socketHandler.js          # จัดการ WebSocket Events ทั้งหมด (รวม get_roster, get_active_sessions)
 │   │   └── quizData.js               # จัดการคลังชุดคำถามตัวอย่าง และฟังก์ชัน Duplicate
-│   ├── tests/                        # Automated Test Suite (100% Native Node Assertion)
-│   │   ├── run-tests.js              # Test Runner
-│   │   ├── roomManager.test.js       # ทดสอบ Engine, Sequence Evaluation, และ Team Lifecycle
-│   │   ├── socketHandler.test.js     # ทดสอบ Real-time Socket Flows
+│   ├── tests/                        # Automated Test Suite (8 Test Suites 100% Pass)
+│   │   ├── run-tests.js              # Master Test Runner
+│   │   ├── roomManager.test.js       # ทดสอบ Engine, Sequence, Teams, และ Reset Lifecycle
+│   │   ├── socketHandler.test.js     # ทดสอบ Real-time Socket Flows & Reconnection
 │   │   ├── quizData.test.js          # ทดสอบ CRUD ชุดคำถาม
-│   │   └── api.test.js               # ทดสอบ REST Endpoints
+│   │   ├── api.test.js               # ทดสอบ REST Endpoints
+│   │   ├── analyticsReport.test.js   # ทดสอบ Analytics และ Excel/CSV Multi-sheet
+│   │   ├── pretestPosttest.test.js   # ทดสอบ Pre-test vs Post-test Learning Gain
+│   │   ├── db.test.js                # ทดสอบ SQLite Persistence CRUD & Schemas
+│   │   └── rosterPersistence.test.js # ทดสอบ End-to-End Server Restart & 1-Click Roster Claim
 │   ├── Dockerfile                    # Node.js Alpine Container
 │   └── package.json
 │
+├── design-system.html                # Google Stitch UX/UI Design System & Prototype (No CDN)
 ├── docker-compose.yml                # Docker Compose Orchestration (Production-Ready)
 └── nginx.conf                        # Root Nginx Proxy Configuration
 ```
@@ -122,14 +127,15 @@ KaoJai/
 
 ### ฝั่ง Frontend (Client)
 - **Framework**: React 18
-- **Build Tool**: Vite 5 (เปิดใช้งาน HMR & React Fast Refresh)
+- **Build Tool**: Vite 7
 - **Icons**: Lucide React
 - **Audio**: Web Audio API Synthesizer (สร้างเสียงสด ไม่ต้องพึ่งพาไฟล์เสียงขนาดใหญ่)
-- **Effects**: Canvas Confetti
-- **Styling**: Pure CSS3 Variables & Responsive Flex/Grid (Earth Tone Palette)
+- **QR Code**: Native Inline SVG QR Code Generator
+- **Styling**: Pure CSS3 Variables & Responsive Flex/Grid (Earth Tone Palette & Google Stitch Standard)
 
 ### ฝั่ง Backend (Server)
-- **Runtime**: Node.js (v18+)
+- **Runtime**: Node.js (v20+)
+- **Database / Persistence**: Built-in SQLite (`node:sqlite` DatabaseSync with WAL Mode)
 - **HTTP Server**: Express.js
 - **Real-time Gateway**: Socket.io 4
 - **Testing Framework**: Node.js Native Assertion (`node:assert/strict`)
@@ -250,6 +256,8 @@ docker compose up --build -d
 | `assign_team` | `{ pin, playerId, teamId }` | กำหนดผู้เล่นเข้าทีม (ใช้ได้ทั้งผู้สอนและผู้เรียนเลือกเอง) |
 | `auto_assign_teams` | `{ pin, teamCount? }` | วิทยากรสั่งสุ่มจัดทีมผู้เรียนอัตโนมัติ |
 | `get_teams` | `{ pin }` | ดึงรายชื่อทีมและสมาชิกปัจจุบัน |
+| `get_roster` | `{ pin }` | ผู้เรียนดึงรายชื่อเพื่อนที่เคยทำ Pre-test ในห้องเพื่อเลือกชื่อตัวเอง (1-Click Claim) |
+| `get_active_sessions` | `(ackCallback)` | วิทยากรดึงประวัติห้องที่เปิดค้างไว้หรือรอทำ Post-test จาก SQLite เพื่อเปิดห้องต่อ |
 
 ### ฝั่ง Server ส่งหา Client (`io.to(pin).emit` หรือ `socket.emit`)
 | Event Name | Payloads | คำอธิบาย |
