@@ -450,213 +450,218 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '32px', alignItems: 'stretch' }}>
+      {/* MODE SELECTION CARDS: STACKED GRID (TOP & BOTTOM) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        {/* LEFT COLUMN: Participant / Join Card */}
+        {/* TOP BLOCK: Participant / Join Game Card */}
         <div
           className="glass-card animate-pop"
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '32px 28px',
-            borderTop: '6px solid #138808',
+            padding: '28px 32px',
+            borderLeft: '8px solid #138808',
             background: '#FFFFFF',
-            boxShadow: '0 6px 24px rgba(15, 23, 42, 0.06)'
+            boxShadow: '0 8px 24px rgba(19, 136, 8, 0.08)',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '24px',
+            flexWrap: 'wrap'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-            <div style={{ background: '#F0FDF4', padding: '14px', borderRadius: '16px', border: '1px solid #BBF7D0' }}>
-              <Gamepad2 size={34} color="#138808" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: '1 1 360px' }}>
+            <div style={{ background: '#F0FDF4', padding: '16px', borderRadius: '18px', border: '1px solid #BBF7D0', flexShrink: 0 }}>
+              <Gamepad2 size={38} color="#138808" />
             </div>
             <div>
-              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#138808', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                สำหรับผู้เรียน
-              </span>
-              <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)', lineHeight: 1.2 }}>
-                เข้าร่วมตอบคำถาม
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 800, color: '#138808', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
+                <Rocket size={14} /> สำหรับผู้เรียน / ผู้เข้าร่วม
+              </div>
+              <h2 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 6px 0', lineHeight: 1.2 }}>
+                เข้าร่วมตอบคำถาม (Join Game)
               </h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0, lineHeight: 1.5 }}>
+                กรอกรหัส **Game PIN 6 หลัก** หรือสแกน QR Code เพื่อเข้าตอบคำถามสดผ่านสมาร์ทโฟน
+              </p>
             </div>
           </div>
 
-          <p style={{ color: 'var(--text-muted)', fontSize: '1rem', lineHeight: 1.6, marginBottom: '28px' }}>
-            สำหรับผู้เข้าร่วมการอบรมที่ต้องการกรอกรหัส **Game PIN 6 หลัก** หรือสแกน **QR Code** เพื่อเข้าเล่นเกมตอบคำถามเรียลไทม์
-          </p>
-
-          <button
-            type="button"
-            onClick={() => setScreen('PLAYER_FORM')}
-            style={{
-              width: '100%',
-              padding: '18px 24px',
-              borderRadius: '12px',
-              background: '#138808',
-              color: '#FFFFFF',
-              fontSize: '1.25rem',
-              fontWeight: 800,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px',
-              boxShadow: '0 4px 14px rgba(19, 136, 8, 0.3)',
-              marginTop: 'auto',
-              borderBottom: '4px solid #0B5605'
-            }}
-          >
-            <Rocket size={22} /> Join / เข้าตอบคำถาม
-          </button>
-        </div>
-
-        {/* RIGHT COLUMN: Teacher / Host Card */}
-        <div
-          className="glass-card animate-pop"
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '32px 28px',
-            borderTop: '6px solid var(--accent-earth-blue)',
-            background: '#FFFFFF',
-            boxShadow: '0 6px 24px rgba(15, 23, 42, 0.06)'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-            <div style={{ background: '#EFF6FF', padding: '14px', borderRadius: '16px', border: '1px solid #BFDBFE' }}>
-              <MonitorPlay size={34} color="var(--accent-earth-blue)" />
-            </div>
-            <div>
-              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-earth-blue)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                สำหรับวิทยากร
-              </span>
-              <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)', lineHeight: 1.2 }}>
-                เปิดเกมสดขึ้นจอใหญ่
-              </h2>
-            </div>
-          </div>
-
-          <p style={{ color: 'var(--text-muted)', fontSize: '1rem', lineHeight: 1.6, marginBottom: '24px' }}>
-            สำหรับวิทยากร/ผู้สอนเพื่อสร้างห้องกิจกรรม แสดง PIN บนจอใหญ่ สลับโหมด Quiz & Pulse และประเมินผลผู้เรียนสด
-          </p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: 'auto' }}>
+          <div style={{ flex: '0 0 auto', minWidth: '220px' }}>
             <button
               type="button"
-              onClick={() => onSwitchToHost?.()}
+              onClick={() => setScreen('PLAYER_FORM')}
               style={{
                 width: '100%',
-                padding: '18px 24px',
-                borderRadius: '12px',
-                background: 'var(--accent-earth-blue)',
+                padding: '16px 32px',
+                borderRadius: '14px',
+                background: '#138808',
                 color: '#FFFFFF',
-                fontSize: '1.25rem',
+                fontSize: '1.2rem',
                 fontWeight: 800,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '10px',
-                boxShadow: '0 4px 14px rgba(30, 58, 138, 0.25)',
-                borderBottom: '4px solid #172554'
+                boxShadow: '0 4px 16px rgba(19, 136, 8, 0.35)',
+                borderBottom: '4px solid #0B5605',
+                cursor: 'pointer'
               }}
             >
-              <Tv size={22} /> Teach / สร้างห้องกิจกรรมสด
+              <Rocket size={22} /> เข้าตอบคำถาม
             </button>
+          </div>
+        </div>
 
-            <button
-              type="button"
-              onClick={() => onOpenTeacherBackoffice?.()}
-              style={{
-                width: '100%',
-                padding: '14px 20px',
-                borderRadius: '12px',
-                background: '#F8FAFC',
-                border: '1px solid #CBD5E1',
-                color: 'var(--text-main)',
-                fontSize: '1rem',
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}
-            >
-              <BookOpen size={18} color="var(--accent-earth-blue)" /> ระบบจัดการคลังคำถาม (Teacher Backoffice)
-            </button>
+        {/* BOTTOM BLOCK: Teacher / Host Card */}
+        <div
+          className="glass-card animate-pop"
+          style={{
+            padding: '28px 32px',
+            borderLeft: '8px solid var(--accent-earth-blue)',
+            background: '#FFFFFF',
+            boxShadow: '0 8px 24px rgba(37, 99, 235, 0.08)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', flexWrap: 'wrap', marginBottom: activeSessions.length > 0 ? '20px' : 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: '1 1 360px' }}>
+              <div style={{ background: '#EFF6FF', padding: '16px', borderRadius: '18px', border: '1px solid #BFDBFE', flexShrink: 0 }}>
+                <MonitorPlay size={38} color="var(--accent-earth-blue)" />
+              </div>
+              <div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-earth-blue)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
+                  <Tv size={14} /> สำหรับวิทยากร / ผู้สอน
+                </div>
+                <h2 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 6px 0', lineHeight: 1.2 }}>
+                  เปิดเกมสดขึ้นจอใหญ่ (Host Dashboard)
+                </h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0, lineHeight: 1.5 }}>
+                  สร้างห้องกิจกรรมใหม่ แสดง PIN & QR Code สลับโหมด Quiz & Pulse หรือเข้าคลังข้อสอบ
+                </p>
+              </div>
+            </div>
 
-            {/* List of Resumable / Pending Sessions */}
-            {activeSessions.length > 0 && (
-              <div
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={() => onSwitchToHost?.()}
                 style={{
-                  marginTop: '16px',
-                  background: '#F8FAFC',
-                  border: '1.5px solid #CBD5E1',
-                  borderRadius: '16px',
-                  padding: '16px',
-                  textAlign: 'left'
+                  padding: '14px 24px',
+                  borderRadius: '12px',
+                  background: 'var(--accent-earth-blue)',
+                  color: '#FFFFFF',
+                  fontSize: '1.05rem',
+                  fontWeight: 800,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 14px rgba(30, 58, 138, 0.25)',
+                  borderBottom: '4px solid #172554',
+                  cursor: 'pointer'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--accent-earth-blue)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Users size={16} /> ห้องที่เปิดค้างไว้ / รอทำ Post-test:
-                  </span>
-                  <span style={{ fontSize: '0.75rem', background: '#DBEAFE', color: '#1E40AF', padding: '2px 8px', borderRadius: '10px', fontWeight: 700 }}>
-                    {activeSessions.length} ห้อง
-                  </span>
-                </div>
+                <Tv size={20} /> สร้างห้องกิจกรรมใหม่
+              </button>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
-                  {activeSessions.map((sess) => (
-                    <div
-                      key={sess.pin}
+              <button
+                type="button"
+                onClick={() => onOpenTeacherBackoffice?.()}
+                style={{
+                  padding: '14px 20px',
+                  borderRadius: '12px',
+                  background: '#F8FAFC',
+                  border: '1px solid #CBD5E1',
+                  color: 'var(--text-main)',
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                <BookOpen size={18} color="var(--accent-earth-blue)" /> คลังคำถาม
+              </button>
+            </div>
+          </div>
+
+          {/* List of Resumable / Pending Sessions */}
+          {activeSessions.length > 0 && (
+            <div
+              style={{
+                marginTop: '16px',
+                background: '#F8FAFC',
+                border: '1.5px solid #CBD5E1',
+                borderRadius: '16px',
+                padding: '16px',
+                textAlign: 'left'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--accent-earth-blue)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Users size={16} /> ห้องที่เปิดค้างไว้ / รอทำ Post-test:
+                </span>
+                <span style={{ fontSize: '0.78rem', background: '#DBEAFE', color: '#1E40AF', padding: '2px 8px', borderRadius: '10px', fontWeight: 700 }}>
+                  {activeSessions.length} ห้อง
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
+                {activeSessions.map((sess) => (
+                  <div
+                    key={sess.pin}
+                    style={{
+                      background: '#FFFFFF',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '12px',
+                      padding: '12px 14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '12px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.03)'
+                    }}
+                  >
+                    <div style={{ overflow: 'hidden' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontWeight: 900, color: 'var(--accent-earth-orange)', fontSize: '1.1rem', letterSpacing: '1px' }}>
+                          PIN: {sess.pin}
+                        </span>
+                        {sess.hasPretest && (
+                          <span style={{ background: '#DCFCE7', color: '#15803D', fontSize: '0.72rem', fontWeight: 700, padding: '1px 6px', borderRadius: '6px' }}>
+                            Pre-test ✓
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', marginTop: '2px' }}>
+                        {sess.quizTitle} • {sess.pretestPlayerCount || sess.rosterCount || 0} คน
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => onResumeRoom?.(sess.pin)}
                       style={{
-                        background: '#FFFFFF',
-                        border: '1px solid #E2E8F0',
-                        borderRadius: '12px',
-                        padding: '10px 14px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '12px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.03)'
+                        background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '8px 14px',
+                        fontSize: '0.85rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        boxShadow: '0 2px 6px rgba(37,99,235,0.25)'
                       }}
                     >
-                      <div style={{ overflow: 'hidden' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontWeight: 900, color: 'var(--accent-earth-orange)', fontSize: '1.05rem', letterSpacing: '1px' }}>
-                            PIN: {sess.pin}
-                          </span>
-                          {sess.hasPretest && (
-                            <span style={{ background: '#DCFCE7', color: '#15803D', fontSize: '0.72rem', fontWeight: 700, padding: '1px 6px', borderRadius: '6px' }}>
-                              Pre-test ✓
-                            </span>
-                          )}
-                        </div>
-                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', marginTop: '2px' }}>
-                          {sess.quizTitle} • {sess.pretestPlayerCount || sess.rosterCount || 0} คน
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => onResumeRoom?.(sess.pin)}
-                        style={{
-                          background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-                          color: '#FFFFFF',
-                          border: 'none',
-                          borderRadius: '8px',
-                          padding: '8px 12px',
-                          fontSize: '0.82rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap',
-                          boxShadow: '0 2px 6px rgba(37,99,235,0.25)'
-                        }}
-                      >
-                        ⚡ เปิดห้องต่อ
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                      ⚡ เปิดห้องต่อ
+                    </button>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
       </div>
