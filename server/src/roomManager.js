@@ -140,7 +140,7 @@ class RoomManager {
     }
 
     const questionResult = room.status === 'QUESTION_RESULT' ? this.getQuestionResult(pin) : null;
-    const leaderboard = (room.status === 'LEADERBOARD' || room.status === 'ENDED') ? this.getLeaderboard(pin) : [];
+    const leaderboard = (room.status === 'LEADERBOARD' || room.status === 'ENDED') ? this.getLeaderboard(pin, false) : [];
     const quizAnalytics = this.getQuizAnalytics(pin);
     const counts = this.getPlayerCounts(pin);
     const players = this.getPlayerList(pin);
@@ -321,7 +321,7 @@ class RoomManager {
     }
 
     const questionResult = room.status === 'QUESTION_RESULT' ? this.getQuestionResult(pin) : null;
-    const leaderboard = room.status === 'LEADERBOARD' ? this.getLeaderboard(pin) : [];
+    const leaderboard = room.status === 'LEADERBOARD' ? this.getLeaderboard(pin, false) : [];
     const counts = this.getPlayerCounts(pin);
 
     return {
@@ -868,7 +868,7 @@ class RoomManager {
     const room = this.rooms.get(pin);
     if (!room) return null;
 
-    const leaderboard = this.getLeaderboard(pin);
+    const leaderboard = this.getLeaderboard(pin, false);
     const totalPlayers = leaderboard.length;
     const history = room.questionHistory || [];
     const totalQuestions = room.quizSet?.questions?.length || history.length || 0;
@@ -1019,11 +1019,17 @@ class RoomManager {
     };
   }
 
-  getLeaderboard(pin) {
+  getLeaderboard(pin, forceStatusUpdate = null) {
     const room = this.rooms.get(pin);
     if (!room) return [];
 
-    if (room.status !== 'ENDED') {
+    // Only update status to LEADERBOARD when explicitly requested or transitioning from QUESTION_RESULT
+    // NEVER mutate status to LEADERBOARD if room is in LOBBY, QUESTION, or ENDED!
+    const shouldUpdate = forceStatusUpdate !== null
+      ? forceStatusUpdate
+      : (room.status === 'QUESTION_RESULT');
+
+    if (shouldUpdate && room.status !== 'ENDED') {
       room.status = 'LEADERBOARD';
     }
 

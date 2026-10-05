@@ -999,6 +999,19 @@ async function testRoomManager() {
     console.log('    ✓ Timer Duration Sanitize & Pulse Retention passed');
   }
 
+  // Test 31: Host Reconnect in Lobby preserves LOBBY status (No accidental Leaderboard transition)
+  {
+    const rm = new RoomManager();
+    const room = rm.createRoom('h-orig-sock');
+    assert.strictEqual(room.status, 'LOBBY');
+
+    // Simulate Host Refresh (new socket connecting and calling reconnectHost)
+    const snapshot = rm.reconnectHost(room.pin, 'h-new-sock', room.hostToken);
+    assert.strictEqual(snapshot.status, 'LOBBY', 'Host refresh in Lobby must remain in LOBBY mode, not jump to LEADERBOARD');
+    assert.strictEqual(room.status, 'LOBBY', 'Room internal status must remain in LOBBY mode');
+    console.log('    ✓ Host Reconnect in Lobby preserves LOBBY status passed');
+  }
+
   console.log('✅ RoomManager tests passed cleanly!');
 }
 
