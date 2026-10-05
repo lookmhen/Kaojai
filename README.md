@@ -134,19 +134,19 @@ KaoJai/
 - **Styling**: Pure CSS3 Variables & Responsive Flex/Grid (Earth Tone Palette & Google Stitch Standard)
 
 ### ฝั่ง Backend (Server)
-- **Runtime**: Node.js (v20+)
+- **Runtime**: Node.js (v22+ LTS แนะนำ Node 22.5+ สำหรับ Built-in `node:sqlite`)
 - **Database / Persistence**: Built-in SQLite (`node:sqlite` DatabaseSync with WAL Mode)
 - **HTTP Server**: Express.js
 - **Real-time Gateway**: Socket.io 4
 - **Testing Framework**: Node.js Native Assertion (`node:assert/strict`)
-- **Container**: Docker & Docker Compose with Alpine Linux
+- **Container**: Docker & Docker Compose with Alpine Linux (Node 22 Alpine)
 
 ---
 
 ## 🚀 คู่มือการติดตั้งและเริ่มต้นใช้งาน (Getting Started)
 
 ### ความต้องการของระบบ (Prerequisites)
-- [Node.js](https://nodejs.org/) เวอร์ชัน 18.0 ขึ้นไป
+- [Node.js](https://nodejs.org/) เวอร์ชัน 22.5.0 ขึ้นไป (เนื่องจากใช้ `node:sqlite` ในตัว)
 - Git
 
 ### 1. ติดตั้ง Dependencies
@@ -181,16 +181,25 @@ npm run dev
 
 ## 🐳 การรันผ่าน Docker (Container Deployment)
 
-ระบบมี Docker Configuration ที่พร้อมใช้งานทันที (รองรับ Production, Nginx Reverse Proxy, และ Persistent Uploads):
+ระบบมี All-in-One Multi-Stage Dockerfile (Node 22 Alpine) รองรับ Production รวมทั้ง Client (React Static Build) และ Server (Socket.io + SQLite):
 
 ```bash
-# สั่ง Build และรันทั้งระบบผ่าน Docker Compose
+# 1. (ทางเลือก) สร้างไฟล์ .env หากต้องการระบุ GEMINI_API_KEY หรือ HOST_PORT
+cp server/.env.example server/.env
+
+# 2. สั่ง Build และรันทั้งระบบผ่าน Docker Compose
 docker compose up --build -d
 ```
 
-- **Frontend Client (Nginx)**: เข้าใช้งานผ่าน `http://localhost` (Port 80)
-- **Backend API & Socket**: ทำงานภายในเครือข่าย Docker และสื่อสารผ่าน Nginx Reverse Proxy อัตโนมัติ
-- **Persistent Data**: โฟลเดอร์รูปภาพคำถามจะถูกจัดเก็บใน Docker Volume `server_uploads` อย่างถาวร
+- **เข้าใช้งานเว็บแอปพลิเคชัน**: เข้าผ่าน `http://<IP-เครื่องเซิร์ฟเวอร์>` หรือ `http://localhost` (Port 80 หรือตามที่ระบุใน `HOST_PORT`)
+- **Persistent Data**:
+  - ฐานข้อมูลห้องและผลสอบ SQLite จะถูก Map ลงโฟลเดอร์ `./server/data/kaojai.sqlite`
+  - ไฟล์ภาพที่อัปโหลดจะถูกเก็บใน Docker Volume `server_uploads`
+- **ตรวจสอบสถานะคอนเทนเนอร์**:
+```bash
+docker compose ps
+docker compose logs -f kaojai
+```
 
 ---
 

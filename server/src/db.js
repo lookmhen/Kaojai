@@ -1,6 +1,16 @@
 const fs = require('fs');
 const path = require('path');
-const { DatabaseSync } = require('node:sqlite');
+
+let DatabaseSync = null;
+let isSqliteSupported = false;
+
+try {
+  const sqlite = require('node:sqlite');
+  DatabaseSync = sqlite.DatabaseSync;
+  isSqliteSupported = !!DatabaseSync;
+} catch (loadErr) {
+  console.warn(`[DB Warning] Built-in 'node:sqlite' unavailable: ${loadErr.message}. Node.js >= 22.5.0 required for SQLite persistence (current: ${process.version}). Falling back to memory-only mode.`);
+}
 
 const DATA_DIR = path.resolve(__dirname, '../data');
 const DB_PATH = process.env.NODE_ENV === 'test' ? ':memory:' : path.resolve(DATA_DIR, 'kaojai.sqlite');
@@ -11,9 +21,13 @@ let activeDbPath = null;
 /**
  * Initialize or get database instance
  * @param {string} [customPath] - Optional custom SQLite file path or ':memory:'
- * @returns {DatabaseSync}
+ * @returns {DatabaseSync|null}
  */
 function initDb(customPath = DB_PATH) {
+  if (!DatabaseSync) {
+    return null;
+  }
+
   if (db && activeDbPath === customPath) {
     return db;
   }
@@ -56,6 +70,7 @@ function initDb(customPath = DB_PATH) {
  * Accessor for database connection (ensures db is initialized)
  */
 function getDb() {
+  if (!DatabaseSync) return null;
   if (!db) {
     return initDb(DB_PATH);
   }
@@ -66,7 +81,9 @@ function getDb() {
  * Create tables, indexes, and views
  */
 function initSchema() {
+  if (!DatabaseSync) return;
   const d = db || initDb(DB_PATH);
+  if (!d) return;
 
   d.exec(`
     CREATE TABLE IF NOT EXISTS rooms (
@@ -117,6 +134,7 @@ function saveRoom(room) {
   if (!room || !room.pin) return { success: false, error: 'Invalid room object or missing PIN' };
   try {
     const d = getDb();
+    if (!d) return { success: false, error: 'Database unavailable' };
     const now = Date.now();
     const createdAt = Number(room.createdAt) || now;
     const updatedAt = now;
@@ -185,6 +203,7 @@ function getRoom(pin) {
   if (!pin) return null;
   try {
     const d = getDb();
+    if (!d) return null;
     const row = d.prepare('SELECT * FROM rooms WHERE pin = ?').get(String(pin));
     if (!row) return null;
 
@@ -236,6 +255,7 @@ function getRoom(pin) {
 function getAllRooms() {
   try {
     const d = getDb();
+    if (!d) return [];
     const rows = d.prepare('SELECT * FROM rooms ORDER BY updatedAt DESC').all();
     return rows.map(row => {
       let quizSet = null;
@@ -289,6 +309,7 @@ function deleteRoom(pin) {
   if (!pin) return false;
   try {
     const d = getDb();
+    if (!d) return false;
     d.prepare('DELETE FROM roster_players WHERE pin = ?').run(String(pin));
     const res = d.prepare('DELETE FROM rooms WHERE pin = ?').run(String(pin));
     return res.changes > 0;
@@ -310,6 +331,7 @@ function saveRosterPlayer(pin, player) {
 
   try {
     const d = getDb();
+    if (!d) return { success: false, error: 'Database unavailable' };
     const stmt = d.prepare(`
       INSERT INTO roster_players (
         pin, playerId, name, avatar, teamId,
@@ -390,6 +412,7 @@ function savePretestRoster(pin, arg2, arg3) {
 
   try {
     const d = getDb();
+    if (!d) return { success: false, error: 'Database unavailable' };
     const now = Date.now();
 
     // If pretestData provided, update rooms table if room exists
@@ -475,6 +498,7 @@ function getRosterByPin(pin) {
   if (!pin) return [];
   try {
     const d = getDb();
+    if (!d) return [];
     const rows = d.prepare(`
       SELECT playerId, name, avatar, teamId, pretestScore, pretestAccuracy, posttestScore, posttestAccuracy, hasPretest, updatedAt
       FROM roster_players

@@ -4,15 +4,17 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "80:4000"
+      - "${HOST_PORT:-80}:4000"
     env_file:
-      - ./server/.env
+      - path: ./server/.env
+        required: false
     environment:
       - PORT=4000
       - NODE_ENV=production
     volumes:
       - ./server/data:/app/server/data
       - server_uploads:/app/server/public/uploads
+    init: true
     restart: always
 
 volumes:
