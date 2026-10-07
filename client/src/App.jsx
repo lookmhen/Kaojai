@@ -13,6 +13,7 @@ import { HostPulse } from './components/host/HostPulse';
 import { HostLeaderboard } from './components/host/HostLeaderboard';
 import { TeacherBackoffice } from './components/teacher/TeacherBackoffice';
 import { PrepareCountdown } from './components/common/PrepareCountdown';
+import { SequenceIntroGuide } from './components/common/SequenceIntroGuide';
 import { WifiOff, AlertCircle, X } from 'lucide-react';
 import './styles/global.css';
 
@@ -64,6 +65,7 @@ export function AppContent() {
   };
 
   const [prepareData, setPrepareData] = useState(null);
+  const [sequenceIntroData, setSequenceIntroData] = useState(null);
   const [quizMode, setQuizMode] = useState('NORMAL');
 
   // Team State
@@ -109,6 +111,9 @@ export function AppContent() {
       } else if (data.quizSet?.id) {
         setSelectedQuizId(data.quizSet.id);
       }
+      if (data.sequenceIntroData) {
+        setSequenceIntroData(data.sequenceIntroData);
+      }
       setViewMode('HOST_GAME');
       saveSessionData({ pin: data.pin, isHost: true, hostToken: data.hostToken || session.hostToken });
     };
@@ -132,6 +137,9 @@ export function AppContent() {
       if (data.leaderboard) setLeaderboard(data.leaderboard);
       if (data.teamsEnabled !== undefined) setTeamsEnabled(data.teamsEnabled);
       if (data.teams) setTeams(data.teams);
+      if (data.sequenceIntroData) {
+        setSequenceIntroData(data.sequenceIntroData);
+      }
       
       saveSessionData({
         pin: data.pin,
@@ -146,10 +154,20 @@ export function AppContent() {
 
     const onQuestionPrepare = (data) => {
       if (data.quizMode) setQuizMode(data.quizMode);
+      setSequenceIntroData(null);
       setQuestionResult(null);
       setCurrentQuestion(null);
       setStatus('PREPARE');
       setPrepareData(data);
+    };
+
+    const onSequenceIntro = (data) => {
+      if (data.quizMode) setQuizMode(data.quizMode);
+      setPrepareData(null);
+      setQuestionResult(null);
+      setCurrentQuestion(null);
+      setStatus('SEQUENCE_INTRO');
+      setSequenceIntroData(data);
     };
 
     const onQuestionStart = (data) => {
@@ -160,6 +178,7 @@ export function AppContent() {
         totalPlayers: data?.totalPlayers
       });
       setPrepareData(null);
+      setSequenceIntroData(null);
       if (data.quizMode) setQuizMode(data.quizMode);
       setCurrentQuestion(data.question);
       setQuestionResult(null);
@@ -379,6 +398,7 @@ export function AppContent() {
     socket.on('error_message', onErrorMessage);
     socket.on('teams_toggled', onTeamsToggled);
     socket.on('teams_updated', onTeamsUpdated);
+    socket.on('sequence_intro', onSequenceIntro);
     socket.on('room_reset_to_lobby', onRoomResetToLobby);
     socket.on('room_closed', onRoomClosed);
 
@@ -407,6 +427,7 @@ export function AppContent() {
       socket.off('room_updated', onRoomUpdated);
       socket.off('join_success', onJoinSuccess);
       socket.off('question_prepare', onQuestionPrepare);
+      socket.off('sequence_intro', onSequenceIntro);
       socket.off('question_start', onQuestionStart);
       socket.off('answered_count_update', onAnsweredCountUpdate);
       socket.off('answer_feedback', onAnswerFeedback);
@@ -499,9 +520,15 @@ export function AppContent() {
   };
 
   const handleNextQuestion = () => {
-    if (!socket || status === 'ENDED' || status === 'PREPARE') return;
+    if (!socket || status === 'ENDED' || status === 'PREPARE' || status === 'SEQUENCE_INTRO') return;
     const token = getEffectiveHostToken();
     socket.emit('next_question', { pin, hostToken: token });
+  };
+
+  const handleStartSequenceQuestion = () => {
+    if (!socket) return;
+    const token = getEffectiveHostToken();
+    socket.emit('start_sequence_question', { pin, hostToken: token });
   };
 
   const handleShowLeaderboard = () => {
@@ -542,6 +569,7 @@ export function AppContent() {
     setQuizMode('NORMAL');
     setPlayerData(null);
     setPrepareData(null);
+    setSequenceIntroData(null);
     setCurrentQuestion(null);
     setQuestionResult(null);
     setLeaderboard([]);
@@ -811,6 +839,16 @@ export function AppContent() {
           totalQuestions={prepareData.totalQuestions}
           initialSeconds={prepareData.countdownSeconds || 5}
           onComplete={() => setPrepareData(null)}
+        />
+      )}
+
+      {sequenceIntroData && status === 'SEQUENCE_INTRO' && (
+        <SequenceIntroGuide
+          isHost={viewMode === 'HOST_GAME'}
+          nextQuestionIndex={sequenceIntroData.nextQuestionIndex}
+          totalQuestions={sequenceIntroData.totalQuestions}
+          questionText={sequenceIntroData.questionText}
+          onStartQuestion={handleStartSequenceQuestion}
         />
       )}
     </div>

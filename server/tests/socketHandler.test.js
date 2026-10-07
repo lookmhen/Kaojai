@@ -565,6 +565,44 @@ async function testSocketHandlers() {
   assert.strictEqual(resultsAfterStale.length, 0, 'Stale questionId submit must NOT trigger question_result');
   console.log('    ✓ next_question flow and stale questionId rejection passed');
 
+  // Test 22: First-look Sequence Intro Flow & host confirmation
+  console.log('  Testing First-look Sequence Intro flow and start_sequence_question...');
+  const t22Host = mockIo.connectSocket('t22-host');
+  let t22HostAck;
+  await t22Host.fire('create_room', null, (r) => { t22HostAck = r; });
+  const t22Pin = t22HostAck.pin;
+  const t22Room = roomManager.getRoom(t22Pin);
+  roomManager.setRoomQuiz(t22Pin, 'quiz-1'); // Q0=CHOICE, Q1=CHOICE, Q2=SEQUENCE
+
+  // Start Q0 (CHOICE)
+  await t22Host.fire('start_quiz', { pin: t22Pin, hostToken: t22Room.hostToken, quizId: 'quiz-1' });
+  await new Promise(r => setTimeout(r, 35));
+
+  // Advance to Q1 (CHOICE)
+  await t22Host.fire('next_question', { pin: t22Pin, hostToken: t22Room.hostToken });
+  await new Promise(r => setTimeout(r, 35));
+  assert.strictEqual(t22Room.currentQuestionIndex, 1);
+
+  // Now advance to Q2 (SEQUENCE) - this is first SEQUENCE question!
+  await t22Host.fire('next_question', { pin: t22Pin, hostToken: t22Room.hostToken });
+
+  // Must emit sequence_intro and enter status SEQUENCE_INTRO
+  const seqIntroBroadcast = broadcasts.find(b => b.roomPin === t22Pin && b.event === 'sequence_intro');
+  assert.ok(seqIntroBroadcast, 'sequence_intro must be emitted for first-look SEQUENCE');
+  assert.strictEqual(seqIntroBroadcast.payload.nextQuestionIndex, 2);
+  assert.strictEqual(t22Room.status, 'SEQUENCE_INTRO');
+  assert.strictEqual(t22Room.prepareTimer, null, 'No automatic prepareTimer should run in SEQUENCE_INTRO');
+
+  // Host confirms ready by emitting start_sequence_question
+  await t22Host.fire('start_sequence_question', { pin: t22Pin, hostToken: t22Room.hostToken });
+  assert.strictEqual(t22Room.status, 'PREPARE');
+
+  // Wait for prepare countdown
+  await new Promise(r => setTimeout(r, 35));
+  assert.strictEqual(t22Room.status, 'QUESTION');
+  assert.strictEqual(t22Room.currentQuestionIndex, 2);
+  console.log('    ✓ First-look Sequence Intro flow passed');
+
   console.log('✅ socketHandler tests passed cleanly!');
 }
 

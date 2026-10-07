@@ -58,8 +58,10 @@ class RoomManager {
       pulseVotes: { green: 0, yellow: 0, red: 0 },
       pulseRound: 1,
       pulseHistory: [],
-      status: 'LOBBY', // 'LOBBY', 'QUESTION', 'QUESTION_RESULT', 'LEADERBOARD', 'ENDED'
+      status: 'LOBBY', // 'LOBBY', 'QUESTION', 'QUESTION_RESULT', 'LEADERBOARD', 'ENDED', 'SEQUENCE_INTRO'
       quizMode: 'NORMAL', // 'NORMAL' | 'PRETEST' | 'POSTTEST'
+      hasIntroducedSequence: false, // Tracks if first-look sequence guide was shown
+      pendingQuestionIndex: null, // Tracks target question index while in SEQUENCE_INTRO
       pretestData: null,  // Snapshot of pre-test results for learning gain comparison
       currentAnswers: new Map(), // playerId -> { optionId, isCorrect, timeUsed, pointsEarned }
       questionHistory: [] // Array of historical question result snapshots for detailed analytics
@@ -98,6 +100,8 @@ class RoomManager {
           pulseHistory: [],
           status: persisted.status === 'ENDED' ? 'LOBBY' : (persisted.status || 'LOBBY'),
           quizMode: persisted.quizMode || 'NORMAL',
+          hasIntroducedSequence: false,
+          pendingQuestionIndex: null,
           pretestData: persisted.pretestData || null,
           currentAnswers: new Map(),
           questionHistory: []
@@ -164,7 +168,12 @@ class RoomManager {
       players,
       counts,
       teamsEnabled: room.teamsEnabled,
-      teams: this.getTeamList(pin)
+      teams: this.getTeamList(pin),
+      sequenceIntroData: room.status === 'SEQUENCE_INTRO' ? {
+        nextQuestionIndex: room.pendingQuestionIndex !== null ? room.pendingQuestionIndex : 0,
+        totalQuestions: room.quizSet?.questions?.length || 0,
+        questionText: room.quizSet?.questions?.[room.pendingQuestionIndex]?.questionText || ''
+      } : null
     };
   }
 
@@ -338,7 +347,12 @@ class RoomManager {
       quizMode: room.quizMode || 'NORMAL',
       pretestData: room.pretestData || null,
       leaderboard,
-      counts
+      counts,
+      sequenceIntroData: room.status === 'SEQUENCE_INTRO' ? {
+        nextQuestionIndex: room.pendingQuestionIndex !== null ? room.pendingQuestionIndex : 0,
+        totalQuestions: room.quizSet?.questions?.length || 0,
+        questionText: room.quizSet?.questions?.[room.pendingQuestionIndex]?.questionText || ''
+      } : null
     };
   }
 
@@ -1264,6 +1278,8 @@ class RoomManager {
     room.questionHistory = [];
     room.currentAnswers.clear();
     room.bottomHalfPlayerIds = new Set();
+    room.hasIntroducedSequence = false;
+    room.pendingQuestionIndex = null;
     if (clearPulse) {
       room.pulseVotes = { green: 0, yellow: 0, red: 0 };
       room.pulseRound = 1;

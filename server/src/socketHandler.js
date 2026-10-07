@@ -183,43 +183,169 @@ module.exports = function setupSocketHandlers(io) {
         // If starting PRETEST, clear any old pretest data. If starting POSTTEST or NORMAL, preserve pretestData.
         roomManager.resetRoomScores(pin, { clearPretest: quizMode === 'PRETEST' });
 
-        const prepareDurationMs = process.env.NODE_ENV === 'test' ? 20 : 5000;
+        function launchQuestion(roomPin, targetIdx) {
+          try {
+            const currentRoom = roomManager.getRoom(roomPin);
+            if (!currentRoom) return;
 
+            const result = roomManager.startQuestion(roomPin, targetIdx);
+            if (result.isEnded) {
+              if (currentRoom.quizMode === 'PRETEST') {
+                roomManager.savePretestSnapshot(roomPin);
+              }
+              const leaderboard = roomManager.getLeaderboard(roomPin);
+              const quizAnalytics = roomManager.getQuizAnalytics(roomPin);
+              return io.to(roomPin).emit('quiz_ended', {
+                leaderboard,
+                quizAnalytics,
+                status: 'ENDED',
+                isEnded: true,
+                quizMode: currentRoom.quizMode,
+                pretestData: currentRoom.pretestData
+              });
+            }
+
+            const counts = roomManager.getPlayerCounts(roomPin);
+            io.to(roomPin).emit('question_start', {
+              question: result.question,
+              currentQuestionIndex: currentRoom.currentQuestionIndex,
+              totalQuestions: currentRoom.quizSet.questions.length,
+              answeredCount: 0,
+              totalPlayers: counts.totalPlayers,
+              quizMode: currentRoom.quizMode
+            });
+
+            const durationSec = Math.max(5, Number(result.question?.timeLimitSeconds) || 30);
+            const timeLimitMs = (durationSec + 1) * 1000;
+            currentRoom.questionTimer = setTimeout(() => {
+              try {
+                currentRoom.questionTimer = null;
+                const questionResult = roomManager.getQuestionResult(roomPin);
+                if (currentRoom.quizMode === 'PRETEST') {
+                  io.to(roomPin).emit('question_result', maskPretestResult(questionResult));
+                } else {
+                  io.to(roomPin).emit('question_result', questionResult);
+                }
+              } catch (tErr) {
+                console.error('[Socket Timer Error] questionTimer:', tErr);
+              }
+            }, timeLimitMs);
+          } catch (launchErr) {
+            console.error('[Socket Error] launchQuestion:', launchErr);
+          }
+        }
+
+        function triggerQuestionTransition(currentRoom, targetIdx) {
+          if (currentRoom.questionTimer) {
+            clearTimeout(currentRoom.questionTimer);
+            currentRoom.questionTimer = null;
+          }
+          if (currentRoom.prepareTimer) {
+            clearTimeout(currentRoom.prepareTimer);
+            currentRoom.prepareTimer = null;
+          }
+
+          const targetQuestion = currentRoom.quizSet?.questions?.[targetIdx];
+          const isSequence = (targetQuestion?.questionType === 'SEQUENCE' || targetQuestion?.type === 'SEQUENCE');
+          const isFirstSequence = isSequence && !currentRoom.hasIntroducedSequence;
+
+          if (isFirstSequence) {
+            currentRoom.hasIntroducedSequence = true;
+            currentRoom.status = 'SEQUENCE_INTRO';
+            currentRoom.pendingQuestionIndex = targetIdx;
+
+            io.to(currentRoom.pin).emit('sequence_intro', {
+              nextQuestionIndex: targetIdx,
+              totalQuestions: currentRoom.quizSet.questions.length,
+              questionText: targetQuestion.questionText || '',
+              quizMode: currentRoom.quizMode
+            });
+            return;
+          }
+
+          const prepareDurationMs = process.env.NODE_ENV === 'test' ? 20 : 5000;
+          currentRoom.status = 'PREPARE';
+          io.to(currentRoom.pin).emit('question_prepare', {
+            nextQuestionIndex: targetIdx,
+            totalQuestions: currentRoom.quizSet.questions.length,
+            countdownSeconds: 5,
+            quizMode: currentRoom.quizMode
+          });
+
+          currentRoom.prepareTimer = setTimeout(() => {
+            currentRoom.prepareTimer = null;
+            launchQuestion(currentRoom.pin, targetIdx);
+          }, prepareDurationMs);
+        }
+
+        triggerQuestionTransition(room, 0);
+
+      } catch (err) {
+        console.error('[Socket Error] start_quiz:', err);
+        socket.emit('error_message', { message: err.message });
+      }
+    });
+
+    socket.on('start_sequence_question', ({ pin, hostToken }) => {
+      try {
+        const room = verifyHost(pin, hostToken);
+        if (room.status !== 'SEQUENCE_INTRO') return;
+
+        const targetIdx = (room.pendingQuestionIndex !== null && room.pendingQuestionIndex !== undefined)
+          ? room.pendingQuestionIndex
+          : 0;
+
+        room.pendingQuestionIndex = null;
+
+        const prepareDurationMs = process.env.NODE_ENV === 'test' ? 20 : 3000;
         room.status = 'PREPARE';
         io.to(pin).emit('question_prepare', {
-          nextQuestionIndex: 0,
+          nextQuestionIndex: targetIdx,
           totalQuestions: room.quizSet.questions.length,
-          countdownSeconds: 5,
+          countdownSeconds: 3,
           quizMode: room.quizMode
         });
 
         room.prepareTimer = setTimeout(() => {
+          room.prepareTimer = null;
           try {
-            room.prepareTimer = null;
-            const result = roomManager.startQuestion(pin, 0);
+            const currentRoom = roomManager.getRoom(pin);
+            if (!currentRoom) return;
+
+            const result = roomManager.startQuestion(pin, targetIdx);
             if (result.isEnded) {
+              if (currentRoom.quizMode === 'PRETEST') {
+                roomManager.savePretestSnapshot(pin);
+              }
               const leaderboard = roomManager.getLeaderboard(pin);
               const quizAnalytics = roomManager.getQuizAnalytics(pin);
-              return io.to(pin).emit('quiz_ended', { leaderboard, quizAnalytics, status: 'ENDED', isEnded: true, quizMode: room.quizMode, pretestData: room.pretestData });
+              return io.to(pin).emit('quiz_ended', {
+                leaderboard,
+                quizAnalytics,
+                status: 'ENDED',
+                isEnded: true,
+                quizMode: currentRoom.quizMode,
+                pretestData: currentRoom.pretestData
+              });
             }
 
             const counts = roomManager.getPlayerCounts(pin);
             io.to(pin).emit('question_start', {
               question: result.question,
-              currentQuestionIndex: room.currentQuestionIndex,
-              totalQuestions: room.quizSet.questions.length,
+              currentQuestionIndex: currentRoom.currentQuestionIndex,
+              totalQuestions: currentRoom.quizSet.questions.length,
               answeredCount: 0,
               totalPlayers: counts.totalPlayers,
-              quizMode: room.quizMode
+              quizMode: currentRoom.quizMode
             });
 
             const durationSec = Math.max(5, Number(result.question?.timeLimitSeconds) || 30);
             const timeLimitMs = (durationSec + 1) * 1000;
-            room.questionTimer = setTimeout(() => {
+            currentRoom.questionTimer = setTimeout(() => {
               try {
-                room.questionTimer = null;
+                currentRoom.questionTimer = null;
                 const questionResult = roomManager.getQuestionResult(pin);
-                if (room.quizMode === 'PRETEST') {
+                if (currentRoom.quizMode === 'PRETEST') {
                   io.to(pin).emit('question_result', maskPretestResult(questionResult));
                 } else {
                   io.to(pin).emit('question_result', questionResult);
@@ -228,13 +354,12 @@ module.exports = function setupSocketHandlers(io) {
                 console.error('[Socket Timer Error] questionTimer:', tErr);
               }
             }, timeLimitMs);
-          } catch (pErr) {
-            console.error('[Socket Timer Error] prepareTimer:', pErr);
+          } catch (lErr) {
+            console.error('[Socket Error] start_sequence_question launch:', lErr);
           }
         }, prepareDurationMs);
-
       } catch (err) {
-        console.error('[Socket Error] start_quiz:', err);
+        console.error('[Socket Error] start_sequence_question:', err);
         socket.emit('error_message', { message: err.message });
       }
     });
@@ -279,6 +404,24 @@ module.exports = function setupSocketHandlers(io) {
           });
         }
 
+        const targetQuestion = room.quizSet?.questions?.[nextIdx];
+        const isSequence = (targetQuestion?.questionType === 'SEQUENCE' || targetQuestion?.type === 'SEQUENCE');
+        const isFirstSequence = isSequence && !room.hasIntroducedSequence;
+
+        if (isFirstSequence) {
+          room.hasIntroducedSequence = true;
+          room.status = 'SEQUENCE_INTRO';
+          room.pendingQuestionIndex = nextIdx;
+
+          io.to(room.pin).emit('sequence_intro', {
+            nextQuestionIndex: nextIdx,
+            totalQuestions: room.quizSet.questions.length,
+            questionText: targetQuestion.questionText || '',
+            quizMode: room.quizMode
+          });
+          return;
+        }
+
         const prepareDurationMs = process.env.NODE_ENV === 'test' ? 20 : 5000;
 
         room.status = 'PREPARE';
@@ -291,48 +434,55 @@ module.exports = function setupSocketHandlers(io) {
 
         room.prepareTimer = setTimeout(() => {
           room.prepareTimer = null;
-          const result = roomManager.startQuestion(pin, nextIdx);
-          if (result.isEnded) {
-            if (room.quizMode === 'PRETEST') {
-              roomManager.savePretestSnapshot(pin);
-            }
-            const leaderboard = roomManager.getLeaderboard(pin);
-            const quizAnalytics = roomManager.getQuizAnalytics(pin);
-            return io.to(pin).emit('quiz_ended', {
-              leaderboard,
-              quizAnalytics,
-              status: 'ENDED',
-              isEnded: true,
-              quizMode: room.quizMode,
-              pretestData: room.pretestData
-            });
-          }
+          try {
+            const currentRoom = roomManager.getRoom(pin);
+            if (!currentRoom) return;
 
-          const counts = roomManager.getPlayerCounts(pin);
-          io.to(pin).emit('question_start', {
-            question: result.question,
-            currentQuestionIndex: room.currentQuestionIndex,
-            totalQuestions: room.quizSet.questions.length,
-            answeredCount: 0,
-            totalPlayers: counts.totalPlayers,
-            quizMode: room.quizMode
-          });
-
-          const durationSec = Math.max(5, Number(result.question?.timeLimitSeconds) || 30);
-          const timeLimitMs = (durationSec + 1) * 1000;
-          room.questionTimer = setTimeout(() => {
-            try {
-              room.questionTimer = null;
-              const questionResult = roomManager.getQuestionResult(pin);
-              if (room.quizMode === 'PRETEST') {
-                io.to(pin).emit('question_result', maskPretestResult(questionResult));
-              } else {
-                io.to(pin).emit('question_result', questionResult);
+            const result = roomManager.startQuestion(pin, nextIdx);
+            if (result.isEnded) {
+              if (currentRoom.quizMode === 'PRETEST') {
+                roomManager.savePretestSnapshot(pin);
               }
-            } catch (tErr) {
-              console.error('[Socket Timer Error] next_question timer:', tErr);
+              const leaderboard = roomManager.getLeaderboard(pin);
+              const quizAnalytics = roomManager.getQuizAnalytics(pin);
+              return io.to(pin).emit('quiz_ended', {
+                leaderboard,
+                quizAnalytics,
+                status: 'ENDED',
+                isEnded: true,
+                quizMode: currentRoom.quizMode,
+                pretestData: currentRoom.pretestData
+              });
             }
-          }, timeLimitMs);
+
+            const counts = roomManager.getPlayerCounts(pin);
+            io.to(pin).emit('question_start', {
+              question: result.question,
+              currentQuestionIndex: currentRoom.currentQuestionIndex,
+              totalQuestions: currentRoom.quizSet.questions.length,
+              answeredCount: 0,
+              totalPlayers: counts.totalPlayers,
+              quizMode: currentRoom.quizMode
+            });
+
+            const durationSec = Math.max(5, Number(result.question?.timeLimitSeconds) || 30);
+            const timeLimitMs = (durationSec + 1) * 1000;
+            currentRoom.questionTimer = setTimeout(() => {
+              try {
+                currentRoom.questionTimer = null;
+                const questionResult = roomManager.getQuestionResult(pin);
+                if (currentRoom.quizMode === 'PRETEST') {
+                  io.to(pin).emit('question_result', maskPretestResult(questionResult));
+                } else {
+                  io.to(pin).emit('question_result', questionResult);
+                }
+              } catch (tErr) {
+                console.error('[Socket Timer Error] next_question timer:', tErr);
+              }
+            }, timeLimitMs);
+          } catch (nextErr) {
+            console.error('[Socket Error] next_question launch:', nextErr);
+          }
         }, prepareDurationMs);
 
       } catch (err) {

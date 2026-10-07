@@ -190,3 +190,48 @@ input, select {
 .animate-pop {
   animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+@keyframes crownFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-7px) rotate(-3deg); }
+}
+
+@keyframes podiumRise {
+  0% { transform: translateY(45px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* Sequence First Look Demo Animations */
+@keyframes seqHandDrag {
+  0%, 8% { transform: translate(0, 0) scale(1); opacity: 0; }
+  14%, 22% { transform: translate(0, 0) scale(0.9); opacity: 1; }
+  52%, 65% { transform: translate(0, 56px) scale(0.9); opacity: 1; }
+  72%, 80% { transform: translate(0, 56px) scale(1); opacity: 0.9; }
+  92%, 100% { transform: translate(0, 0) scale(1); opacity: 0; }
+}
+
+@keyframes seqCard1Swap {
+  0%, 22% { transform: translateY(0); z-index: 2; box-shadow: 0 3px 8px rgba(0,0,0,0.06); }
+  25% { transform: translateY(0) scale(1.03); z-index: 5; box-shadow: 0 8px 20px rgba(37,99,235,0.25); }
+  52%, 80% { transform: translateY(56px); z-index: 5; box-shadow: 0 8px 20px rgba(37,99,235,0.25); }
+  92%, 100% { transform: translateY(0); z-index: 2; box-shadow: 0 3px 8px rgba(0,0,0,0.06); }
+}
+
+@keyframes seqCard2Swap {
+  0%, 22% { transform: translateY(0); }
+  52%, 80% { transform: translateY(-56px); }
+  92%, 100% { transform: translateY(0); }
+}
+
+.seq-demo-hand {
+  animation: seqHandDrag 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.seq-demo-card-1 {
+  animation: seqCard1Swap 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.seq-demo-card-2 {
+  animation: seqCard2Swap 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
