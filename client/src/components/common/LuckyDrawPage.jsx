@@ -8,7 +8,7 @@ import { sfx } from '../../utils/audioSFX';
 import {
   Gift, Trophy, Users, QrCode, FileSpreadsheet, Download, Upload,
   RotateCcw, Sparkles, X, Check, Copy, Trash2, ArrowLeft, ShieldAlert,
-  Sliders, Award, RefreshCw, ChevronRight
+  Sliders, Award, RefreshCw, ChevronRight, Maximize2
 } from 'lucide-react';
 
 const SAMPLE_NAMES = [
@@ -25,8 +25,15 @@ export const LuckyDrawPage = ({
   socket = null,
   onBack = null
 }) => {
-  // Tabs: 'ROOM' | 'QR' | 'MANUAL'
-  const [activeTab, setActiveTab] = useState(() => (pin ? 'ROOM' : 'MANUAL'));
+  // Real-time Room & QR session state
+  const [activePin, setActivePin] = useState(pin);
+  const [activeHostToken, setActiveHostToken] = useState(hostToken);
+  const [livePlayers, setLivePlayers] = useState(players || []);
+  const [isQrFullscreen, setIsQrFullscreen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  // Tabs: 'QR' | 'MANUAL' | 'ROOM'
+  const [activeTab, setActiveTab] = useState(() => (pin ? 'ROOM' : 'QR'));
 
   // Draw Style: 'POOL' (ตักลูกบอลในอ่าง) | 'WHEEL' (วงล้อหมุน)
   const [drawStyle, setDrawStyle] = useState('POOL');
@@ -55,12 +62,48 @@ export const LuckyDrawPage = ({
 
   const fileInputRef = useRef(null);
 
-  // Sync tab if pin changes
+  // Sync activePin / activeHostToken with props
   useEffect(() => {
-    if (!pin && activeTab !== 'MANUAL') {
-      setActiveTab('MANUAL');
-    }
+    if (pin) setActivePin(pin);
   }, [pin]);
+
+  useEffect(() => {
+    if (hostToken) setActiveHostToken(hostToken);
+  }, [hostToken]);
+
+  useEffect(() => {
+    if (players && players.length > 0) {
+      setLivePlayers(players);
+    }
+  }, [players]);
+
+  // If activeTab is QR and no activePin yet, auto-create a room via socket
+  useEffect(() => {
+    if (activeTab === 'QR' && !activePin && socket) {
+      socket.emit('create_room', { title: 'KaoJai Lucky Draw Event', questions: [] }, (res) => {
+        if (res && res.success) {
+          setActivePin(res.pin);
+          setActiveHostToken(res.hostToken);
+        }
+      });
+    }
+  }, [activeTab, activePin, socket]);
+
+  // Real-time socket listener for attendees joining room via QR
+  useEffect(() => {
+    if (!socket || !activePin) return;
+
+    const handleRoomUpdated = (data) => {
+      if (data && Array.isArray(data.players)) {
+        setLivePlayers(data.players);
+      }
+    };
+
+    socket.on('room_updated', handleRoomUpdated);
+    return () => {
+      socket.off('room_updated', handleRoomUpdated);
+    };
+  }, [socket, activePin]);
 
   // Save manual text to localStorage
   useEffect(() => {
@@ -105,8 +148,8 @@ export const LuckyDrawPage = ({
         });
     }
 
-    // ROOM or QR tab -> use players joined in the room
-    const pool = (players || []).map(p => ({
+    // QR or ROOM tab -> use live players joined/scanned into the room
+    const pool = (livePlayers || []).map(p => ({
       id: p.playerId,
       name: p.name || 'Anonymous',
       avatar: p.avatar || '0291dcc0ce.svg',
@@ -116,13 +159,13 @@ export const LuckyDrawPage = ({
     return pool.filter(item => {
       if (excludedIds.has(item.id)) return false;
       if (excludePreviousWinners && previousWinnerKeys.has(item.key)) return false;
-      if (excludeTop3 && top3PlayerIds.has(item.id)) return false;
+      if (activeTab === 'ROOM' && excludeTop3 && top3PlayerIds.has(item.id)) return false;
       return true;
     });
   }, [
     activeTab,
     manualText,
-    players,
+    livePlayers,
     excludedIds,
     excludePreviousWinners,
     excludeTop3,
@@ -141,11 +184,11 @@ export const LuckyDrawPage = ({
     setCurrentWinner(null);
     setIsSpinning(true);
 
-    if (socket && pin && hostToken) {
+    if (socket && activePin && activeHostToken) {
       try {
         socket.emit('host_spin_lucky_draw', {
-          pin,
-          hostToken,
+          pin: activePin,
+          hostToken: activeHostToken,
           prizeName: prizeName || 'รางวัลพิเศษ 🎉',
           winner: {
             id: chosenWinner.id,
@@ -194,11 +237,11 @@ export const LuckyDrawPage = ({
     sfx.playFanfare();
     fireConfetti();
 
-    if (socket && pin && hostToken) {
+    if (socket && activePin && activeHostToken) {
       try {
         socket.emit('host_spin_lucky_draw', {
-          pin,
-          hostToken,
+          pin: activePin,
+          hostToken: activeHostToken,
           prizeName: prizeName || 'รางวัลพิเศษ 🎉',
           winner: {
             id: winnerCand.id,
@@ -309,16 +352,24 @@ export const LuckyDrawPage = ({
   };
 
   const handleBack = () => {
-    if (socket && pin && hostToken) {
+    if (socket && activePin && activeHostToken) {
       try {
-        socket.emit('host_close_lucky_draw', { pin, hostToken });
+        socket.emit('host_close_lucky_draw', { pin: activePin, hostToken: activeHostToken });
       } catch (e) {}
     }
     if (onBack) onBack();
   };
 
-  const joinUrl = typeof window !== 'undefined' ? `${window.location.origin}/?pin=${pin}` : '';
-  const qrSvgUrl = pin ? generateQRCodeSVG(joinUrl, 220) : '';
+  const joinUrl = typeof window !== 'undefined' && activePin ? `${window.location.origin}/?pin=${activePin}&luckydraw=1` : '';
+  const qrSvgUrl = activePin ? generateQRCodeSVG(joinUrl, 260) : '';
+
+  const handleCopyJoinLink = () => {
+    if (!joinUrl) return;
+    navigator.clipboard.writeText(joinUrl).then(() => {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }).catch(() => {});
+  };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', display: 'flex', flexDirection: 'column' }}>
@@ -395,14 +446,14 @@ export const LuckyDrawPage = ({
                 </span>
               </div>
               <p style={{ margin: '2px 0 0', fontSize: '0.85rem', color: '#64748B' }}>
-                {pin ? `เชื่อมต่อห้องกิจกรรม PIN: ${pin} • สุ่มผู้เรียนในห้องหรือกรอกรายชื่ออิสระ` : 'โหมดอิสระ (Standalone) • สุ่มรายชื่อสำหรับงานสัมมนา ปาร์ตี้บริษัท'}
+                {activePin ? `เชื่อมต่อห้องกิจกรรม PIN: ${activePin} • สแกน QR หรือกรอกรายชื่อเพื่อร่วมลุ้น` : 'โหมดอิสระ (Standalone) • สุ่มรายชื่อสำหรับงานสัมมนา ปาร์ตี้บริษัท'}
               </p>
             </div>
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          {pin && (
+          {activePin && (
             <div
               style={{
                 display: 'flex',
@@ -415,7 +466,7 @@ export const LuckyDrawPage = ({
               }}
             >
               <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#C2410C', textTransform: 'uppercase' }}>PIN:</span>
-              <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#EA580C', letterSpacing: '2px' }}>{pin}</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#EA580C', letterSpacing: '2px' }}>{activePin}</span>
             </div>
           )}
 
@@ -613,28 +664,28 @@ export const LuckyDrawPage = ({
                   </button>
                 )}
 
-                {pin && (
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('QR')}
-                    style={{
-                      padding: '10px 14px',
-                      borderRadius: '12px',
-                      border: 'none',
-                      background: activeTab === 'QR' ? '#FFF7ED' : 'transparent',
-                      color: activeTab === 'QR' ? '#EA580C' : '#64748B',
-                      fontWeight: 800,
-                      fontSize: '0.9rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    <QrCode size={18} /> QR สแกนร่วมสนุก
-                  </button>
-                )}
+                {/* TAB 1: QR LIVE REGISTRATION (Always Available) */}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('QR')}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: activeTab === 'QR' ? '#FFF7ED' : 'transparent',
+                    color: activeTab === 'QR' ? '#EA580C' : '#64748B',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <QrCode size={18} /> QR สแกนส่งชื่อ ({activeTab === 'QR' ? candidatePool.length : livePlayers.length})
+                </button>
 
+                {/* TAB 2: MANUAL & CSV */}
                 <button
                   type="button"
                   onClick={() => setActiveTab('MANUAL')}
@@ -654,10 +705,197 @@ export const LuckyDrawPage = ({
                 >
                   <FileSpreadsheet size={18} /> กรอกเอง / CSV
                 </button>
+
+                {/* TAB 3: QUIZ ROOM PLAYERS (if opened from Quiz Room) */}
+                {pin && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('ROOM')}
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      background: activeTab === 'ROOM' ? '#FFF7ED' : 'transparent',
+                      color: activeTab === 'ROOM' ? '#EA580C' : '#64748B',
+                      fontWeight: 800,
+                      fontSize: '0.9rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Users size={18} /> ห้องสอบ ({players?.length || 0})
+                  </button>
+                )}
               </div>
 
               {/* Source Tab Contents */}
               <div style={{ marginTop: '16px' }}>
+                {/* TAB: QR LIVE REGISTRATION */}
+                {activeTab === 'QR' && (
+                  <div>
+                    <div style={{ textAlign: 'center', padding: '6px 0 14px' }}>
+                      <div style={{ fontSize: '0.98rem', fontWeight: 900, color: '#1E293B', marginBottom: '4px' }}>
+                        📱 สแกน QR เพื่อลงทะเบียนลุ้นรางวัล Lucky Draw!
+                      </div>
+                      <p style={{ fontSize: '0.82rem', color: '#64748B', margin: '0 0 12px' }}>
+                        เปิดจอใหญ่ให้คนในงานสแกนด้วยกล้องมือถือ พิมพ์ชื่อแล้วชื่อจะเข้ามาในอ่าง/วงล้อทันที
+                      </p>
+
+                      {/* QR Display Card */}
+                      <div style={{
+                        display: 'inline-flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        padding: '16px',
+                        background: '#FFFFFF',
+                        borderRadius: '24px',
+                        border: '2px solid #F59E0B',
+                        boxShadow: '0 8px 24px rgba(245, 158, 11, 0.16)'
+                      }}>
+                        {qrSvgUrl ? (
+                          <img src={qrSvgUrl} alt="Lucky Draw QR Code" style={{ width: '190px', height: '190px', display: 'block' }} />
+                        ) : (
+                          <div style={{ width: '190px', height: '190px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8' }}>
+                            กำลังสร้าง QR Code...
+                          </div>
+                        )}
+
+                        <div style={{ marginTop: '10px', fontSize: '1.45rem', fontWeight: 900, color: '#EA580C', letterSpacing: '3px' }}>
+                          PIN: {activePin || '...'}
+                        </div>
+                      </div>
+
+                      {/* Action buttons: Projector Fullscreen & Copy Link */}
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '12px' }}>
+                        <button
+                          type="button"
+                          onClick={() => setIsQrFullscreen(true)}
+                          style={{
+                            padding: '8px 14px',
+                            borderRadius: '12px',
+                            background: '#FFF7ED',
+                            border: '1.5px solid #FDBA74',
+                            color: '#C2410C',
+                            fontWeight: 800,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          <Maximize2 size={15} /> ฉาย QR เต็มจอ (โปรเจกเตอร์)
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleCopyJoinLink}
+                          style={{
+                            padding: '8px 14px',
+                            borderRadius: '12px',
+                            background: '#F1F5F9',
+                            border: '1px solid #CBD5E1',
+                            color: copiedLink ? '#16A34A' : '#475569',
+                            fontWeight: 700,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          {copiedLink ? <Check size={15} /> : <Copy size={15} />}
+                          {copiedLink ? 'คัดลอกแล้ว!' : 'คัดลอกลิงก์'}
+                        </button>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '10px', color: '#059669', fontSize: '0.8rem', fontWeight: 700 }}>
+                        <ShieldAlert size={15} /> ป้องกันชื่อซ้ำ: 1 เครื่อง = 1 สิทธิ์ลงทะเบียน
+                      </div>
+                    </div>
+
+                    {/* Live Registered Attendees List */}
+                    <div style={{ marginTop: '8px', borderTop: '1px solid #F1F5F9', paddingTop: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#334155' }}>
+                          รายชื่อผู้ลงทะเบียน ({candidatePool.length} คน)
+                        </span>
+                        <span style={{ fontSize: '0.78rem', color: '#16A34A', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#16A34A', display: 'inline-block' }} /> Live อัปเดตสด
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          maxHeight: '180px',
+                          overflowY: 'auto',
+                          border: '1px solid #E2E8F0',
+                          borderRadius: '14px',
+                          padding: '8px',
+                          background: '#F8FAFC',
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: '6px'
+                        }}
+                      >
+                        {livePlayers.length === 0 ? (
+                          <div style={{ padding: '16px', textAlign: 'center', width: '100%', color: '#94A3B8', fontSize: '0.85rem' }}>
+                            ยังไม่มีผู้ลงทะเบียนผ่าน QR (เปิดให้ผู้ร่วมงานสแกน QR ได้เลย!)
+                          </div>
+                        ) : (
+                          livePlayers.map(p => {
+                            const isExcluded = excludedIds.has(p.playerId) ||
+                              (excludePreviousWinners && previousWinnerKeys.has((p.playerId || p.name).toLowerCase()));
+
+                            return (
+                              <div
+                                key={p.playerId}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '4px 10px',
+                                  borderRadius: '20px',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 700,
+                                  background: isExcluded ? '#E2E8F0' : '#FFFFFF',
+                                  color: isExcluded ? '#94A3B8' : '#1E293B',
+                                  border: isExcluded ? '1px dashed #CBD5E1' : '1px solid #CBD5E1',
+                                  textDecoration: isExcluded ? 'line-through' : 'none'
+                                }}
+                              >
+                                <img
+                                  src={`/avatars/${p.avatar || '0291dcc0ce.svg'}`}
+                                  alt={p.name}
+                                  style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover' }}
+                                />
+                                <span>{p.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleExcludeCandidate(p.playerId)}
+                                  title={isExcluded ? 'นำกลับเข้าวงล้อ' : 'คัดชื่อนี้ออก'}
+                                  style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    padding: 0,
+                                    color: isExcluded ? '#2563EB' : '#EF4444',
+                                    display: 'flex'
+                                  }}
+                                >
+                                  {isExcluded ? <RotateCcw size={13} /> : <X size={13} />}
+                                </button>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* TAB 1: ROOM PLAYERS */}
                 {activeTab === 'ROOM' && (
                   <div>
@@ -739,32 +977,6 @@ export const LuckyDrawPage = ({
                   </div>
                 )}
 
-                {/* TAB 2: QR LIVE REGISTRATION */}
-                {activeTab === 'QR' && (
-                  <div style={{ textAlign: 'center', padding: '12px 0' }}>
-                    <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#1E293B', marginBottom: '6px' }}>
-                      📱 สแกน QR Code เพื่อส่งชื่อเข้าร่วมลุ้นรางวัล!
-                    </div>
-                    <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '0 0 14px' }}>
-                      เปิดจอใหญ่ให้คนในงานสแกนด้วยกล้องมือถือ พิมพ์ชื่อแล้วชื่อจะเข้ามาในอ่างน้ำ/วงล้อทันที
-                    </p>
-
-                    <div style={{ display: 'inline-block', padding: '14px', background: '#FFFFFF', borderRadius: '20px', border: '2px solid #F59E0B', boxShadow: '0 6px 16px rgba(245, 158, 11, 0.15)' }}>
-                      {qrSvgUrl && (
-                        <img src={qrSvgUrl} alt="Lucky Draw QR Code" style={{ width: '180px', height: '180px', display: 'block' }} />
-                      )}
-                    </div>
-
-                    <div style={{ marginTop: '12px', fontSize: '1.4rem', fontWeight: 900, color: '#EA580C', letterSpacing: '3px' }}>
-                      PIN: {pin}
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '8px', color: '#059669', fontSize: '0.82rem', fontWeight: 700 }}>
-                      <ShieldAlert size={16} /> ระบบป้องกันชื่อซ้ำ: 1 เครื่อง = 1 สิทธิ์อัตโนมัติ
-                    </div>
-                  </div>
-                )}
-
                 {/* TAB 3: MANUAL & CSV */}
                 {activeTab === 'MANUAL' && (
                   <div>
@@ -794,6 +1006,7 @@ export const LuckyDrawPage = ({
                           onClick={() => {
                             setManualText('');
                             setExcludedIds(new Set());
+                            setWinnerHistory([]);
                           }}
                           style={{
                             background: '#FEF2F2',
@@ -805,8 +1018,9 @@ export const LuckyDrawPage = ({
                             fontWeight: 700,
                             cursor: 'pointer'
                           }}
+                          title="ล้างรายชื่อและรีเซ็ตประวัติผู้ได้รับรางวัล"
                         >
-                          ล้างรายชื่อ
+                          ล้างรายชื่อ & ประวัติ
                         </button>
                       </div>
                     </div>
@@ -936,26 +1150,49 @@ export const LuckyDrawPage = ({
                   <Trophy size={18} color="#F59E0B" /> ประวัติผู้ได้รับรางวัล ({winnerHistory.length} รางวัล)
                 </div>
                 {winnerHistory.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleCopyHistory}
-                    style={{
-                      background: '#F1F5F9',
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '5px 10px',
-                      fontSize: '0.78rem',
-                      fontWeight: 700,
-                      color: copiedHistory ? '#16A34A' : '#475569',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                  >
-                    {copiedHistory ? <Check size={14} /> : <Copy size={14} />}
-                    {copiedHistory ? 'คัดลอกแล้ว!' : 'คัดลอกรายชื่อ'}
-                  </button>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setWinnerHistory([])}
+                      style={{
+                        background: '#FEF2F2',
+                        border: '1px solid #FECACA',
+                        borderRadius: '8px',
+                        padding: '5px 10px',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        color: '#DC2626',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                      title="ล้างประวัติผู้ได้รับรางวัลทั้งหมด"
+                    >
+                      <Trash2 size={13} />
+                      ล้างประวัติ
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCopyHistory}
+                      style={{
+                        background: '#F1F5F9',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '5px 10px',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        color: copiedHistory ? '#16A34A' : '#475569',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      {copiedHistory ? <Check size={14} /> : <Copy size={14} />}
+                      {copiedHistory ? 'คัดลอกแล้ว!' : 'คัดลอกรายชื่อ'}
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -1127,6 +1364,100 @@ export const LuckyDrawPage = ({
               >
                 ยอดเยี่ยม! สุ่มรางวัลต่อไป ✨
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fullscreen QR Projector Modal */}
+      {isQrFullscreen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            animation: 'fadeIn 0.25s ease-out'
+          }}
+          onClick={() => setIsQrFullscreen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#FFFFFF',
+              borderRadius: '32px',
+              padding: '40px',
+              maxWidth: '520px',
+              width: '100%',
+              textAlign: 'center',
+              boxShadow: '0 30px 70px rgba(0,0,0,0.5)',
+              position: 'relative',
+              animation: 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setIsQrFullscreen(false)}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: '#F1F5F9',
+                border: 'none',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#64748B'
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#FEF3C7', padding: '6px 16px', borderRadius: '20px', color: '#D97706', fontWeight: 800, fontSize: '0.9rem', marginBottom: '16px' }}>
+              <Sparkles size={16} /> สแกนลงทะเบียน Lucky Draw
+            </div>
+
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#1E293B', marginBottom: '8px' }}>
+              สแกน QR Code เพื่อร่วมลุ้นรางวัล!
+            </h2>
+            <p style={{ color: '#64748B', fontSize: '0.95rem', marginBottom: '24px' }}>
+              เปิดกล้องมือถือแล้วสแกนเพื่อกรอกชื่อลุ้นรับของรางวัลทันที
+            </p>
+
+            <div
+              style={{
+                display: 'inline-block',
+                padding: '20px',
+                background: '#FFFFFF',
+                borderRadius: '24px',
+                boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
+                border: '2px solid #E2E8F0',
+                marginBottom: '20px'
+              }}
+              dangerouslySetInnerHTML={{
+                __html: generateQRCodeSVG(joinUrl, 260)
+              }}
+            />
+
+            <div style={{ background: '#F8FAFC', borderRadius: '16px', padding: '14px 20px', border: '1px solid #E2E8F0', marginBottom: '20px' }}>
+              <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '4px' }}>หรือเข้าผ่านลิงก์</div>
+              <div style={{ fontSize: '1rem', fontWeight: 800, color: '#2563EB', wordBreak: 'break-all' }}>
+                {joinUrl}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontSize: '1.05rem', fontWeight: 800, color: '#059669' }}>
+              <Users size={20} /> ลงทะเบียนแล้ว {livePlayers.length} คน
             </div>
           </div>
         </div>

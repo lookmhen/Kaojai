@@ -16,14 +16,18 @@ import { PrepareCountdown } from './components/common/PrepareCountdown';
 import { SequenceIntroGuide } from './components/common/SequenceIntroGuide';
 import { LuckyDrawPage } from './components/common/LuckyDrawPage';
 import { PlayerLuckyDrawOverlay } from './components/player/PlayerLuckyDrawOverlay';
+import { LuckyDrawPlayerJoin } from './components/player/LuckyDrawPlayerJoin';
 import { WifiOff, AlertCircle, X } from 'lucide-react';
 import './styles/global.css';
 
 export function AppContent() {
   const { socket, isConnected, session, saveSessionData, clearSession, syncSession, needsSyncRef } = useSocket();
   
-  // App Mode & Views: 'PLAYER_JOIN', 'PLAYER_GAME', 'HOST_LOBBY', 'HOST_GAME', 'TEACHER_BACKOFFICE'
+  // App Mode & Views: 'PLAYER_JOIN', 'PLAYER_GAME', 'HOST_LOBBY', 'HOST_GAME', 'TEACHER_BACKOFFICE', 'LUCKY_DRAW', 'LUCKY_DRAW_PLAYER'
   const [viewMode, setViewMode] = useState(() => {
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const isLuckyDrawScan = urlParams && (urlParams.get('luckydraw') === '1' || urlParams.get('mode') === 'luckydraw');
+    if (isLuckyDrawScan) return 'LUCKY_DRAW_PLAYER';
     if (session?.isHost && session?.pin) return 'HOST_GAME';
     if (session?.playerId && session?.pin) return 'PLAYER_GAME';
     return 'PLAYER_JOIN';
@@ -784,6 +788,11 @@ export function AppContent() {
             />
           )}
         </div>
+      )}
+
+      {/* DEDICATED LUCKY DRAW PARTICIPANT REGISTRATION VIEW */}
+      {viewMode === 'LUCKY_DRAW_PLAYER' && (
+        <LuckyDrawPlayerJoin initialPin={pin} />
       )}
 
       {/* PARTICIPANT VIEW ROUTING */}
