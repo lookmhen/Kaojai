@@ -37,10 +37,10 @@ export const LuckyWaterPool = ({
 
   // Tub & Water Geometry (2.5D Isometric Cylindrical Pool matching user sketch)
   const cx = width / 2;
-  const topCy = 140;
-  const rx = 246;
-  const ry = 86;
-  const tubHeight = 180;
+  const topCy = 125;
+  const rx = 240;
+  const ry = 80;
+  const tubHeight = 175;
   const botCy = topCy + tubHeight;
 
   // Recessed Water Surface inside the tub rim
@@ -128,13 +128,18 @@ export const LuckyWaterPool = ({
       // 2. CYLINDRICAL TUB OUTER WALL (ตัวถัง/อ่างน้ำทรงกระบอก)
       // ==========================================
       ctx.save();
-      // Tub Wall Path: Left edge down, bottom arc, right edge up, top arc back
+      // Continuous closed path for the front cylinder wall:
+      // 1. Start top-left corner
+      // 2. Line down to bottom-left corner
+      // 3. Curve across bottom front rim to bottom-right corner
+      // 4. Line up to top-right corner
+      // 5. Curve across top front rim back to top-left corner
       ctx.beginPath();
       ctx.moveTo(cx - rx, topCy);
       ctx.lineTo(cx - rx, botCy);
-      ctx.ellipse(cx, botCy, rx, ry, 0, 0, Math.PI, false); // Bottom front rim
+      ctx.ellipse(cx, botCy, rx, ry, 0, Math.PI, 0, true);
       ctx.lineTo(cx + rx, topCy);
-      ctx.ellipse(cx, topCy, rx, ry, 0, 0, Math.PI, true); // Top front curve
+      ctx.ellipse(cx, topCy, rx, ry, 0, 0, Math.PI, false);
       ctx.closePath();
 
       // Tub Wall Gradient (3D cylindrical metallic/aquatic shading)
@@ -163,14 +168,15 @@ export const LuckyWaterPool = ({
       drawBand(topCy + tubHeight * 0.45);
       drawBand(topCy + tubHeight * 0.85);
 
-      // Outer border stroke
+      // Outer border stroke: Left wall, bottom curved rim, right wall
       ctx.beginPath();
       ctx.moveTo(cx - rx, topCy);
       ctx.lineTo(cx - rx, botCy);
-      ctx.ellipse(cx, botCy, rx, ry, 0, 0, Math.PI, false);
+      ctx.ellipse(cx, botCy, rx, ry, 0, Math.PI, 0, true);
       ctx.lineTo(cx + rx, topCy);
       ctx.strokeStyle = '#0284C7';
-      ctx.lineWidth = 3.5;
+      ctx.lineWidth = 4;
+      ctx.lineJoin = 'round';
       ctx.stroke();
       ctx.restore();
 
@@ -424,6 +430,19 @@ export const LuckyWaterPool = ({
       ctx.ellipse(cx, waterCy, waterRx, waterRy, 0, 0, Math.PI, false);
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
       ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Front Rim Lip of the Tub (ขอบปากอ่างด้านหน้า บังหน้าลูกบอลเพื่อมิติ 3D ที่สมบูรณ์)
+      ctx.beginPath();
+      ctx.ellipse(cx, topCy, rx, ry, 0, 0, Math.PI, false);
+      ctx.strokeStyle = '#38BDF8';
+      ctx.lineWidth = 5;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.ellipse(cx, topCy - 1, rx - 3, ry - 3, 0, 0, Math.PI, false);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+      ctx.lineWidth = 2;
       ctx.stroke();
       ctx.restore();
 
