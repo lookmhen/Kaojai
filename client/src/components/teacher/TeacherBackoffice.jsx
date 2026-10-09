@@ -1,20 +1,24 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Plus, Trash2, Save, ArrowLeft, Image as ImageIcon, Clock, CheckCircle2, Upload, X, Copy, ListOrdered, ArrowUp, ArrowDown, Download, FileUp, Sparkles, Search, Check, Layers } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, Image as ImageIcon, Clock, CheckCircle2, Upload, X, Copy, ListOrdered, ArrowUp, ArrowDown, Download, FileUp, Sparkles, Search, Check, Layers, Users, LogOut, Shield, GraduationCap } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { AiQuizGeneratorModal } from './AiQuizGeneratorModal';
+import { UserManagementModal } from './UserManagementModal';
 
 export const TeacherBackoffice = ({ onBack }) => {
+  const { user, isAuthenticated, isAdmin, isTeacher, logout, authFetch } = useAuth();
   const [quizzes, setQuizzes] = useState([]);
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [notification, setNotification] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const fileInputRef = useRef(null);
 
   const handleAiQuizGenerated = (newAiQuiz) => {
     // Save generated quiz to backend and open in editor
-    fetch('/api/quizzes', {
+    authFetch('/api/quizzes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ quiz: newAiQuiz })
@@ -40,7 +44,7 @@ export const TeacherBackoffice = ({ onBack }) => {
   };
 
   const handleExportQuizzes = () => {
-    fetch('/api/quizzes/export')
+    authFetch('/api/quizzes/export')
       .then(res => res.blob())
       .then(blob => {
         const url = window.URL.createObjectURL(blob);
@@ -74,7 +78,7 @@ export const TeacherBackoffice = ({ onBack }) => {
           return;
         }
 
-        fetch('/api/quizzes/import', {
+        authFetch('/api/quizzes/import', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ quizzes: parsed, replaceAll: false })
@@ -117,7 +121,7 @@ export const TeacherBackoffice = ({ onBack }) => {
   }, [quizzes, searchQuery]);
 
   const fetchQuizzes = () => {
-    fetch('/api/quizzes')
+    authFetch('/api/quizzes')
       .then(res => res.json())
       .then(data => {
         if (data.quizzes) {
@@ -132,7 +136,7 @@ export const TeacherBackoffice = ({ onBack }) => {
   };
 
   const handleDuplicateQuiz = (quizId) => {
-    fetch(`/api/quizzes/${quizId}/duplicate`, { method: 'POST' })
+    authFetch(`/api/quizzes/${quizId}/duplicate`, { method: 'POST' })
       .then(res => res.json())
       .then(data => {
         if (data.success && data.quiz) {
@@ -214,7 +218,7 @@ export const TeacherBackoffice = ({ onBack }) => {
     const reader = new FileReader();
     reader.onload = (event) => {
       const base64Data = event.target?.result;
-      fetch('/api/upload', {
+      authFetch('/api/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageData: base64Data, fileName: file.name })
@@ -270,7 +274,7 @@ export const TeacherBackoffice = ({ onBack }) => {
       }
     }
 
-    fetch('/api/quizzes', {
+    authFetch('/api/quizzes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ quiz: activeQuiz })
@@ -291,7 +295,7 @@ export const TeacherBackoffice = ({ onBack }) => {
   const handleDeleteQuiz = (quizId) => {
     if (!window.confirm('คุณต้องการลบชุดคำถามนี้หรือไม่?')) return;
 
-    fetch(`/api/quizzes/${quizId}`, { method: 'DELETE' })
+    authFetch(`/api/quizzes/${quizId}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -452,6 +456,79 @@ export const TeacherBackoffice = ({ onBack }) => {
           >
             <Plus size={16} /> สร้างชุดใหม่
           </button>
+
+          {/* Admin-Only: User Management */}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setIsUserManagementOpen(true)}
+              title="จัดการผู้ใช้งานระบบ (Admin Only)"
+              style={{
+                background: '#F0FDF4',
+                border: '1.5px solid #86EFAC',
+                color: '#166534',
+                padding: '8px 14px',
+                borderRadius: '10px',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(22, 101, 52, 0.08)'
+              }}
+            >
+              <Users size={16} /> 👥 จัดการผู้ใช้งาน
+            </button>
+          )}
+
+          <div style={{ width: '1px', height: '28px', background: '#E2E8F0', margin: '0 2px' }} />
+
+          {/* Current User Profile & Logout */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#F8FAFC', padding: '4px 10px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '3px 8px',
+                borderRadius: '8px',
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                background: isAdmin ? '#DCFCE7' : '#DBEAFE',
+                color: isAdmin ? '#166534' : '#1E40AF'
+              }}
+            >
+              {isAdmin ? <Shield size={12} /> : <GraduationCap size={12} />}
+              {isAdmin ? 'Admin' : 'Teacher'}
+            </div>
+            <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)' }}>
+              {user?.displayName || user?.username || 'วิทยากร'}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                onBack?.();
+              }}
+              title="ออกจากระบบ"
+              style={{
+                background: '#FEF2F2',
+                border: '1px solid #FECACA',
+                color: '#DC2626',
+                borderRadius: '8px',
+                padding: '5px 8px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              <LogOut size={13} /> ออก
+            </button>
+          </div>
         </div>
       </header>
 
@@ -459,6 +536,11 @@ export const TeacherBackoffice = ({ onBack }) => {
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
         onQuizGenerated={handleAiQuizGenerated}
+      />
+
+      <UserManagementModal
+        isOpen={isUserManagementOpen}
+        onClose={() => setIsUserManagementOpen(false)}
       />
 
       {notification && (

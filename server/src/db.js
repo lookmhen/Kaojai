@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('node:crypto');
 
 let DatabaseSync = null;
 let isSqliteSupported = false;
@@ -123,7 +124,37 @@ function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_rooms_updated ON rooms (updatedAt);
 
     CREATE VIEW IF NOT EXISTS players AS SELECT * FROM roster_players;
+
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      display_name TEXT NOT NULL,
+      role TEXT DEFAULT 'TEACHER',
+      created_at INTEGER,
+      updated_at INTEGER
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_users_username ON users (username);
   `);
+
+  // Auto-seed default ADMIN and TEACHER if users table is empty
+  try {
+    const userCountRow = d.prepare('SELECT count(*) as count FROM users').get();
+    if (!userCountRow || userCountRow.count === 0) {
+      const now = Date.now();
+      const adminHash = hashPassword('admin1234');
+      const teacherHash = hashPassword('teacher1234');
+      const insertUserStmt = d.prepare(`
+        INSERT INTO users (username, password_hash, display_name, role, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `);
+      insertUserStmt.run('admin', adminHash, 'ผู้ดูแลระบบ (Admin)', 'ADMIN', now, now);
+      insertUserStmt.run('teacher', teacherHash, 'อาจารย์ผู้สอน (Teacher)', 'TEACHER', now, now);
+    }
+  } catch (seedErr) {
+    console.warn('[DB Warning] Auto-seed users failed:', seedErr.message);
+  }
 }
 
 /**
@@ -525,6 +556,230 @@ function getRosterByPin(pin) {
 }
 
 /**
+ * Hash password using scryptSync with random 16-byte salt
+ * @param {string} password
+ * @returns {string} salt:derivedKey
+ */
+function hashPassword(password) {
+  if (!password || typeof password !== 'string') {
+    throw new Error('Password must be a non-empty string');
+  }
+  const salt = crypto.randomBytes(16).toString('hex');
+  const derivedKey = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${derivedKey}`;
+}
+
+/**
+ * Verify plaintext password against stored salt:derivedKey hash
+ * @param {string} password
+ * @param {string} storedHash
+ * @returns {boolean}
+ */
+function verifyPassword(password, storedHash) {
+  if (!password || !storedHash || typeof storedHash !== 'string') {
+    return false;
+  }
+  const parts = storedHash.split(':');
+  if (parts.length !== 2) {
+    return false;
+  }
+  const [salt, originalKey] = parts;
+  try {
+    const derivedKey = crypto.scryptSync(password, salt, 64).toString('hex');
+    const keyBuf = Buffer.from(originalKey, 'hex');
+    const derivedBuf = Buffer.from(derivedKey, 'hex');
+    if (keyBuf.length !== derivedBuf.length) return false;
+    return crypto.timingSafeEqual(keyBuf, derivedBuf);
+  } catch (err) {
+    return false;
+  }
+}
+
+/**
+ * Find user by username
+ * @param {string} username
+ * @returns {object|null}
+ */
+function getUserByUsername(username) {
+  if (!username) return null;
+  try {
+    const d = getDb();
+    if (!d) return null;
+    const row = d.prepare('SELECT * FROM users WHERE username = ? COLLATE NOCASE').get(String(username).trim());
+    if (!row) return null;
+    return {
+      id: row.id,
+      username: row.username,
+      passwordHash: row.password_hash,
+      password_hash: row.password_hash,
+      displayName: row.display_name,
+      display_name: row.display_name,
+      role: row.role,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    };
+  } catch (err) {
+    console.error('[DB Error] getUserByUsername:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Find user by ID
+ * @param {number|string} id
+ * @returns {object|null}
+ */
+function getUserById(id) {
+  if (!id) return null;
+  try {
+    const d = getDb();
+    if (!d) return null;
+    const row = d.prepare('SELECT * FROM users WHERE id = ?').get(Number(id));
+    if (!row) return null;
+    return {
+      id: row.id,
+      username: row.username,
+      passwordHash: row.password_hash,
+      password_hash: row.password_hash,
+      displayName: row.display_name,
+      display_name: row.display_name,
+      role: row.role,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    };
+  } catch (err) {
+    console.error('[DB Error] getUserById:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Create a new user in SQLite
+ * @param {object} param0
+ * @returns {object}
+ */
+function createUser({ username, passwordHash, password_hash, displayName, display_name, role }) {
+  const uName = String(username || '').trim();
+  const pHash = passwordHash || password_hash;
+  const dName = String(displayName || display_name || uName).trim();
+  const uRole = String(role || 'TEACHER').toUpperCase();
+
+  if (!uName) throw new Error('Username is required');
+  if (!pHash) throw new Error('Password hash is required');
+  if (!['ADMIN', 'TEACHER'].includes(uRole)) {
+    throw new Error('Role must be either ADMIN or TEACHER');
+  }
+
+  const d = getDb();
+  if (!d) throw new Error('Database unavailable');
+
+  const now = Date.now();
+  const stmt = d.prepare(`
+    INSERT INTO users (username, password_hash, display_name, role, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+
+  const res = stmt.run(uName, pHash, dName, uRole, now, now);
+  const newId = Number(res.lastInsertRowid);
+
+  return {
+    id: newId,
+    username: uName,
+    displayName: dName,
+    display_name: dName,
+    role: uRole,
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+/**
+ * Update user password
+ * @param {number|string} id
+ * @param {string} passwordHash
+ * @returns {boolean}
+ */
+function updateUserPassword(id, passwordHash) {
+  if (!id || !passwordHash) return false;
+  try {
+    const d = getDb();
+    if (!d) return false;
+    const now = Date.now();
+    const res = d.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?')
+      .run(passwordHash, now, Number(id));
+    return res.changes > 0;
+  } catch (err) {
+    console.error('[DB Error] updateUserPassword:', err.message);
+    return false;
+  }
+}
+
+/**
+ * Update user role
+ * @param {number|string} id
+ * @param {string} role - 'ADMIN' or 'TEACHER'
+ * @returns {boolean}
+ */
+function updateUserRole(id, role) {
+  if (!id || !role) return false;
+  const upperRole = String(role).toUpperCase();
+  if (!['ADMIN', 'TEACHER'].includes(upperRole)) return false;
+  try {
+    const d = getDb();
+    if (!d) return false;
+    const now = Date.now();
+    const res = d.prepare('UPDATE users SET role = ?, updated_at = ? WHERE id = ?')
+      .run(upperRole, now, Number(id));
+    return res.changes > 0;
+  } catch (err) {
+    console.error('[DB Error] updateUserRole:', err.message);
+    return false;
+  }
+}
+
+/**
+ * Get all users without password hashes
+ * @returns {Array<object>}
+ */
+function getAllUsers() {
+  try {
+    const d = getDb();
+    if (!d) return [];
+    const rows = d.prepare('SELECT id, username, display_name, role, created_at, updated_at FROM users ORDER BY id ASC').all();
+    return rows.map(r => ({
+      id: r.id,
+      username: r.username,
+      displayName: r.display_name,
+      display_name: r.display_name,
+      role: r.role,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at
+    }));
+  } catch (err) {
+    console.error('[DB Error] getAllUsers:', err.message);
+    return [];
+  }
+}
+
+/**
+ * Delete a user by ID
+ * @param {number|string} id
+ * @returns {boolean}
+ */
+function deleteUser(id) {
+  if (!id) return false;
+  try {
+    const d = getDb();
+    if (!d) return false;
+    const res = d.prepare('DELETE FROM users WHERE id = ?').run(Number(id));
+    return res.changes > 0;
+  } catch (err) {
+    console.error('[DB Error] deleteUser:', err.message);
+    return false;
+  }
+}
+
+/**
  * Close database connection
  */
 function closeDb() {
@@ -619,6 +874,52 @@ function runSelfTest() {
   assert.equal(checkDeleted, null, 'Deleted room should be null');
   console.log('[PASS] deleteRoom verified');
 
+  // 6. Test User Auto-Seed & Password Verification
+  const admin = getUserByUsername('admin');
+  assert.ok(admin, 'Auto-seeded admin should exist');
+  assert.equal(admin.role, 'ADMIN');
+  assert.equal(verifyPassword('admin1234', admin.passwordHash), true, 'Admin password should verify');
+  assert.equal(verifyPassword('wrongpass', admin.passwordHash), false, 'Wrong password should fail');
+
+  const teacher = getUserByUsername('teacher');
+  assert.ok(teacher, 'Auto-seeded teacher should exist');
+  assert.equal(teacher.role, 'TEACHER');
+  assert.equal(verifyPassword('teacher1234', teacher.passwordHash), true, 'Teacher password should verify');
+  console.log('[PASS] Auto-seed users & password verification verified');
+
+  // 7. Test createUser, getUserById, updateUserPassword, getAllUsers, deleteUser
+  const customUser = createUser({
+    username: 'new_teacher',
+    passwordHash: hashPassword('mypassword123'),
+    displayName: 'New Teacher',
+    role: 'TEACHER'
+  });
+  assert.ok(customUser.id, 'Created user should have id');
+  assert.equal(customUser.username, 'new_teacher');
+
+  const fetchedById = getUserById(customUser.id);
+  assert.ok(fetchedById, 'getUserById should return user');
+  assert.equal(fetchedById.displayName, 'New Teacher');
+
+  // Test updateUserPassword
+  const newHash = hashPassword('updatedpassword456');
+  const updateRes = updateUserPassword(customUser.id, newHash);
+  assert.equal(updateRes, true, 'updateUserPassword should return true');
+  const updatedUser = getUserById(customUser.id);
+  assert.equal(verifyPassword('updatedpassword456', updatedUser.passwordHash), true);
+  assert.equal(verifyPassword('mypassword123', updatedUser.passwordHash), false);
+
+  // Test getAllUsers
+  const allUsers = getAllUsers();
+  assert.ok(allUsers.length >= 3, 'getAllUsers should return at least 3 users');
+  assert.equal(allUsers.every(u => !u.passwordHash && !u.password_hash), true, 'getAllUsers should not return password hashes');
+
+  // Test deleteUser
+  const delUserRes = deleteUser(customUser.id);
+  assert.equal(delUserRes, true, 'deleteUser should return true');
+  assert.equal(getUserById(customUser.id), null, 'Deleted user should be null');
+  console.log('[PASS] createUser, getUserById, updateUserPassword, getAllUsers, deleteUser verified');
+
   closeDb();
   console.log('🎉 All db.js Self Tests Passed Successfully!');
 }
@@ -645,5 +946,14 @@ module.exports = {
   savePlayerPretest,
   getRosterByPin,
   closeDb,
+  hashPassword,
+  verifyPassword,
+  getUserByUsername,
+  getUserById,
+  createUser,
+  updateUserPassword,
+  updateUserRole,
+  getAllUsers,
+  deleteUser,
   runSelfTest
 };

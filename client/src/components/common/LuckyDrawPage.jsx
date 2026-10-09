@@ -727,48 +727,44 @@ export const LuckyDrawPage = ({
           >
             {/* Candidate Source Tabs */}
             <div>
-              <div style={{ display: 'flex', borderBottom: '2px solid #F1F5F9', gap: '8px', paddingBottom: '4px' }}>
-                {pin && (
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('ROOM')}
-                    style={{
-                      padding: '10px 14px',
-                      borderRadius: '12px',
-                      border: 'none',
-                      background: activeTab === 'ROOM' ? '#FFF7ED' : 'transparent',
-                      color: activeTab === 'ROOM' ? '#EA580C' : '#64748B',
-                      fontWeight: 800,
-                      fontSize: '0.9rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    <Users size={18} /> ผู้เล่นในห้อง ({players?.length || 0})
-                  </button>
-                )}
-
+              <div
+                style={{
+                  display: 'flex',
+                  borderBottom: '2px solid #F1F5F9',
+                  gap: '6px',
+                  paddingBottom: '4px',
+                  alignItems: 'stretch'
+                }}
+              >
                 {/* TAB 1: QR LIVE REGISTRATION (Always Available) */}
                 <button
                   type="button"
                   onClick={() => setActiveTab('QR')}
                   style={{
-                    padding: '10px 14px',
+                    flex: 1,
+                    minWidth: 0,
+                    padding: '8px 8px',
                     borderRadius: '12px',
                     border: 'none',
                     background: activeTab === 'QR' ? '#FFF7ED' : 'transparent',
                     color: activeTab === 'QR' ? '#EA580C' : '#64748B',
                     fontWeight: 800,
-                    fontSize: '0.9rem',
+                    fontSize: '0.84rem',
                     cursor: 'pointer',
-                    display: 'flex',
+                    display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '6px'
+                    justifyContent: 'center',
+                    gap: '5px',
+                    whiteSpace: 'nowrap',
+                    boxSizing: 'border-box',
+                    transition: 'all 0.15s ease'
                   }}
+                  title="ลงทะเบียนผ่าน QR Code"
                 >
-                  <QrCode size={18} /> QR สแกนส่งชื่อ ({activeTab === 'QR' ? candidatePool.length : livePlayers.length})
+                  <QrCode size={16} style={{ flexShrink: 0 }} />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    QR สแกน ({activeTab === 'QR' ? candidatePool.length : livePlayers.length})
+                  </span>
                 </button>
 
                 {/* TAB 2: MANUAL & CSV */}
@@ -776,20 +772,30 @@ export const LuckyDrawPage = ({
                   type="button"
                   onClick={() => setActiveTab('MANUAL')}
                   style={{
-                    padding: '10px 14px',
+                    flex: 1,
+                    minWidth: 0,
+                    padding: '8px 8px',
                     borderRadius: '12px',
                     border: 'none',
                     background: activeTab === 'MANUAL' ? '#FFF7ED' : 'transparent',
                     color: activeTab === 'MANUAL' ? '#EA580C' : '#64748B',
                     fontWeight: 800,
-                    fontSize: '0.9rem',
+                    fontSize: '0.84rem',
                     cursor: 'pointer',
-                    display: 'flex',
+                    display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '6px'
+                    justifyContent: 'center',
+                    gap: '5px',
+                    whiteSpace: 'nowrap',
+                    boxSizing: 'border-box',
+                    transition: 'all 0.15s ease'
                   }}
+                  title="กรอกรายชื่อเอง หรือนำเข้าไฟล์ CSV"
                 >
-                  <FileSpreadsheet size={18} /> กรอกเอง / CSV
+                  <FileSpreadsheet size={16} style={{ flexShrink: 0 }} />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    กรอกเอง / CSV
+                  </span>
                 </button>
 
                 {/* TAB 3: QUIZ ROOM PLAYERS (if opened from Quiz Room) */}
@@ -798,20 +804,30 @@ export const LuckyDrawPage = ({
                     type="button"
                     onClick={() => setActiveTab('ROOM')}
                     style={{
-                      padding: '10px 14px',
+                      flex: 1,
+                      minWidth: 0,
+                      padding: '8px 8px',
                       borderRadius: '12px',
                       border: 'none',
                       background: activeTab === 'ROOM' ? '#FFF7ED' : 'transparent',
                       color: activeTab === 'ROOM' ? '#EA580C' : '#64748B',
                       fontWeight: 800,
-                      fontSize: '0.9rem',
+                      fontSize: '0.84rem',
                       cursor: 'pointer',
-                      display: 'flex',
+                      display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '6px'
+                      justifyContent: 'center',
+                      gap: '5px',
+                      whiteSpace: 'nowrap',
+                      boxSizing: 'border-box',
+                      transition: 'all 0.15s ease'
                     }}
+                    title="ผู้เรียนจากห้องสอบปัจจุบัน"
                   >
-                    <Users size={18} /> ห้องสอบ ({players?.length || 0})
+                    <Users size={16} style={{ flexShrink: 0 }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      ห้องสอบ ({players?.length || 0})
+                    </span>
                   </button>
                 )}
               </div>

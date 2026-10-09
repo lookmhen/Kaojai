@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { Sparkles, X, Wand2, Check, AlertCircle, Trash2, ArrowUpDown, HelpCircle } from 'lucide-react';
 
 export const AiQuizGeneratorModal = ({ isOpen, onClose, onQuizGenerated }) => {
+  const { authFetch } = useAuth();
   const [topic, setTopic] = useState('');
   const [textContent, setTextContent] = useState('');
   const [questionCount, setQuestionCount] = useState(5);
@@ -27,7 +29,8 @@ export const AiQuizGeneratorModal = ({ isOpen, onClose, onQuizGenerated }) => {
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/quizzes/generate-ai', {
+      const fetchFn = authFetch || fetch;
+      const res = await fetchFn('/api/quizzes/generate-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

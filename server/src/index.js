@@ -9,6 +9,7 @@ const os = require('os');
 const setupSocketHandlers = require('./socketHandler');
 const { getAllQuizzes, saveQuiz, deleteQuiz, duplicateQuiz, importQuizzes } = require('./quizData');
 const { generateAiQuiz } = require('./aiService');
+const { authRouter, authenticateToken } = require('./auth');
 
 function getLocalIpAddress() {
   const interfaces = os.networkInterfaces();
@@ -61,6 +62,9 @@ const io = new Server(server, {
 
 
 
+// Auth API routes
+app.use('/api/auth', authRouter);
+
 // REST Health Check & Server Info
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'KaoJai Real-time Quiz Engine' });
@@ -81,7 +85,7 @@ app.get('/api/quizzes', (req, res) => {
   res.json({ quizzes: getAllQuizzes() });
 });
 
-app.post('/api/quizzes', (req, res) => {
+app.post('/api/quizzes', authenticateToken, (req, res) => {
   try {
     const { quiz } = req.body;
     if (!quiz || !quiz.title) {
@@ -94,7 +98,7 @@ app.post('/api/quizzes', (req, res) => {
   }
 });
 
-app.post('/api/quizzes/:id/duplicate', (req, res) => {
+app.post('/api/quizzes/:id/duplicate', authenticateToken, (req, res) => {
   try {
     const quizId = req.params.id;
     const duplicated = duplicateQuiz(quizId);
@@ -107,7 +111,7 @@ app.post('/api/quizzes/:id/duplicate', (req, res) => {
   }
 });
 
-app.delete('/api/quizzes/:id', (req, res) => {
+app.delete('/api/quizzes/:id', authenticateToken, (req, res) => {
   try {
     const quizId = req.params.id;
     deleteQuiz(quizId);
@@ -118,7 +122,7 @@ app.delete('/api/quizzes/:id', (req, res) => {
 });
 
 // Import & Export Quizzes
-app.get('/api/quizzes/export', (req, res) => {
+app.get('/api/quizzes/export', authenticateToken, (req, res) => {
   try {
     const quizzes = getAllQuizzes();
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -129,7 +133,7 @@ app.get('/api/quizzes/export', (req, res) => {
   }
 });
 
-app.post('/api/quizzes/import', (req, res) => {
+app.post('/api/quizzes/import', authenticateToken, (req, res) => {
   try {
     const { quizzes, replaceAll } = req.body;
     if (!quizzes) {
@@ -143,7 +147,7 @@ app.post('/api/quizzes/import', (req, res) => {
 });
 
 // AI Quiz Generator Endpoint
-app.post('/api/quizzes/generate-ai', async (req, res) => {
+app.post('/api/quizzes/generate-ai', authenticateToken, async (req, res) => {
   try {
     const { topic, textContent, questionCount, questionTypes, difficulty, language } = req.body;
     if (!topic && !textContent) {
@@ -188,7 +192,7 @@ app.use('/uploads', (req, res, next) => {
 }, express.static(uploadsDir));
 
 // Image Upload Endpoint with Strict MIME Whitelist and 5MB Limit
-app.post('/api/upload', (req, res) => {
+app.post('/api/upload', authenticateToken, (req, res) => {
   try {
     const { imageData } = req.body;
     if (!imageData || typeof imageData !== 'string') {

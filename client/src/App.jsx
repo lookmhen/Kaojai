@@ -17,11 +17,13 @@ import { SequenceIntroGuide } from './components/common/SequenceIntroGuide';
 import { LuckyDrawPage } from './components/common/LuckyDrawPage';
 import { PlayerLuckyDrawOverlay } from './components/player/PlayerLuckyDrawOverlay';
 import { LuckyDrawPlayerJoin } from './components/player/LuckyDrawPlayerJoin';
+import { useAuth } from './context/AuthContext';
 import { WifiOff, AlertCircle, X } from 'lucide-react';
 import './styles/global.css';
 
 export function AppContent() {
   const { socket, isConnected, session, saveSessionData, clearSession, syncSession, needsSyncRef } = useSocket();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   
   // App Mode & Views: 'PLAYER_JOIN', 'PLAYER_GAME', 'HOST_LOBBY', 'HOST_GAME', 'TEACHER_BACKOFFICE', 'LUCKY_DRAW', 'LUCKY_DRAW_PLAYER'
   const [viewMode, setViewMode] = useState(() => {
@@ -33,6 +35,13 @@ export function AppContent() {
     if (session?.playerId && session?.pin) return 'PLAYER_GAME';
     return 'PLAYER_JOIN';
   });
+
+  // Guard protected teacher backoffice route
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated && viewMode === 'TEACHER_BACKOFFICE') {
+      setViewMode('PLAYER_JOIN');
+    }
+  }, [isAuthLoading, isAuthenticated, viewMode]);
   
   // Room State
   const [pin, setPin] = useState(session.pin || '');

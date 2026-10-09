@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
+import { useAuth } from '../../context/AuthContext';
+import { AdminLoginModal } from '../auth/AdminLoginModal';
+import { UserManagementModal } from '../teacher/UserManagementModal';
 import { AvatarPicker, getRandomAvatar } from './AvatarPicker';
-import { LogIn, Crown, BookOpen, Gamepad2, MonitorPlay, ArrowLeft, Rocket, Sparkles, Tv, Users, Gift } from 'lucide-react';
+import { LogIn, Crown, BookOpen, Gamepad2, MonitorPlay, ArrowLeft, Rocket, Sparkles, Tv, Users, Gift, Lock, LogOut, Shield, GraduationCap } from 'lucide-react';
 
 export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacherBackoffice, onOpenLuckyDraw }) => {
   const { socket, session, saveSessionData } = useSocket();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+
+  // Login modal & pending redirect action
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null); // 'HOST' | 'BACKOFFICE' | 'LUCKY_DRAW' | { type: 'RESUME', pin: string }
   
   // Internal Screen State: 'MODE_SELECT' or 'PLAYER_FORM'
   const [screen, setScreen] = useState('MODE_SELECT');
@@ -155,6 +164,65 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
         setError(response?.message || 'ไม่สามารถเข้าร่วมห้องได้ กรุณาตรวจสอบ PIN');
       }
     });
+  };
+
+  const getRedirectLabel = () => {
+    if (pendingAction === 'HOST') return 'สร้างห้องกิจกรรมใหม่ (Host)';
+    if (pendingAction === 'BACKOFFICE') return 'คลังคำถาม (Teacher Backoffice)';
+    if (pendingAction === 'LUCKY_DRAW') return 'วงล้อ Lucky Draw';
+    if (pendingAction?.type === 'RESUME') return `เปิดห้องกิจกรรมต่อ (PIN: ${pendingAction.pin})`;
+    return '';
+  };
+
+  const handleProtectedHost = () => {
+    if (isAuthenticated) {
+      onSwitchToHost?.();
+    } else {
+      setPendingAction('HOST');
+      setIsLoginModalOpen(true);
+    }
+  };
+
+  const handleProtectedBackoffice = () => {
+    if (isAuthenticated) {
+      onOpenTeacherBackoffice?.();
+    } else {
+      setPendingAction('BACKOFFICE');
+      setIsLoginModalOpen(true);
+    }
+  };
+
+  const handleProtectedLuckyDraw = () => {
+    if (isAuthenticated) {
+      onOpenLuckyDraw?.();
+    } else {
+      setPendingAction('LUCKY_DRAW');
+      setIsLoginModalOpen(true);
+    }
+  };
+
+  const handleProtectedResume = (sessionPin) => {
+    if (isAuthenticated) {
+      onResumeRoom?.(sessionPin);
+    } else {
+      setPendingAction({ type: 'RESUME', pin: sessionPin });
+      setIsLoginModalOpen(true);
+    }
+  };
+
+  const handleLoginSuccess = () => {
+    setIsLoginModalOpen(false);
+    const action = pendingAction;
+    setPendingAction(null);
+    if (action === 'HOST') {
+      onSwitchToHost?.();
+    } else if (action === 'BACKOFFICE') {
+      onOpenTeacherBackoffice?.();
+    } else if (action === 'LUCKY_DRAW') {
+      onOpenLuckyDraw?.();
+    } else if (action?.type === 'RESUME') {
+      onResumeRoom?.(action.pin);
+    }
   };
 
   if (screen === 'PLAYER_FORM') {
@@ -438,6 +506,112 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
 
   return (
     <div style={{ maxWidth: '960px', margin: '40px auto', padding: '0 20px' }}>
+      {/* Top Header Bar with Auth Badge & Login Button */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '16px' }}>
+        {isAuthenticated ? (
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '10px',
+              background: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              padding: '6px 14px',
+              borderRadius: '30px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+            }}
+          >
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '3px 8px',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                background: isAdmin ? '#F0FDF4' : '#EFF6FF',
+                color: isAdmin ? '#166534' : '#1E40AF',
+                border: isAdmin ? '1px solid #BBF7D0' : '1px solid #BFDBFE'
+              }}
+            >
+              {isAdmin ? <Shield size={12} /> : <GraduationCap size={12} />}
+              {isAdmin ? '🛡️ ผู้ดูแลระบบ (Admin)' : '🎓 อาจารย์ผู้สอน (Teacher)'}
+            </div>
+            <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-main)' }}>
+              {user?.displayName || user?.username}
+            </span>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setIsUserManagementOpen(true)}
+                title="จัดการผู้ใช้งานระบบ (Admin Only)"
+                style={{
+                  background: '#F0FDF4',
+                  border: '1px solid #86EFAC',
+                  color: '#166534',
+                  borderRadius: '20px',
+                  padding: '4px 10px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                <Users size={12} /> จัดการผู้ใช้
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={logout}
+              title="ออกจากระบบ"
+              style={{
+                background: '#FEF2F2',
+                border: '1px solid #FECACA',
+                color: '#DC2626',
+                borderRadius: '20px',
+                padding: '4px 10px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              <LogOut size={12} /> ออกจากระบบ
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setPendingAction(null);
+              setIsLoginModalOpen(true);
+            }}
+            style={{
+              background: '#FFFFFF',
+              border: '1.5px solid #CBD5E1',
+              color: 'var(--text-main)',
+              padding: '8px 18px',
+              borderRadius: '24px',
+              fontSize: '0.88rem',
+              fontWeight: 700,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            <Lock size={15} color="var(--accent-earth-blue)" /> 🔐 เข้าสู่ระบบผู้สอน/แอดมิน
+          </button>
+        )}
+      </div>
+
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--accent-earth-orange)', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>
           <Sparkles size={16} /> Interactive Training & Quiz System
@@ -543,7 +717,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
               <button
                 type="button"
-                onClick={() => onSwitchToHost?.()}
+                onClick={handleProtectedHost}
                 style={{
                   padding: '14px 24px',
                   borderRadius: '12px',
@@ -565,7 +739,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
 
               <button
                 type="button"
-                onClick={() => onOpenTeacherBackoffice?.()}
+                onClick={handleProtectedBackoffice}
                 style={{
                   padding: '14px 20px',
                   borderRadius: '12px',
@@ -586,7 +760,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
 
               <button
                 type="button"
-                onClick={() => onOpenLuckyDraw?.()}
+                onClick={handleProtectedLuckyDraw}
                 style={{
                   padding: '14px 20px',
                   borderRadius: '12px',
@@ -663,7 +837,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
 
                     <button
                       type="button"
-                      onClick={() => onResumeRoom?.(sess.pin)}
+                      onClick={() => handleProtectedResume(sess.pin)}
                       style={{
                         background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
                         color: '#FFFFFF',
@@ -687,6 +861,23 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
         </div>
 
       </div>
+
+      {/* Admin / Teacher Login Modal */}
+      <AdminLoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => {
+          setIsLoginModalOpen(false);
+          setPendingAction(null);
+        }}
+        onSuccess={handleLoginSuccess}
+        redirectLabel={getRedirectLabel()}
+      />
+
+      {/* User Management Modal (Admin Only) */}
+      <UserManagementModal
+        isOpen={isUserManagementOpen}
+        onClose={() => setIsUserManagementOpen(false)}
+      />
     </div>
   );
 };
