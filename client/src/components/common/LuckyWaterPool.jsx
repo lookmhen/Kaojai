@@ -2,15 +2,17 @@ import React, { useRef, useEffect } from 'react';
 import { sfx } from '../../utils/audioSFX';
 
 const BALL_PALETTES = [
-  { main: '#FF5E62', highlight: '#FFA8A8', rim: '#D9383D', text: '#FFFFFF' },
-  { main: '#00C6FF', highlight: '#80E3FF', rim: '#0072FF', text: '#FFFFFF' },
-  { main: '#10B981', highlight: '#6EE7B7', rim: '#047857', text: '#FFFFFF' },
-  { main: '#F59E0B', highlight: '#FDE68A', rim: '#B45309', text: '#FFFFFF' },
-  { main: '#8B5CF6', highlight: '#C4B5FD', rim: '#6D28D9', text: '#FFFFFF' },
-  { main: '#EC4899', highlight: '#FBCFE8', rim: '#BE185D', text: '#FFFFFF' },
-  { main: '#06B6D4', highlight: '#67E8F9', rim: '#0E7490', text: '#FFFFFF' },
-  { main: '#F97316', highlight: '#FDBA74', rim: '#C2410C', text: '#FFFFFF' }
+  { main: '#FF5E62', highlight: '#FFA8A8', rim: '#D9383D' },
+  { main: '#00C6FF', highlight: '#80E3FF', rim: '#0072FF' },
+  { main: '#10B981', highlight: '#6EE7B7', rim: '#047857' },
+  { main: '#F59E0B', highlight: '#FDE68A', rim: '#B45309' },
+  { main: '#8B5CF6', highlight: '#C4B5FD', rim: '#6D28D9' },
+  { main: '#EC4899', highlight: '#FBCFE8', rim: '#BE185D' },
+  { main: '#06B6D4', highlight: '#67E8F9', rim: '#0E7490' },
+  { main: '#F97316', highlight: '#FDBA74', rim: '#C2410C' }
 ];
+
+const MYSTERY_ICONS = ['⭐️', '🎁', '💎', '🍀', '✨', '👑', '🎯', '🌟', '🔮', '🎉', '⚡️', '❤️'];
 
 export const LuckyWaterPool = ({
   candidates = [],
@@ -31,8 +33,7 @@ export const LuckyWaterPool = ({
     scoopedBall: null,
     scoopStartPos: { x: 0, y: 0 },
     hasSplashedOnExit: false,
-    liftProgress: 0,
-    avatarCache: new Map()
+    liftProgress: 0
   });
 
   // Tub & Water Geometry (2.5D Isometric Cylindrical Pool matching user sketch)
@@ -48,50 +49,51 @@ export const LuckyWaterPool = ({
   const waterRx = rx - 12;
   const waterRy = ry - 8;
 
-  // Initialize balls and avatars
+  // Initialize Mystery Floating Balls (สอยดาว / ไข่นำโชคปริศนา - จัดวางเรียงตัวนิ่งสงบ ไม่ซ้อนทับกัน)
   useEffect(() => {
     const state = stateRef.current;
+    const hasCandidates = candidates.length > 0;
+    const ballBaseRadius = 24;
 
-    // Pre-cache avatar images if available
-    candidates.forEach((c) => {
-      if (c.avatar && !state.avatarCache.has(c.avatar)) {
-        const img = new Image();
-        img.src = `/avatars/${c.avatar}`;
-        state.avatarCache.set(c.avatar, img);
-      }
-    });
+    const balls = [];
+    if (hasCandidates) {
+      // Ring distribution: Center (1), Inner (7), Middle (10), Outer (10) = 28 balls
+      const rings = [
+        { count: 1, ratio: 0, phaseOffset: 0 },
+        { count: 7, ratio: 0.36, phaseOffset: 0.2 },
+        { count: 10, ratio: 0.66, phaseOffset: 0.5 },
+        { count: 10, ratio: 0.90, phaseOffset: 0.1 }
+      ];
 
-    // Create balls positioned nicely inside the elliptical pool
-    const ballBaseRadius = candidates.length > 32 ? 19 : (candidates.length > 16 ? 22 : 26);
+      let ballIndex = 0;
+      rings.forEach((ring) => {
+        for (let i = 0; i < ring.count; i++) {
+          const palette = BALL_PALETTES[ballIndex % BALL_PALETTES.length];
+          const icon = MYSTERY_ICONS[ballIndex % MYSTERY_ICONS.length];
+          const ang = ring.count === 1 ? 0 : (i / ring.count) * Math.PI * 2 + ring.phaseOffset;
+          const x = cx + Math.cos(ang) * (waterRx - ballBaseRadius - 12) * ring.ratio;
+          const y = waterCy + Math.sin(ang) * (waterRy - ballBaseRadius - 8) * ring.ratio;
 
-    state.balls = candidates.map((cand, idx) => {
-      const palette = BALL_PALETTES[idx % BALL_PALETTES.length];
-      const nameStr = cand.name || 'Anonymous';
-      const initials = nameStr.length > 2 ? nameStr.substring(0, 2) : nameStr;
+          balls.push({
+            id: `mystery_ball_${ballIndex}`,
+            icon,
+            ballNumber: ballIndex + 1,
+            x,
+            y,
+            vx: 0,
+            vy: 0,
+            radius: ballBaseRadius,
+            palette,
+            angle: 0,
+            vAngle: 0,
+            bobPhase: ballIndex * 0.7
+          });
+          ballIndex++;
+        }
+      });
+    }
 
-      // Distribute randomly inside the water ellipse
-      const angle = Math.random() * Math.PI * 2;
-      const distRatio = 0.15 + Math.sqrt(Math.random()) * 0.72;
-      const x = cx + Math.cos(angle) * (waterRx - ballBaseRadius - 10) * distRatio;
-      const y = waterCy + Math.sin(angle) * (waterRy - ballBaseRadius - 6) * distRatio;
-
-      return {
-        id: cand.id || `ball_${idx}`,
-        candidate: cand,
-        x,
-        y,
-        baseY: y,
-        vx: (Math.random() - 0.5) * 1.2,
-        vy: (Math.random() - 0.5) * 0.8,
-        radius: ballBaseRadius,
-        palette,
-        initials,
-        angle: Math.random() * Math.PI * 2,
-        vAngle: (Math.random() - 0.5) * 0.04,
-        bobPhase: Math.random() * Math.PI * 2
-      };
-    });
-
+    state.balls = balls;
     state.scoopedBall = null;
     state.hasSplashedOnExit = false;
     state.liftProgress = 0;
@@ -129,11 +131,6 @@ export const LuckyWaterPool = ({
       // ==========================================
       ctx.save();
       // Continuous closed path for the front cylinder wall:
-      // 1. Start top-left corner
-      // 2. Line down to bottom-left corner
-      // 3. Curve across bottom front rim to bottom-right corner
-      // 4. Line up to top-right corner
-      // 5. Curve across top front rim back to top-left corner
       ctx.beginPath();
       ctx.moveTo(cx - rx, topCy);
       ctx.lineTo(cx - rx, botCy);
@@ -184,13 +181,13 @@ export const LuckyWaterPool = ({
       // 3. TUB TOP RIM LIP & INNER BACK WALL (ขอบปากอ่างด้านใน)
       // ==========================================
       ctx.save();
-      // Top Outer Rim
+      // Top Outer Rim (full ellipse)
       ctx.beginPath();
       ctx.ellipse(cx, topCy, rx, ry, 0, 0, Math.PI * 2);
       ctx.fillStyle = '#075985'; // Deep inner cavity behind water
       ctx.fill();
       ctx.strokeStyle = '#38BDF8';
-      ctx.lineWidth = 6;
+      ctx.lineWidth = 5;
       ctx.stroke();
 
       // Top Inner Lip Highlight
@@ -220,12 +217,23 @@ export const LuckyWaterPool = ({
       ctx.strokeStyle = 'rgba(224, 242, 254, 0.75)';
       ctx.lineWidth = 2.5;
       ctx.stroke();
+
+      // Empty State Banner if no candidates
+      if (candidates.length === 0) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 15px "Prompt", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('ยังไม่มีรายชื่อผู้มีสิทธิ์ลุ้นรางวัล', cx, waterCy - 8);
+        ctx.font = '12px "Prompt", sans-serif';
+        ctx.fillStyle = '#E0F2FE';
+        ctx.fillText('เพิ่มรายชื่อหรือเชื่อมต่อห้องเพื่อเริ่มสอยลูกบอล', cx, waterCy + 14);
+      }
       ctx.restore();
 
       // ==========================================
-      // 5. WATER RIPPLES & WAVES (คลื่นน้ำวงรีสมจริง)
+      // 5. WATER RIPPLES & BUBBLES (คลื่นน้ำวงรีและฟองอากาศ)
       // ==========================================
-      // Spawn subtle ambient ripples occasionally
       if (Math.random() < 0.05 && state.ripples.length < 8) {
         const ang = Math.random() * Math.PI * 2;
         const dist = Math.random() * 0.7;
@@ -250,7 +258,6 @@ export const LuckyWaterPool = ({
 
         ctx.save();
         ctx.beginPath();
-        // Elliptical ripple matching perspective ratio
         const ryRatio = waterRy / waterRx;
         ctx.ellipse(rip.x, rip.y, rip.r, rip.r * ryRatio, 0, 0, Math.PI * 2);
         ctx.strokeStyle = `rgba(255, 255, 255, ${rip.alpha * 0.75})`;
@@ -259,7 +266,7 @@ export const LuckyWaterPool = ({
         ctx.restore();
       }
 
-      // Air Bubbles floating inside the pool
+      // Air Bubbles
       if (Math.random() < 0.22 && state.bubbles.length < 15) {
         const ang = Math.random() * Math.PI * 2;
         const dist = Math.random() * 0.75;
@@ -293,8 +300,12 @@ export const LuckyWaterPool = ({
         ctx.stroke();
       }
 
+      // Decay mouse speed in render loop so stationary mouse has 0 speed
+      state.mouse.speed *= 0.82;
+      if (state.mouse.speed < 0.2) state.mouse.speed = 0;
+
       // ==========================================
-      // 6. BALL PHYSICS & 2.5D ELLIPTICAL COLLISION
+      // 6. BALL PHYSICS & 2.5D ELLIPTICAL COLLISION (อยู่นิ่งสงบ ไม่ขยับเอง)
       // ==========================================
       const mouse = state.mouse;
       const isScooping = Boolean(state.scoopedBall);
@@ -302,40 +313,41 @@ export const LuckyWaterPool = ({
       for (let i = 0; i < state.balls.length; i++) {
         const b = state.balls[i];
 
-        // Skip normal physics if this ball is being scooped up by the Pickup Rod
         if (state.scoopedBall && state.scoopedBall.id === b.id) {
           continue;
         }
 
-        // Water resistance & friction
-        b.vx *= 0.965;
-        b.vy *= 0.965;
+        // Strong water drag so balls settle peacefully into stillness
+        b.vx *= 0.88;
+        b.vy *= 0.88;
+        b.vAngle *= 0.90;
 
-        // Gentle floating bobbing on elliptical water plane
-        b.bobPhase += 0.035;
-        b.y += Math.sin(b.bobPhase) * 0.15;
+        // Cut off residual micro-movements (หยุดนิ่งสนิทเมื่อความเร็วต่ำ)
+        if (Math.abs(b.vx) < 0.025) b.vx = 0;
+        if (Math.abs(b.vy) < 0.025) b.vy = 0;
+        if (Math.abs(b.vAngle) < 0.005) b.vAngle = 0;
 
-        // Mouse Pickup Rod Stirring Interaction (กวนน้ำวน)
-        if (mouse.isHover) {
+        // Pickup Rod Stirring Interaction: ขยับเฉพาะตอนเลื่อนไม้กวนน้ำจริงเท่านั้น!
+        if (mouse.isHover && mouse.speed > 2.0) {
           const dx = b.x - mouse.x;
           const dy = b.y - mouse.y;
           const dist = Math.hypot(dx, dy);
-          const stirRadius = 78;
+          const stirRadius = 75;
 
           if (dist < stirRadius && dist > 1) {
-            const force = (1 - dist / stirRadius) * 2.2;
-            b.vx += (dx / dist) * force + (mouse.speed * 0.08 * Math.sign(dx));
-            b.vy += (dy / dist) * force + (mouse.speed * 0.06 * Math.sign(dy));
-            b.vAngle += (Math.random() - 0.5) * 0.06;
+            const stirPower = Math.min(3.2, (mouse.speed - 2.0) * 0.16);
+            const force = (1 - dist / stirRadius) * stirPower;
+            b.vx += (dx / dist) * force;
+            b.vy += (dy / dist) * force;
+            b.vAngle += (Math.random() - 0.5) * 0.05;
 
-            // Trigger ripple when rod stirs water
-            if (Math.random() < 0.15) {
+            if (Math.random() < 0.12) {
               state.ripples.push({
                 x: mouse.x,
                 y: mouse.y,
                 r: 3,
                 maxR: 42,
-                alpha: 0.6
+                alpha: 0.5
               });
             }
           }
@@ -344,9 +356,8 @@ export const LuckyWaterPool = ({
         b.x += b.vx;
         b.y += b.vy;
         b.angle += b.vAngle;
-        b.vAngle *= 0.97;
 
-        // Elliptical Boundary Collision (สะท้อนขอบอ่างวงรีตามมุมตกกระทบ)
+        // Elliptical Boundary Collision
         const effectiveRx = waterRx - b.radius - 4;
         const effectiveRy = waterRy - b.radius - 4;
         const normX = (b.x - cx) / effectiveRx;
@@ -354,11 +365,9 @@ export const LuckyWaterPool = ({
         const normDist = Math.hypot(normX, normY);
 
         if (normDist > 1) {
-          // Push ball back inside the ellipse
           b.x = cx + (normX / normDist) * effectiveRx;
           b.y = waterCy + (normY / normDist) * effectiveRy;
 
-          // Normal vector of the ellipse at this boundary point
           let nx = normX / (effectiveRx * effectiveRx);
           let ny = normY / (effectiveRy * effectiveRy);
           const nlen = Math.hypot(nx, ny) || 1;
@@ -367,12 +376,12 @@ export const LuckyWaterPool = ({
 
           const dot = b.vx * nx + b.vy * ny;
           if (dot > 0) {
-            b.vx -= 1.6 * dot * nx;
-            b.vy -= 1.6 * dot * ny;
+            b.vx -= 1.4 * dot * nx;
+            b.vy -= 1.4 * dot * ny;
           }
         }
 
-        // Ball-to-ball soft collisions
+        // Ball-to-ball soft collisions (หน่วงการชน ไม่เด้งกระจาย)
         for (let j = i + 1; j < state.balls.length; j++) {
           const b2 = state.balls[j];
           if (state.scoopedBall && state.scoopedBall.id === b2.id) continue;
@@ -383,7 +392,7 @@ export const LuckyWaterPool = ({
           const minDist = b.radius + b2.radius;
 
           if (cdist < minDist && cdist > 0) {
-            const overlap = (minDist - cdist) * 0.5;
+            const overlap = (minDist - cdist) * 0.25;
             const cnx = cdx / cdist;
             const cny = cdy / cdist;
 
@@ -393,14 +402,14 @@ export const LuckyWaterPool = ({
             b2.y += cny * overlap;
 
             const relVel = (b.vx - b2.vx) * cnx + (b.vy - b2.vy) * cny;
-            if (relVel > 0) {
-              const impulse = relVel * 0.85;
+            if (relVel > 0.1) {
+              const impulse = relVel * 0.6;
               b.vx -= impulse * cnx;
               b.vy -= impulse * cny;
               b2.vx += impulse * cnx;
               b2.vy += impulse * cny;
 
-              if (relVel > 1.1) {
+              if (relVel > 1.4) {
                 sfx.playBallClack();
               }
             }
@@ -411,28 +420,19 @@ export const LuckyWaterPool = ({
       // ==========================================
       // 7. RENDER FLOATING BALLS WITH 2.5D PERSPECTIVE DEPTH
       // ==========================================
-      // Sort balls by Y position so front balls cleanly overlap rear balls!
       const sortedBalls = [...state.balls].sort((a, b) => a.y - b.y);
 
       for (const b of sortedBalls) {
         if (state.scoopedBall && state.scoopedBall.id === b.id) continue;
 
-        // Depth perspective scale: balls towards the back (top) are slightly smaller
         const depthY = (b.y - (waterCy - waterRy)) / (2 * waterRy);
         const depthScale = 0.88 + Math.max(0, Math.min(1, depthY)) * 0.24;
 
-        drawBall(ctx, b, depthScale, state.avatarCache);
+        drawBall(ctx, b, depthScale);
       }
 
-      // Front Rim Lip Highlight (เส้นแสงไฮไลท์ผิวน้ำด้านหน้าอ่าง)
-      ctx.save();
-      ctx.beginPath();
-      ctx.ellipse(cx, waterCy, waterRx, waterRy, 0, 0, Math.PI, false);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-
       // Front Rim Lip of the Tub (ขอบปากอ่างด้านหน้า บังหน้าลูกบอลเพื่อมิติ 3D ที่สมบูรณ์)
+      ctx.save();
       ctx.beginPath();
       ctx.ellipse(cx, topCy, rx, ry, 0, 0, Math.PI, false);
       ctx.strokeStyle = '#38BDF8';
@@ -467,26 +467,24 @@ export const LuckyWaterPool = ({
         let currentX, currentY, scale;
 
         if (t < 0.22) {
-          // PHASE 1: Submerge & Lock On (หัว Pickup Rod ล็อคจับที่ลูกบอล)
+          // PHASE 1: Submerge & Lock On
           const p = t / 0.22;
           const dipY = Math.sin(p * Math.PI) * 12;
           currentX = start.x;
           currentY = start.y + dipY;
           scale = 1.0;
         } else if (t < 0.72) {
-          // PHASE 2: Lifting Upwards through Water Surface (ยกช้อนขึ้นจากผิวน้ำ)
+          // PHASE 2: Lifting Upwards through Water Surface
           const p = (t - 0.22) / 0.5;
           const ease = 1 - Math.pow(1 - p, 3);
           currentX = start.x + (targetX - start.x) * ease;
           currentY = start.y + (targetY - start.y) * ease;
           scale = 1 + ease * 0.45;
 
-          // When passing through water surface:
           if (currentY <= waterCy + 10 && !state.hasSplashedOnExit) {
             state.hasSplashedOnExit = true;
             sfx.playWaterSplash();
 
-            // Big splash droplets
             for (let k = 0; k < 28; k++) {
               const ang = Math.random() * Math.PI * 2;
               const spd = 2.2 + Math.random() * 4.2;
@@ -500,7 +498,6 @@ export const LuckyWaterPool = ({
               });
             }
 
-            // Expanding ripple on water surface
             state.ripples.push({
               x: currentX,
               y: waterCy,
@@ -510,13 +507,12 @@ export const LuckyWaterPool = ({
             });
           }
         } else {
-          // PHASE 3: Floating High Above Tub (ลูกบอลลอยเด่นเหนือบ่อน้ำ พร้อมหยดน้ำติ๋งๆ และประกายระยิบระยับ)
+          // PHASE 3: Floating High Above Tub with Golden Sparkles
           const p = (t - 0.72) / 0.28;
           currentX = targetX;
           currentY = targetY;
           scale = 1.45 + p * 0.45; // Scale up to 1.9x
 
-          // Water drips falling back into tub
           if (Math.random() < 0.65) {
             state.drips.push({
               x: currentX + (Math.random() - 0.5) * 36,
@@ -527,7 +523,6 @@ export const LuckyWaterPool = ({
             });
           }
 
-          // Wet sparkle glisten
           if (Math.random() < 0.35) {
             state.sparkles.push({
               x: currentX + (Math.random() - 0.5) * (sb.radius * scale * 1.4),
@@ -543,10 +538,10 @@ export const LuckyWaterPool = ({
           const auraProgress = (t - 0.58) / 0.42;
           ctx.save();
           ctx.beginPath();
-          ctx.arc(currentX, currentY, sb.radius * scale + 15, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(245, 158, 11, ${auraProgress * 0.35})`;
+          ctx.arc(currentX, currentY, sb.radius * scale + 16, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(245, 158, 11, ${auraProgress * 0.38})`;
           ctx.fill();
-          ctx.strokeStyle = `rgba(251, 191, 36, ${auraProgress * 0.85})`;
+          ctx.strokeStyle = `rgba(251, 191, 36, ${auraProgress * 0.9})`;
           ctx.lineWidth = 3.5;
           ctx.stroke();
           ctx.restore();
@@ -556,7 +551,7 @@ export const LuckyWaterPool = ({
         drawPickupRod(ctx, currentX, currentY, true);
 
         // Draw the lifted ball
-        drawBall(ctx, { ...sb, x: currentX, y: currentY }, scale, state.avatarCache);
+        drawBall(ctx, { ...sb, x: currentX, y: currentY }, scale);
       }
 
       // Render splashing water droplets
@@ -564,7 +559,7 @@ export const LuckyWaterPool = ({
         const s = state.splashes[i];
         s.x += s.vx;
         s.y += s.vy;
-        s.vy += 0.18; // Gravity
+        s.vy += 0.18;
         s.life -= 0.035;
 
         if (s.life <= 0 || s.y > botCy) {
@@ -582,7 +577,7 @@ export const LuckyWaterPool = ({
       for (let i = state.drips.length - 1; i >= 0; i--) {
         const d = state.drips[i];
         d.y += d.vy;
-        d.vy += 0.15; // Gravity acceleration
+        d.vy += 0.15;
 
         if (d.y >= waterCy) {
           state.ripples.push({
@@ -630,15 +625,18 @@ export const LuckyWaterPool = ({
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, [width, height, cx, topCy, rx, ry, tubHeight, botCy, waterCy, waterRx, waterRy]);
+  }, [candidates, width, height, cx, topCy, rx, ry, tubHeight, botCy, waterCy, waterRx, waterRy]);
 
-  // Helper: Draw 3D Floating Ball with Avatar / Initials & Name
-  const drawBall = (ctx, ball, scale = 1, avatarCache) => {
-    const { x, y, radius, palette, initials, candidate: cand } = ball;
+  // Helper: Draw 3D Floating Mystery Ball with Lucky Icon (ไข่นำโชค / สอยดาวปริศนา)
+  const drawBall = (ctx, ball, scale = 1) => {
+    const { x, y, radius, palette, icon, bobPhase } = ball;
     const r = radius * scale;
 
+    // Visual-only gentle bobbing (ไม่กระทบตำแหน่งฟิสิกส์ จึงไม่ชนกันเอง)
+    const bobOffset = Math.sin(Date.now() * 0.0018 + (bobPhase || 0)) * 1.4;
+
     ctx.save();
-    ctx.translate(x, y);
+    ctx.translate(x, y + bobOffset);
 
     // 1. Soft Shadow on Water Surface
     ctx.beginPath();
@@ -657,49 +655,24 @@ export const LuckyWaterPool = ({
     ctx.fill();
 
     // Outer Rim Stroke
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-    ctx.lineWidth = 1.6 * scale;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 1.8 * scale;
     ctx.stroke();
 
-    // 3. Avatar Icon or Initials
-    const avatarImg = cand?.avatar ? avatarCache.get(cand.avatar) : null;
-    if (avatarImg && avatarImg.complete && avatarImg.naturalWidth > 0) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(0, -r * 0.15, r * 0.52, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.drawImage(avatarImg, -r * 0.52, -r * 0.15 - r * 0.52, r * 1.04, r * 1.04);
-      ctx.restore();
-
-      ctx.beginPath();
-      ctx.arc(0, -r * 0.15, r * 0.52, 0, Math.PI * 2);
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 1.8 * scale;
-      ctx.stroke();
-    } else {
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = `bold ${Math.round(11 * scale)}px "Prompt", sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(initials, 0, -r * 0.12);
-    }
-
-    // Candidate Short Name Badge
+    // 3. Mystery Emblem / Icon in the center (ไอคอนสอยดาวนำโชค)
     ctx.save();
-    const nameStr = cand.name || 'Anonymous';
-    const displayShort = nameStr.length > 5 ? nameStr.substring(0, 4) + '…' : nameStr;
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = `bold ${Math.round(8.5 * scale)}px "Prompt", sans-serif`;
+    ctx.font = `${Math.round(15 * scale)}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(displayShort, 0, r * 0.38 + 6 * scale);
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+    ctx.shadowBlur = 4 * scale;
+    ctx.fillText(icon || '⭐️', 0, 1 * scale);
     ctx.restore();
 
-    // Specular Glare (Reflection shine on top-left)
+    // 4. Specular Glare (Reflection shine on top-left)
     ctx.beginPath();
     ctx.ellipse(-r * 0.38, -r * 0.38, r * 0.28, r * 0.15, -Math.PI / 4, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
     ctx.fill();
 
     ctx.restore();
@@ -720,7 +693,7 @@ export const LuckyWaterPool = ({
     ctx.beginPath();
     ctx.moveTo(tipX, tipY);
     ctx.lineTo(endX, endY);
-    ctx.strokeStyle = '#1E293B'; // Dark metallic rod
+    ctx.strokeStyle = '#1E293B';
     ctx.lineWidth = 6;
     ctx.lineCap = 'round';
     ctx.stroke();
@@ -772,7 +745,6 @@ export const LuckyWaterPool = ({
     // Target Crosshair / Claw Grid inside the box
     ctx.strokeStyle = isCatching ? '#F59E0B' : '#38BDF8';
     ctx.lineWidth = 1.6;
-    // Inner square frame
     ctx.strokeRect(-boxSize / 2 + 7, -boxSize / 2 + 7, boxSize - 14, boxSize - 14);
 
     // Crosshair Lines
@@ -825,7 +797,6 @@ export const LuckyWaterPool = ({
       speed
     };
 
-    // Check if inside elliptical water surface
     const normDist = Math.hypot((x - cx) / waterRx, (y - waterCy) / waterRy);
     if (speed > 8 && normDist <= 1.1) {
       sfx.playWaterStir(speed / 25);
@@ -840,7 +811,7 @@ export const LuckyWaterPool = ({
     stateRef.current.mouse.isHover = false;
   };
 
-  // Click: Scoop up / Pickup a ball with the Pickup Rod!
+  // Click: Scoop up / Pickup a mystery ball with the Pickup Rod!
   const handleClick = (e) => {
     if (isLocked || stateRef.current.scoopedBall || candidates.length === 0) return;
     const canvas = canvasRef.current;
@@ -854,19 +825,13 @@ export const LuckyWaterPool = ({
     // Pick candidate: closest ball to Pickup Rod tip or random
     let target = state.balls.find((b) => Math.hypot(b.x - x, b.y - y) <= b.radius + 22);
     if (!target && state.balls.length > 0) {
-      let closest = state.balls[0];
-      let minDist = Infinity;
-      for (const b of state.balls) {
-        const d = Math.hypot(b.x - x, b.y - y);
-        if (d < minDist) {
-          minDist = d;
-          closest = b;
-        }
-      }
-      target = closest;
+      target = state.balls[Math.floor(Math.random() * state.balls.length)];
     }
 
     if (!target) return;
+
+    // Fairly draw a winner from eligible candidates
+    const chosenWinner = candidates[Math.floor(Math.random() * candidates.length)];
 
     // Trigger scoop sequence with Pickup Rod!
     state.scoopedBall = target;
@@ -876,8 +841,8 @@ export const LuckyWaterPool = ({
 
     // Notify winner after complete realistic scooping sequence
     setTimeout(() => {
-      if (onSelectWinner && target.candidate) {
-        onSelectWinner(target.candidate);
+      if (onSelectWinner && chosenWinner) {
+        onSelectWinner(chosenWinner);
       }
     }, 1750);
   };
@@ -921,7 +886,7 @@ export const LuckyWaterPool = ({
       >
         <span>🎣 เลื่อนก้าน <strong>Pickup Rod</strong> กวนน้ำวนในอ่างกลม</span>
         <span>•</span>
-        <span>🎯 <strong>คลิกเพื่อสอยลูกบอลลุ้นรางวัล!</strong></span>
+        <span>🔮 <strong>คลิกเพื่อสอยลูกบอลปริศนา ลุ้นผู้โชคดี!</strong></span>
       </div>
     </div>
   );

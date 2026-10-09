@@ -1,11 +1,24 @@
 import React, { useRef, useEffect } from 'react';
 import { sfx } from '../../utils/audioSFX';
 
-const WHEEL_COLORS = [
-  '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
-  '#F7DC6F', '#BB8FCE', '#82E0AA', '#F1948A', '#85C1E9',
-  '#F39C12', '#16A085', '#2980B9', '#8E44AD', '#27AE60',
-  '#D35400', '#C0392B', '#1ABC9C', '#3498DB', '#9B59B6'
+// 16 Festive Carnival Mystery Segments (วงล้อปริศนาหลากสีสันสดใส)
+const MYSTERY_SEGMENTS = [
+  { icon: '⭐️', label: 'STAR', color: '#EF4444', text: '#FFFFFF' },
+  { icon: '🎁', label: 'GIFT', color: '#F97316', text: '#FFFFFF' },
+  { icon: '💎', label: 'GEM', color: '#F59E0B', text: '#FFFFFF' },
+  { icon: '🍀', label: 'LUCK', color: '#10B981', text: '#FFFFFF' },
+  { icon: '✨', label: 'SHINE', color: '#06B6D4', text: '#FFFFFF' },
+  { icon: '👑', label: 'KING', color: '#3B82F6', text: '#FFFFFF' },
+  { icon: '🎯', label: 'AIM', color: '#6366F1', text: '#FFFFFF' },
+  { icon: '🌟', label: 'GOLD', color: '#8B5CF6', text: '#FFFFFF' },
+  { icon: '🔮', label: 'MYSTERY', color: '#EC4899', text: '#FFFFFF' },
+  { icon: '🏆', label: 'TROPHY', color: '#F43F5E', text: '#FFFFFF' },
+  { icon: '🌈', label: 'COLOR', color: '#14B8A6', text: '#FFFFFF' },
+  { icon: '🎈', label: 'BALLOON', color: '#84CC16', text: '#FFFFFF' },
+  { icon: '🎉', label: 'FEST', color: '#EAB308', text: '#FFFFFF' },
+  { icon: '⚡️', label: 'POWER', color: '#0EA5E9', text: '#FFFFFF' },
+  { icon: '❤️', label: 'HEART', color: '#A855F7', text: '#FFFFFF' },
+  { icon: '🍀', label: 'CLOVER', color: '#059669', text: '#FFFFFF' }
 ];
 
 export const LuckyWheel = ({
@@ -21,19 +34,22 @@ export const LuckyWheel = ({
   const animFrameRef = useRef(null);
   const lastTickSegmentRef = useRef(-1);
 
-  // Ease-out quartic curve: fast start, dramatic deceleration
+  // Ease-out quartic curve: fast start, dramatic suspenseful deceleration
   const easeOutQuart = (x) => 1 - Math.pow(1 - x, 4);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const count = candidates.length;
-    if (count === 0) {
+    const hasCandidates = candidates.length > 0;
+
+    if (!hasCandidates) {
       drawEmptyWheel(ctx, canvas.width, canvas.height);
       return;
     }
 
+    const segments = MYSTERY_SEGMENTS;
+    const count = segments.length;
     const arc = (2 * Math.PI) / count;
 
     const render = (angle) => {
@@ -46,78 +62,94 @@ export const LuckyWheel = ({
       ctx.translate(centerX, centerY);
       ctx.rotate(angle);
 
-      // Draw segments
+      // 1. Draw Mystery Segments (ชิ้นส่วนวงล้อปริศนา)
       for (let i = 0; i < count; i++) {
+        const seg = segments[i];
         const segAngle = i * arc;
+
         ctx.beginPath();
-        ctx.fillStyle = WHEEL_COLORS[i % WHEEL_COLORS.length];
+        ctx.fillStyle = seg.color;
         ctx.moveTo(0, 0);
         ctx.arc(0, 0, radius, segAngle, segAngle + arc);
         ctx.lineTo(0, 0);
         ctx.fill();
 
+        // White dividing border
         ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        // Draw text
+        // Draw Mystery Icon (ไอคอนสัญลักษณ์นำโชค)
         ctx.save();
         ctx.rotate(segAngle + arc / 2);
-        ctx.textAlign = 'right';
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 14px "Prompt", sans-serif';
-        ctx.shadowColor = 'rgba(0,0,0,0.4)';
-        ctx.shadowBlur = 3;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
 
-        const candidateName = typeof candidates[i] === 'string'
-          ? candidates[i]
-          : (candidates[i]?.name || `คน ${i + 1}`);
+        // Outer Mystery Icon
+        ctx.font = '22px sans-serif';
+        ctx.shadowColor = 'rgba(0,0,0,0.45)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(seg.icon, radius * 0.72, 0);
 
-        const maxLen = count > 30 ? 7 : (count > 15 ? 10 : 15);
-        const displayName = candidateName.length > maxLen
-          ? candidateName.substring(0, maxLen - 1) + '…'
-          : candidateName;
-
-        ctx.fillText(displayName, radius - 20, 5);
+        // Inner Subtext
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.font = 'bold 9.5px "Prompt", sans-serif';
+        ctx.shadowBlur = 2;
+        ctx.fillText(seg.label, radius * 0.42, 0);
         ctx.restore();
       }
 
       ctx.restore();
 
-      // Outer gold rim
+      // 2. Outer Golden Brass Rim (ขอบวงล้อสีทองพร้อมไฟนีออน)
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius + 4, 0, 2 * Math.PI);
       ctx.strokeStyle = '#F59E0B';
-      ctx.lineWidth = 8;
+      ctx.lineWidth = 9;
       ctx.stroke();
 
-      // Outer rim dots
-      const numDots = Math.min(24, Math.max(12, count));
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius + 8, 0, 2 * Math.PI);
+      ctx.strokeStyle = '#B45309';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Golden Rim Light Bulbs
+      const numDots = 24;
       for (let d = 0; d < numDots; d++) {
         const dotAngle = (d / numDots) * 2 * Math.PI;
         const dx = centerX + (radius + 4) * Math.cos(dotAngle);
         const dy = centerY + (radius + 4) * Math.sin(dotAngle);
         ctx.beginPath();
-        ctx.arc(dx, dy, 3, 0, 2 * Math.PI);
-        ctx.fillStyle = '#FFFFFF';
+        ctx.arc(dx, dy, 3.5, 0, 2 * Math.PI);
+        ctx.fillStyle = d % 2 === 0 ? '#FEF08A' : '#FFFFFF';
+        ctx.shadowColor = '#F59E0B';
+        ctx.shadowBlur = isSpinning ? 6 : 2;
         ctx.fill();
+        ctx.shadowBlur = 0;
       }
 
-      // Center cap
+      // 3. Center Hub & Brass Badge (ดุมกลางวงล้อลายดาวนำโชค)
       ctx.beginPath();
-      ctx.arc(centerX, centerY, 32, 0, 2 * Math.PI);
-      ctx.fillStyle = '#1E293B';
+      ctx.arc(centerX, centerY, 34, 0, 2 * Math.PI);
+      ctx.fillStyle = '#0F172A';
       ctx.fill();
       ctx.strokeStyle = '#F59E0B';
       ctx.lineWidth = 4;
       ctx.stroke();
 
       ctx.beginPath();
-      ctx.arc(centerX, centerY, 12, 0, 2 * Math.PI);
+      ctx.arc(centerX, centerY, 15, 0, 2 * Math.PI);
       ctx.fillStyle = '#F59E0B';
       ctx.fill();
 
-      // Pointer (Top needle pointing down to 12 o'clock)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('★', centerX, centerY);
+
+      // 4. Pointer Flapper (เข็มชี้ด้านบนชี้ลงมาที่ตำแหน่ง 12 นาฬิกา)
       ctx.save();
       ctx.translate(centerX, centerY - radius + 8);
       ctx.beginPath();
@@ -131,7 +163,7 @@ export const LuckyWheel = ({
       ctx.lineWidth = 3;
       ctx.stroke();
       ctx.shadowColor = 'rgba(0,0,0,0.5)';
-      ctx.shadowBlur = 4;
+      ctx.shadowBlur = 5;
       ctx.restore();
     };
 
@@ -145,13 +177,11 @@ export const LuckyWheel = ({
     const startAngle = currentAngleRef.current;
     const extraRotations = 6 + Math.floor(Math.random() * 3); // 6-8 full spins
 
-    // Top pointer is at -Math.PI / 2 (12 o'clock).
-    // Segment i spans from (startAngle + i * arc) to (startAngle + (i+1) * arc).
-    // For segment winnerIndex to align with pointer at 12 o'clock:
-    // pointerAngle = -Math.PI / 2.
-    // (finalAngle + winnerIndex * arc + arc/2) % 2PI = -Math.PI / 2
-    const targetSegmentCenter = winnerIndex * arc + arc / 2;
-    // Align target segment center to top (-Math.PI/2)
+    // Map winnerIndex into one of the 16 mystery segments
+    const targetSegIndex = winnerIndex >= 0 ? (winnerIndex % count) : Math.floor(Math.random() * count);
+
+    // Target segment center aligns to top needle at -Math.PI / 2
+    const targetSegmentCenter = targetSegIndex * arc + arc / 2;
     const normalizedTarget = (3 * Math.PI / 2) - targetSegmentCenter;
     const totalSpinAngle = (extraRotations * 2 * Math.PI) + (normalizedTarget - (startAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     const finalAngle = startAngle + totalSpinAngle;
@@ -165,7 +195,7 @@ export const LuckyWheel = ({
       const currentAngle = startAngle + totalSpinAngle * eased;
       currentAngleRef.current = currentAngle;
 
-      // Audio tick calculation
+      // Audio tick calculation when crossing mystery segments
       const currentPointerOffset = (3 * Math.PI / 2) - (currentAngle % (2 * Math.PI));
       const posPointer = (currentPointerOffset % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
       const activeSeg = Math.floor(posPointer / arc) % count;
@@ -228,7 +258,7 @@ export const LuckyWheel = ({
         style={{
           maxWidth: '100%',
           height: 'auto',
-          filter: isSpinning ? 'drop-shadow(0 10px 20px rgba(0,0,0,0.18))' : 'drop-shadow(0 4px 10px rgba(0,0,0,0.08))',
+          filter: isSpinning ? 'drop-shadow(0 12px 24px rgba(245, 158, 11, 0.28))' : 'drop-shadow(0 4px 12px rgba(0,0,0,0.08))',
           transition: 'filter 0.3s ease'
         }}
       />
