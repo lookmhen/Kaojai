@@ -49,9 +49,13 @@ export const LuckyWaterPool = ({
   const waterRx = rx - 12;
   const waterRy = ry - 8;
 
-  // Initialize Mystery Floating Balls (อ้างอิงตามจำนวนคน แต่จำกัด Max Cap 14 ลูก ไม่ให้ล้นและไม่หน่วง)
+  // Initialize Mystery Floating Balls (อ้างอิงตามจำนวนคน แต่จำกัด Max Cap 10 ลูก ไม่ให้ล้นและไม่หน่วง)
   useEffect(() => {
     const state = stateRef.current;
+    // ป้องกันการรีเซ็ตลูกบอล หากกำลังมีลูกบอลถูกช้อนขึ้นมาอยู่
+    if (state.scoopedBall) {
+      return;
+    }
     const candidateCount = candidates.length;
     const MAX_BALLS = 10;
     const numBalls = Math.min(candidateCount, MAX_BALLS);

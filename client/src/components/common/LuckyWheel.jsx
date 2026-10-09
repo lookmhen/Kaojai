@@ -37,11 +37,12 @@ export const LuckyWheel = ({
   // Ease-out quartic curve: fast start, dramatic suspenseful deceleration
   const easeOutQuart = (x) => 1 - Math.pow(1 - x, 4);
 
+  const hasCandidates = candidates.length > 0;
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const hasCandidates = candidates.length > 0;
 
     if (!hasCandidates) {
       drawEmptyWheel(ctx, canvas.width, canvas.height);
@@ -225,7 +226,7 @@ export const LuckyWheel = ({
         cancelAnimationFrame(animFrameRef.current);
       }
     };
-  }, [candidates, isSpinning, winnerIndex, duration]);
+  }, [hasCandidates, isSpinning, winnerIndex, duration]);
 
   const drawEmptyWheel = (ctx, w, h) => {
     ctx.clearRect(0, 0, w, h);

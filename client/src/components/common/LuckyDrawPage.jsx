@@ -43,6 +43,7 @@ export const LuckyDrawPage = ({
   const [isSpinning, setIsSpinning] = useState(false);
   const [winnerIndex, setWinnerIndex] = useState(-1);
   const [currentWinner, setCurrentWinner] = useState(null);
+  const pendingSpinWinnerRef = useRef(null);
   const [winnerHistory, setWinnerHistory] = useState([]);
   const [copiedHistory, setCopiedHistory] = useState(false);
 
@@ -179,6 +180,7 @@ export const LuckyDrawPage = ({
 
     const chosenIdx = Math.floor(Math.random() * candidatePool.length);
     const chosenWinner = candidatePool[chosenIdx];
+    pendingSpinWinnerRef.current = chosenWinner;
 
     setWinnerIndex(chosenIdx);
     setCurrentWinner(null);
@@ -206,8 +208,10 @@ export const LuckyDrawPage = ({
 
   const handleSpinEnd = () => {
     setIsSpinning(false);
-    if (winnerIndex >= 0 && winnerIndex < candidatePool.length) {
-      const winner = candidatePool[winnerIndex];
+    const winner = pendingSpinWinnerRef.current || (winnerIndex >= 0 && winnerIndex < candidatePool.length ? candidatePool[winnerIndex] : null);
+    pendingSpinWinnerRef.current = null;
+
+    if (winner) {
       setCurrentWinner(winner);
 
       const newRecord = {
