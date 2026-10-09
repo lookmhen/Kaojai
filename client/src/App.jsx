@@ -84,6 +84,11 @@ export function AppContent() {
 
   const handleOpenLuckyDraw = () => {
     setPreviousViewMode(viewMode);
+    if (!session?.isHost) {
+      setPin('');
+      setPlayers([]);
+      setLeaderboard([]);
+    }
     setViewMode('LUCKY_DRAW');
   };
 
@@ -101,7 +106,7 @@ export function AppContent() {
       if (data.teams) setTeams(data.teams);
       if (data.quizSet?.id) setSelectedQuizId(data.quizSet.id);
       setStatus('LOBBY');
-      setViewMode('HOST_GAME');
+      setViewMode(prev => prev === 'LUCKY_DRAW' ? 'LUCKY_DRAW' : 'HOST_GAME');
       saveSessionData({ pin: data.pin, isHost: true, hostToken: data.hostToken });
     };
 
@@ -129,7 +134,7 @@ export function AppContent() {
       if (data.sequenceIntroData) {
         setSequenceIntroData(data.sequenceIntroData);
       }
-      setViewMode('HOST_GAME');
+      setViewMode(prev => prev === 'LUCKY_DRAW' ? 'LUCKY_DRAW' : 'HOST_GAME');
       saveSessionData({ pin: data.pin, isHost: true, hostToken: data.hostToken || session.hostToken });
     };
 

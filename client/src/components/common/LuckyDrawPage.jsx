@@ -36,7 +36,7 @@ export const LuckyDrawPage = ({
   const [serverHost, setServerHost] = useState(null);
 
   // Tabs: 'QR' | 'MANUAL' | 'ROOM'
-  const [activeTab, setActiveTab] = useState(() => (pin ? 'ROOM' : 'QR'));
+  const [activeTab, setActiveTab] = useState(() => (players && players.length > 0 ? 'ROOM' : 'QR'));
 
   // Draw Style: 'POOL' (ตักลูกบอลในอ่าง) | 'WHEEL' (วงล้อหมุน)
   const [drawStyle, setDrawStyle] = useState('POOL');
