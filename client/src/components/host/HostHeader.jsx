@@ -1,9 +1,9 @@
 import React from 'react';
 import { useSocket } from '../../context/SocketContext';
-import { Users, Play, Activity, LogOut } from 'lucide-react';
+import { Users, Play, Activity, LogOut, Gift } from 'lucide-react';
 import { SoundToggle } from '../common/SoundToggle';
 
-export const HostHeader = ({ pin, mode, counts, onSwitchMode, onLeave }) => {
+export const HostHeader = ({ pin, mode, counts, onSwitchMode, onLeave, onOpenLuckyDraw }) => {
   return (
     <header
       style={{
@@ -83,6 +83,31 @@ export const HostHeader = ({ pin, mode, counts, onSwitchMode, onLeave }) => {
             {counts?.totalPlayers || 0} คน
           </span>
         </div>
+
+        {onOpenLuckyDraw && (
+          <button
+            type="button"
+            onClick={() => onOpenLuckyDraw()}
+            style={{
+              background: 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)',
+              border: '1.5px solid #FDBA74',
+              color: '#EA580C',
+              padding: '8px 16px',
+              borderRadius: '24px',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(234, 88, 12, 0.15)',
+              transition: 'all 0.2s'
+            }}
+            title="เปิดวงล้อสุ่ม Lucky Draw"
+          >
+            <Gift size={16} color="#EA580C" /> Lucky Draw
+          </button>
+        )}
 
         <SoundToggle />
 

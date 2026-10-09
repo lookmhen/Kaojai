@@ -603,6 +603,51 @@ async function testSocketHandlers() {
   assert.strictEqual(t22Room.currentQuestionIndex, 2);
   console.log('    ✓ First-look Sequence Intro flow passed');
 
+  // Testing Lucky Draw socket events
+  console.log('  Testing host_spin_lucky_draw and host_close_lucky_draw events...');
+  const ldHost = mockIo.connectSocket('ld-host');
+  const ldPlayer = mockIo.connectSocket('ld-player');
+  let ldHostAck;
+  await ldHost.fire('create_room', null, (r) => { ldHostAck = r; });
+  const ldPin = ldHostAck.pin;
+  const ldRoom = roomManager.getRoom(ldPin);
+  await ldPlayer.fire('join_room', { pin: ldPin, name: 'Lucky Winner', avatar: '0291dcc0ce.svg' });
+
+  // Spin with valid host
+  let spinAck;
+  await ldHost.fire('host_spin_lucky_draw', {
+    pin: ldPin,
+    hostToken: ldRoom.hostToken,
+    prizeName: 'รางวัลที่ 1 ทีวี 55 นิ้ว',
+    winner: { id: 'p_winner', name: 'Lucky Winner', avatar: '0291dcc0ce.svg' },
+    candidateNames: ['Lucky Winner', 'Participant 2'],
+    durationMs: 4000
+  }, (r) => { spinAck = r; });
+
+  assert.ok(spinAck && spinAck.success, 'host_spin_lucky_draw should acknowledge success');
+  const spinBroadcast = broadcasts.find(b => b.roomPin === ldPin && b.event === 'lucky_draw_spin');
+  assert.ok(spinBroadcast, 'lucky_draw_spin broadcast must be emitted to room');
+  assert.strictEqual(spinBroadcast.payload.prizeName, 'รางวัลที่ 1 ทีวี 55 นิ้ว');
+  assert.strictEqual(spinBroadcast.payload.winner.name, 'Lucky Winner');
+  assert.strictEqual(spinBroadcast.payload.durationMs, 4000);
+
+  // Unauthorized spin attempt
+  let failSpinAck;
+  await ldPlayer.fire('host_spin_lucky_draw', {
+    pin: ldPin,
+    hostToken: 'wrong-token',
+    prizeName: 'Fake Prize'
+  }, (r) => { failSpinAck = r; });
+  assert.ok(failSpinAck && !failSpinAck.success, 'Unauthorized lucky draw spin must fail');
+
+  // Close lucky draw
+  let closeAck;
+  await ldHost.fire('host_close_lucky_draw', { pin: ldPin, hostToken: ldRoom.hostToken }, (r) => { closeAck = r; });
+  assert.ok(closeAck && closeAck.success, 'host_close_lucky_draw should succeed');
+  const closeBroadcast = broadcasts.find(b => b.roomPin === ldPin && b.event === 'lucky_draw_closed');
+  assert.ok(closeBroadcast, 'lucky_draw_closed broadcast must be emitted');
+  console.log('    ✓ Lucky Draw socket events passed');
+
   console.log('✅ socketHandler tests passed cleanly!');
 }
 

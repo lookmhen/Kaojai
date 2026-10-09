@@ -685,6 +685,50 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
+    socket.on('host_spin_lucky_draw', ({ pin, hostToken, prizeName, winner, candidateNames, durationMs }, ackCallback) => {
+      try {
+        const room = verifyHost(pin, hostToken);
+        if (!room) {
+          throw new Error('ไม่พบห้องดังกล่าว');
+        }
+
+        const safePayload = {
+          prizeName: (prizeName && String(prizeName).trim()) || 'รางวัลพิเศษ 🎉',
+          winner: winner || null,
+          candidateNames: Array.isArray(candidateNames) ? candidateNames : [],
+          durationMs: (typeof durationMs === 'number' && durationMs > 0) ? durationMs : 4500
+        };
+
+        io.to(pin).emit('lucky_draw_spin', safePayload);
+
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: true, payload: safePayload });
+        }
+      } catch (err) {
+        console.error('[Socket Error] host_spin_lucky_draw:', err);
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: false, message: err.message });
+        }
+        socket.emit('error_message', { message: err.message });
+      }
+    });
+
+    socket.on('host_close_lucky_draw', ({ pin, hostToken }, ackCallback) => {
+      try {
+        verifyHost(pin, hostToken);
+        io.to(pin).emit('lucky_draw_closed', { closedAt: Date.now() });
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: true });
+        }
+      } catch (err) {
+        console.error('[Socket Error] host_close_lucky_draw:', err);
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: false, message: err.message });
+        }
+        socket.emit('error_message', { message: err.message });
+      }
+    });
+
     socket.on('close_room', ({ pin, hostToken }) => {
       try {
         verifyHost(pin, hostToken);

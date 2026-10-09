@@ -14,6 +14,8 @@ import { HostLeaderboard } from './components/host/HostLeaderboard';
 import { TeacherBackoffice } from './components/teacher/TeacherBackoffice';
 import { PrepareCountdown } from './components/common/PrepareCountdown';
 import { SequenceIntroGuide } from './components/common/SequenceIntroGuide';
+import { LuckyDrawModal } from './components/common/LuckyDrawModal';
+import { PlayerLuckyDrawOverlay } from './components/player/PlayerLuckyDrawOverlay';
 import { WifiOff, AlertCircle, X } from 'lucide-react';
 import './styles/global.css';
 
@@ -71,6 +73,10 @@ export function AppContent() {
   // Team State
   const [teamsEnabled, setTeamsEnabled] = useState(false);
   const [teams, setTeams] = useState([]);
+
+  // Lucky Draw State
+  const [isLuckyDrawOpen, setIsLuckyDrawOpen] = useState(false);
+  const [playerLuckyDrawSpinData, setPlayerLuckyDrawSpinData] = useState(null);
 
   // Socket Listeners
   useEffect(() => {
@@ -378,6 +384,14 @@ export function AppContent() {
       if (data?.quizAnalytics) setQuizAnalytics(data.quizAnalytics);
     };
 
+    const onLuckyDrawSpin = (data) => {
+      setPlayerLuckyDrawSpinData(data);
+    };
+
+    const onLuckyDrawClosed = () => {
+      setPlayerLuckyDrawSpinData(null);
+    };
+
     socket.on('room_created', onRoomCreated);
     socket.on('host_reconnected', onHostReconnected);
     socket.on('room_updated', onRoomUpdated);
@@ -401,6 +415,8 @@ export function AppContent() {
     socket.on('sequence_intro', onSequenceIntro);
     socket.on('room_reset_to_lobby', onRoomResetToLobby);
     socket.on('room_closed', onRoomClosed);
+    socket.on('lucky_draw_spin', onLuckyDrawSpin);
+    socket.on('lucky_draw_closed', onLuckyDrawClosed);
 
     // ─── SYNC SESSION: Call syncSession now that all listeners are registered ───
     // This fixes the race condition where host_reconnected/join_success events
@@ -445,6 +461,8 @@ export function AppContent() {
       socket.off('teams_updated', onTeamsUpdated);
       socket.off('room_reset_to_lobby', onRoomResetToLobby);
       socket.off('room_closed', onRoomClosed);
+      socket.off('lucky_draw_spin', onLuckyDrawSpin);
+      socket.off('lucky_draw_closed', onLuckyDrawClosed);
     };
   }, [socket, session.hostToken, syncSession, needsSyncRef]);
 
@@ -684,6 +702,7 @@ export function AppContent() {
             counts={counts}
             onSwitchMode={handleSwitchMode}
             onLeave={handleLeaveSession}
+            onOpenLuckyDraw={() => setIsLuckyDrawOpen(true)}
           />
           {roomMode === 'PULSE' ? (
             <HostPulse
@@ -723,6 +742,7 @@ export function AppContent() {
               onNextQuestion={handleNextQuestion}
               onResetToLobby={handleResetToLobby}
               onLeave={handleLeaveSession}
+              onOpenLuckyDraw={() => setIsLuckyDrawOpen(true)}
             />
           ) : status === 'PREPARE' ? (
             <div style={{ maxWidth: '600px', margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
@@ -768,6 +788,7 @@ export function AppContent() {
           onSwitchToHost={handleCreateRoom}
           onResumeRoom={handleResumeRoom}
           onOpenTeacherBackoffice={() => setViewMode('TEACHER_BACKOFFICE')}
+          onOpenLuckyDraw={() => setIsLuckyDrawOpen(true)}
         />
       )}
 
@@ -851,6 +872,23 @@ export function AppContent() {
           onStartQuestion={handleStartSequenceQuestion}
         />
       )}
+
+      {/* LUCKY DRAW MODAL & PLAYER OVERLAY */}
+      <LuckyDrawModal
+        isOpen={isLuckyDrawOpen}
+        onClose={() => setIsLuckyDrawOpen(false)}
+        pin={pin}
+        hostToken={session?.hostToken}
+        players={players}
+        leaderboard={leaderboard}
+        socket={socket}
+      />
+
+      <PlayerLuckyDrawOverlay
+        spinData={playerLuckyDrawSpinData}
+        currentPlayerData={playerData}
+        onClose={() => setPlayerLuckyDrawSpinData(null)}
+      />
     </div>
   );
 }

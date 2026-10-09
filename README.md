@@ -246,6 +246,20 @@ docker compose logs -f kaojai
 - ปุ่มดาวน์โหลดรายงานผลคะแนนและสถิติ Pulse บนหน้า Leaderboard
 - เข้ารหัสด้วย **UTF-8 with BOM (`\uFEFF`)** ทำให้เปิดบน **Microsoft Excel และ Google Sheets ได้ทันทีโดยภาษาไทยไม่เพี้ยน**
 
+### 7. 🎁 Lucky Draw (ระบบสุ่มผู้โชคดี & สอยดาวตักลูกบอลในอ่างน้ำ)
+- **สลับสไตล์การเล่นได้ 2 รูปแบบ (Dual Draw Styles)**:
+  - 🌊 **ตักลูกบอลในอ่างน้ำ (Water Pool Scooper)**: สร้างด้วย **Pure HTML5 Canvas 60fps** จำลองผิวน้ำกระเพื่อมสมจริง, ลูกบอล 3D Capsule หลากสีลอยตุ๊บป่อง, เลื่อนเมาส์กวนน้ำวน (Stirring Vortex) มีฟองอากาศผุด, เมาส์กลายเป็นกระชอนช้อนตักลูกบอลขึ้นพ้นผิวน้ำพร้อมหยดน้ำกระเซ็น (Water Splash) และเสียงน้ำสังเคราะห์แบบ Dynamic ผ่าน Web Audio API
+  - 🎡 **วงล้อหมุน (Wheel of Fortune)**: วงล้อ Canvas หลากสีสัน พร้อมฟิสิกส์ชะลอความเร็ว (Deceleration), เข็มกระตุกพร้อมเสียงตึ๊กๆ, พลุ Confetti และเสียง Fanfare
+- **รองรับ 3 แหล่งที่มาของรายชื่อ**:
+  - 👥 **ดึงจากห้องเรียน (Room Players)**: เชื่อมโยงรายชื่อและ Avatar ผู้เรียนที่กด Join เข้ามาในห้องอัตโนมัติ
+  - 📱 **สแกน QR Code สดในงาน (Live QR Registration)**: ฉาย QR Code ขึ้นจอใหญ่ ให้คนในงานสัมมนาหรือปาร์ตี้ใช้มือถือสแกนส่งชื่อเข้ามาลุ้นรางวัล พร้อมระบบป้องกันการปั๊มสิทธิ์ (1 เครื่อง = 1 สิทธิ์)
+  - ✍️ **กรอกเอง / CSV Import (Manual & Standalone)**: พิมพ์/Paste รายชื่ออิสระ, ปุ่มนำเข้าไฟล์ `.csv` (UTF-8 ภาษาไทย), และปุ่ม **ดาวน์โหลด Template CSV** เพื่อเปิดกรอกใน Excel/Google Sheets
+- **ตัวเลือกการคัดกรอง (Toggleable Exclusions)**:
+  - 🚫 **ตัดผู้ได้รับรางวัลไปแล้ว**: ป้องกันคนเดิมได้รางวัลซ้ำ (เปิด-ปิดได้อิสระ)
+  - 🥉 **ตัด 3 อันดับแรก (Top 3) จาก Quiz**: สำหรับสุ่มแจก **"รางวัลปลอบใจ"** ให้ผู้ที่ไม่ได้ขึ้นแท่น Podium
+- **ประวัติผู้โชคดี (Winner History)**: แสดงรายการผู้ชนะและชื่อรางวัล พร้อมปุ่มคัดลอกลง Clipboard และปุ่มคืนสิทธิ์เข้าวงล้อ (Undo)
+- **Real-time Mobile Sync**: เมื่อ Host ในห้องสั่งสุ่ม/ตักลูกบอล มือถือของผู้เรียนจะแสดงแอนิเมชันไปพร้อมกัน และขึ้นป๊อปอัปฉลองหากตนเองคือผู้โชคดี
+
 ---
 
 ## 📡 สารบบ Socket Events (Socket.io API Reference)
@@ -272,6 +286,8 @@ docker compose logs -f kaojai
 | `get_teams` | `{ pin }` | ดึงรายชื่อทีมและสมาชิกปัจจุบัน |
 | `get_roster` | `{ pin }` | ผู้เรียนดึงรายชื่อเพื่อนที่เคยทำ Pre-test ในห้องเพื่อเลือกชื่อตัวเอง (1-Click Claim) |
 | `get_active_sessions` | `(ackCallback)` | วิทยากรดึงประวัติห้องที่เปิดค้างไว้หรือรอทำ Post-test จาก SQLite เพื่อเปิดห้องต่อ |
+| `host_spin_lucky_draw` | `{ pin, hostToken, prizeName, winner, candidateNames, durationMs }` | วิทยากรสั่งหมุนวงล้อหรือตักลูกบอลสุ่มผู้โชคดี |
+| `host_close_lucky_draw` | `{ pin, hostToken }` | วิทยากรปิดหน้าต่าง Lucky Draw |
 
 ### ฝั่ง Server ส่งหา Client (`io.to(pin).emit` หรือ `socket.emit`)
 | Event Name | Payloads | คำอธิบาย |
@@ -291,6 +307,8 @@ docker compose logs -f kaojai
 | `pulse_updated` | `{ pulseVotes, pulseAnsweredCount, totalPlayers }` | สรุปคะแนนโหวตความเข้าใจ |
 | `show_leaderboard` | `{ leaderboard, status }` | แสดงอันดับคะแนนผู้เรียน |
 | `quiz_ended` | `{ leaderboard, isEnded: true }` | สิ้นสุดเกมและประกาศผล Podium |
+| `lucky_draw_spin` | `{ prizeName, winner, candidateNames, durationMs }` | ถ่ายทอดสดแอนิเมชันสุ่มรางวัลไปยังมือถือของผู้เรียนทุกคน |
+| `lucky_draw_closed` | `{ closedAt }` | แจ้งปิดหน้าจอ Lucky Draw ฝั่งผู้เรียน |
 
 ---
 

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
-import { Trophy, ArrowRight, Flag, RotateCcw, FileSpreadsheet, FileText, LogOut, TrendingUp, Award, Download } from 'lucide-react';
+import { Trophy, ArrowRight, Flag, RotateCcw, FileSpreadsheet, FileText, LogOut, TrendingUp, Award, Download, Gift } from 'lucide-react';
 import { exportGameReportExcel, exportGameReportPDF } from '../../utils/exportReport';
 import { SportsPodium } from './SportsPodium';
 
-export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, pretestData, isEnded, onNextQuestion, onResetToLobby, onLeave }) => {
+export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, pretestData, isEnded, onNextQuestion, onResetToLobby, onLeave, onOpenLuckyDraw }) => {
   const [animatedScores, setAnimatedScores] = useState({});
   const [viewMode, setViewMode] = useState('PODIUM');
 
@@ -433,6 +433,29 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
 
         {isEnded ? (
           <>
+            {onOpenLuckyDraw && (
+              <button
+                type="button"
+                onClick={() => onOpenLuckyDraw?.()}
+                style={{
+                  padding: '16px 32px',
+                  borderRadius: '50px',
+                  background: 'linear-gradient(135deg, #EA580C 0%, #C2410C 100%)',
+                  color: '#FFFFFF',
+                  fontSize: '1.1rem',
+                  fontWeight: 800,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  boxShadow: '0 4px 14px rgba(234, 88, 12, 0.35)',
+                  borderBottom: '3px solid #9A3412',
+                  cursor: 'pointer'
+                }}
+              >
+                <Gift size={20} /> 🎁 สุ่ม Lucky Draw ผู้โชคดี
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => onResetToLobby?.()}

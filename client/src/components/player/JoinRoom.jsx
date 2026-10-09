@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { AvatarPicker, getRandomAvatar } from './AvatarPicker';
-import { LogIn, Crown, BookOpen, Gamepad2, MonitorPlay, ArrowLeft, Rocket, Sparkles, Tv, Users } from 'lucide-react';
+import { LogIn, Crown, BookOpen, Gamepad2, MonitorPlay, ArrowLeft, Rocket, Sparkles, Tv, Users, Gift } from 'lucide-react';
 
-export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacherBackoffice }) => {
+export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacherBackoffice, onOpenLuckyDraw }) => {
   const { socket, session, saveSessionData } = useSocket();
   
   // Internal Screen State: 'MODE_SELECT' or 'PLAYER_FORM'
@@ -582,6 +582,28 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                 }}
               >
                 <BookOpen size={18} color="var(--accent-earth-blue)" /> คลังคำถาม
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onOpenLuckyDraw?.()}
+                style={{
+                  padding: '14px 20px',
+                  borderRadius: '12px',
+                  background: '#FFF7ED',
+                  border: '1.5px solid #FDBA74',
+                  color: '#EA580C',
+                  fontSize: '0.95rem',
+                  fontWeight: 800,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(234, 88, 12, 0.1)'
+                }}
+              >
+                <Gift size={18} color="#EA580C" /> วงล้อ Lucky Draw
               </button>
             </div>
           </div>
