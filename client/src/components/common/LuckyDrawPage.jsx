@@ -770,7 +770,7 @@ export const LuckyDrawPage = ({
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <label style={{ fontSize: '0.88rem', fontWeight: 800, color: '#334155' }}>
-                        รายชื่อผู้ร่วมกิจกรรม:
+                        รายชื่อผู้ร่วมกิจกรรม ({candidatePool.length} คน):
                       </label>
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <button
@@ -827,55 +827,6 @@ export const LuckyDrawPage = ({
                         boxSizing: 'border-box'
                       }}
                     />
-
-                    {/* Candidate Preview & Counter */}
-                    {candidatePool.length > 0 && (
-                      <div style={{ marginTop: '10px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
-                            ตรวจพบรายชื่อ: <strong style={{ color: '#0284C7' }}>{candidatePool.length}</strong> คน
-                          </span>
-                          <span style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                            ลูกบอลในอ่าง: <strong style={{ color: '#EA580C' }}>{Math.min(candidatePool.length, 10)}</strong> / 10 ลูก
-                          </span>
-                        </div>
-
-                        <div
-                          style={{
-                            maxHeight: '110px',
-                            overflowY: 'auto',
-                            border: '1px solid #E2E8F0',
-                            borderRadius: '12px',
-                            padding: '8px',
-                            background: '#F8FAFC',
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '6px'
-                          }}
-                        >
-                          {candidatePool.map((c, i) => (
-                            <span
-                              key={c.id}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                padding: '3px 8px',
-                                background: '#FFFFFF',
-                                borderRadius: '12px',
-                                fontSize: '0.78rem',
-                                fontWeight: 700,
-                                color: '#1E293B',
-                                border: '1px solid #CBD5E1'
-                              }}
-                            >
-                              <span style={{ color: '#0284C7', fontSize: '0.72rem' }}>#{i + 1}</span>
-                              {c.name}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
 
                     {/* CSV Actions Toolbar */}
                     <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
