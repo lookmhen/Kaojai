@@ -64,9 +64,12 @@ KaoJai/
 │   │   └── avatars/                  # ไฟล์ไอคอน Avatar ผู้เรียน 30 รูปแบบ (.svg)
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── common/               # คอมโพเนนต์ส่วนกลาง (PrepareCountdown, SequenceIntroGuide, SoundToggle)
+│   │   │   ├── common/               # คอมโพเนนต์ส่วนกลาง (PrepareCountdown, SequenceIntroGuide, LuckyDraw)
 │   │   │   │   ├── PrepareCountdown.jsx # ป๊อปอัปนับถอยหลัง 5 วินาทีก่อนเริ่มคำถาม
-│   │   │   │   └── SequenceIntroGuide.jsx # หน้าต่างแนะนำกติกาข้อ Sequence ครั้งแรก (Animated Drag Demo)
+│   │   │   │   ├── SequenceIntroGuide.jsx # หน้าต่างแนะนำกติกาข้อ Sequence ครั้งแรก (Animated Drag Demo)
+│   │   │   │   ├── LuckyDrawPage.jsx    # หน้าจอเต็มสุ่มผู้โชคดี (Full-screen Dedicated Page)
+│   │   │   │   ├── LuckyWaterPool.jsx   # ระบบจำลองอ่างน้ำตักลูกบอลฟิสิกส์ 60fps (Web Audio & Realistic Scooping)
+│   │   │   │   └── LuckyDrawWheel.jsx   # ระบบวงล้อหมุนสุ่มรางวัล (Wheel of Fortune Canvas)
 │   │   │   ├── host/                 # หน้าจอสำหรับผู้สอน/วิทยากร (Host Views)
 │   │   │   │   ├── HostHeader.jsx       # แถบหัวแสดง PIN, สลับโหมด, ยอดคนตอบ
 │   │   │   │   ├── HostLobby.jsx        # ห้องรอเริ่มเกม, QR Code, จัดทีม, สุ่มทีม, โหมด Pre/Post-test
@@ -247,8 +250,13 @@ docker compose logs -f kaojai
 - เข้ารหัสด้วย **UTF-8 with BOM (`\uFEFF`)** ทำให้เปิดบน **Microsoft Excel และ Google Sheets ได้ทันทีโดยภาษาไทยไม่เพี้ยน**
 
 ### 7. 🎁 Lucky Draw (ระบบสุ่มผู้โชคดี & สอยดาวตักลูกบอลในอ่างน้ำ)
+- **แยกเป็นหน้าจอเต็ม (Dedicated Full-Screen Page - `LuckyDrawPage.jsx`)**: ขยายพื้นที่ใช้งานกว้างขวาง หมดปัญหาป๊อปอัป Modal ล้นจอ (Overflow) บนจอโปรเจกเตอร์หรือแล็ปท็อป พร้อมปุ่มย้อนกลับคงสถานะเดิมครบถ้วน 100%
 - **สลับสไตล์การเล่นได้ 2 รูปแบบ (Dual Draw Styles)**:
-  - 🌊 **ตักลูกบอลในอ่างน้ำ (Water Pool Scooper)**: สร้างด้วย **Pure HTML5 Canvas 60fps** จำลองผิวน้ำกระเพื่อมสมจริง, ลูกบอล 3D Capsule หลากสีลอยตุ๊บป่อง, เลื่อนเมาส์กวนน้ำวน (Stirring Vortex) มีฟองอากาศผุด, เมาส์กลายเป็นกระชอนช้อนตักลูกบอลขึ้นพ้นผิวน้ำพร้อมหยดน้ำกระเซ็น (Water Splash) และเสียงน้ำสังเคราะห์แบบ Dynamic ผ่าน Web Audio API
+  - 🌊 **ตักลูกบอลในอ่างน้ำ (Water Pool Scooper)**: สร้างด้วย **Pure HTML5 Canvas 60fps** จำลองฟิสิกส์การลอยตัวและการหน่วงในน้ำ, ผิวน้ำกระเพื่อมสมจริง, ลูกบอล 3D Capsule หลากสีลอยตุ๊บป่อง, เลื่อนเมาส์กวนน้ำวน (Stirring Vortex) มีฟองอากาศผุด, เสียงน้ำและเสียงลูกบอลกระทบกันสังเคราะห์ผ่าน Web Audio API
+  - 🥄 **แอนิเมชันช้อนตักสมจริง & โปร่งใส 100%**:
+    - **100% Blind Transparency**: ไม่แสดงชื่อเป้าหมายล่วงหน้าขณะเล็งหรือวนเมาส์ เพื่อความโปร่งใสและยุติธรรมสูงสุด
+    - **Curved Scooping Motion**: เคลื่อนไหวกระชอนมุดลงใต้ลูกบอล เอียงองศาช้อนตักขึ้นเป็นวิถีโค้งสมจริง
+    - **Water Splash & Droplets**: เมื่อลูกบอลลอยพ้นผิวน้ำ มีเอฟเฟกต์น้ำกระจาย (Water Splash) พร้อมหยดน้ำหยดกลับลงอ่าง (Drips Falling) และประกายน้ำแวววาว (Wet Glisten Sparkles) ก่อนระเบิด Confetti และเปิดเผยชื่อผู้โชคดี
   - 🎡 **วงล้อหมุน (Wheel of Fortune)**: วงล้อ Canvas หลากสีสัน พร้อมฟิสิกส์ชะลอความเร็ว (Deceleration), เข็มกระตุกพร้อมเสียงตึ๊กๆ, พลุ Confetti และเสียง Fanfare
 - **รองรับ 3 แหล่งที่มาของรายชื่อ**:
   - 👥 **ดึงจากห้องเรียน (Room Players)**: เชื่อมโยงรายชื่อและ Avatar ผู้เรียนที่กด Join เข้ามาในห้องอัตโนมัติ

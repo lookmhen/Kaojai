@@ -14,7 +14,7 @@ import { HostLeaderboard } from './components/host/HostLeaderboard';
 import { TeacherBackoffice } from './components/teacher/TeacherBackoffice';
 import { PrepareCountdown } from './components/common/PrepareCountdown';
 import { SequenceIntroGuide } from './components/common/SequenceIntroGuide';
-import { LuckyDrawModal } from './components/common/LuckyDrawModal';
+import { LuckyDrawPage } from './components/common/LuckyDrawPage';
 import { PlayerLuckyDrawOverlay } from './components/player/PlayerLuckyDrawOverlay';
 import { WifiOff, AlertCircle, X } from 'lucide-react';
 import './styles/global.css';
@@ -75,8 +75,13 @@ export function AppContent() {
   const [teams, setTeams] = useState([]);
 
   // Lucky Draw State
-  const [isLuckyDrawOpen, setIsLuckyDrawOpen] = useState(false);
+  const [previousViewMode, setPreviousViewMode] = useState('PLAYER_JOIN');
   const [playerLuckyDrawSpinData, setPlayerLuckyDrawSpinData] = useState(null);
+
+  const handleOpenLuckyDraw = () => {
+    setPreviousViewMode(viewMode);
+    setViewMode('LUCKY_DRAW');
+  };
 
   // Socket Listeners
   useEffect(() => {
@@ -693,6 +698,18 @@ export function AppContent() {
         <TeacherBackoffice onBack={() => setViewMode('PLAYER_JOIN')} />
       )}
 
+      {/* LUCKY DRAW DEDICATED FULL-PAGE ROUTING */}
+      {viewMode === 'LUCKY_DRAW' && (
+        <LuckyDrawPage
+          pin={pin}
+          hostToken={session?.hostToken}
+          players={players}
+          leaderboard={leaderboard}
+          socket={socket}
+          onBack={() => setViewMode(previousViewMode || (session?.isHost ? 'HOST_GAME' : 'PLAYER_JOIN'))}
+        />
+      )}
+
       {/* HOST VIEW ROUTING */}
       {viewMode === 'HOST_GAME' && (
         <div>
@@ -702,7 +719,7 @@ export function AppContent() {
             counts={counts}
             onSwitchMode={handleSwitchMode}
             onLeave={handleLeaveSession}
-            onOpenLuckyDraw={() => setIsLuckyDrawOpen(true)}
+            onOpenLuckyDraw={handleOpenLuckyDraw}
           />
           {roomMode === 'PULSE' ? (
             <HostPulse
@@ -742,7 +759,7 @@ export function AppContent() {
               onNextQuestion={handleNextQuestion}
               onResetToLobby={handleResetToLobby}
               onLeave={handleLeaveSession}
-              onOpenLuckyDraw={() => setIsLuckyDrawOpen(true)}
+              onOpenLuckyDraw={handleOpenLuckyDraw}
             />
           ) : status === 'PREPARE' ? (
             <div style={{ maxWidth: '600px', margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
@@ -788,7 +805,7 @@ export function AppContent() {
           onSwitchToHost={handleCreateRoom}
           onResumeRoom={handleResumeRoom}
           onOpenTeacherBackoffice={() => setViewMode('TEACHER_BACKOFFICE')}
-          onOpenLuckyDraw={() => setIsLuckyDrawOpen(true)}
+          onOpenLuckyDraw={handleOpenLuckyDraw}
         />
       )}
 
@@ -873,16 +890,7 @@ export function AppContent() {
         />
       )}
 
-      {/* LUCKY DRAW MODAL & PLAYER OVERLAY */}
-      <LuckyDrawModal
-        isOpen={isLuckyDrawOpen}
-        onClose={() => setIsLuckyDrawOpen(false)}
-        pin={pin}
-        hostToken={session?.hostToken}
-        players={players}
-        leaderboard={leaderboard}
-        socket={socket}
-      />
+      {/* PLAYER LUCKY DRAW OVERLAY */}
 
       <PlayerLuckyDrawOverlay
         spinData={playerLuckyDrawSpinData}
