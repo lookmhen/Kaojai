@@ -33,6 +33,7 @@ export const LuckyDrawPage = ({
   const [copiedLink, setCopiedLink] = useState(false);
   const [isRegistrationLocked, setIsRegistrationLocked] = useState(false);
   const [autoLockOnDraw, setAutoLockOnDraw] = useState(true);
+  const [serverHost, setServerHost] = useState(null);
 
   // Tabs: 'QR' | 'MANUAL' | 'ROOM'
   const [activeTab, setActiveTab] = useState(() => (pin ? 'ROOM' : 'QR'));
@@ -91,6 +92,23 @@ export const LuckyDrawPage = ({
       });
     }
   }, [activeTab, activePin, socket]);
+
+  // Fetch actual LAN IP or domain from server for mobile QR scanning
+  useEffect(() => {
+    fetch('/api/server-info')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success) {
+          const clientPort = window.location.port ? `:${window.location.port}` : '';
+          if (data.configuredHost) {
+            setServerHost(data.configuredHost);
+          } else if (data.localIp && data.localIp !== 'localhost' && data.localIp !== '127.0.0.1') {
+            setServerHost(`${data.localIp}${clientPort}`);
+          }
+        }
+      })
+      .catch(err => console.error('LuckyDraw fetch server info error:', err));
+  }, []);
 
   // Real-time socket listener for attendees joining room via QR
   useEffect(() => {
@@ -408,7 +426,9 @@ export const LuckyDrawPage = ({
     if (onBack) onBack();
   };
 
-  const joinUrl = typeof window !== 'undefined' && activePin ? `${window.location.origin}/?pin=${activePin}&luckydraw=1` : '';
+  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const effectiveHost = (!isLocalhost || !serverHost) ? (typeof window !== 'undefined' ? window.location.host : '') : serverHost;
+  const joinUrl = typeof window !== 'undefined' && activePin ? `${window.location.protocol}//${effectiveHost}/?pin=${activePin}&luckydraw=1` : '';
   const qrSvgUrl = activePin ? generateQRCodeSVG(joinUrl, 260) : '';
 
   const handleCopyJoinLink = () => {
