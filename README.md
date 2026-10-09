@@ -15,8 +15,9 @@
 5. [การรันผ่าน Docker (Container Deployment)](#-การรันผ่าน-docker-container-deployment)
 6. [ฟีเจอร์หลักของระบบ (Key Features)](#-ฟีเจอร์หลักของระบบ-key-features)
 7. [สารบบ Socket Events (Socket.io API Reference)](#-สารบบ-socket-events-socketio-api-reference)
-8. [การทดสอบระบบ (Automated Testing)](#-การทดสอบระบบ-automated-testing)
-9. [แนวทางการพัฒนาต่อยอด (Future Roadmap)](#-แนวทางการพัฒนาต่อยอด-future-roadmap)
+8. [คู่มือสำหรับนักพัฒนาในการเพิ่มหรือปรับแต่งโหมด (Developer Guidelines)](#-คู่มือสำหรับนักพัฒนาในการเพิ่มหรือปรับแต่งโหมด-developer-guidelines)
+9. [การทดสอบระบบ (Automated Testing)](#-การทดสอบระบบ-automated-testing)
+10. [แนวทางการพัฒนาต่อยอด (Future Roadmap)](#-แนวทางการพัฒนาต่อยอด-future-roadmap)
 
 ---
 
@@ -254,22 +255,30 @@ docker compose logs -f kaojai
 - **ระบบสุ่มปริศนา 100% (Mystery Lucky Draw Experience)**:
   - นำรายชื่อออกจากภายนอกลูกบอลและช่องวงล้อโดยสมบูรณ์ เพื่อความสมจริงเหมือนงานวัด/งานสอยดาว และแก้ปัญหาตัวหนังสือเบียดทับกันเมื่อมีผู้เข้าร่วมจำนวนมาก (รองรับตั้งแต่ 1 ถึง 1,000+ คนอย่างสวยงามคมชัด 60fps)
   - ทุกคนลุ้นผลระทึกพร้อมกันในวินาทีที่สอยลูกบอลขึ้นมาหรือวงล้อหยุดหมุน ก่อนเปิดเผยการ์ดผู้โชคดีพร้อม Confetti
-- **สลับสไตล์การเล่นได้ 2 รูปแบบ (Dual Draw Styles)**:
-  - 🌊 **อ่างน้ำทรงกระบอก 2.5D & ลูกบอลปริศนา (Mystery Balls & Pickup Rod)**:
+- **สลับสไตล์การเล่นได้ 2 รูปแบบ แยก Engine ขาดจากกัน (Dual Visual Models)**:
+  - 🌊 **อ่างน้ำทรงกระบอก 2.5D & ลูกบอลปริศนา (`drawStyle: 'POOL'`)**:
     - **ดีไซน์อ่างน้ำทรงกระบอก 2.5D Perspective**: บ่อน้ำวงรีสมจริงพร้อมเงาตกกระทบพื้น, ห่วงคาดถังน้ำเมทัลลิก, ขอบปากอ่าง 3D, ผิวน้ำใสและคลื่น Concentric Ripples
     - **ลูกบอลสอยดาวปริศนา (Mystery Lucky Balls)**: ลูกบอลแคปซูล 3 มิติสีสันสดใส 28 ลูกลอยตุ๊บป่อง ประดับไอคอนสัญลักษณ์นำโชค (⭐️, 🎁, 💎, 🍀, ✨, 👑, 🎯, 🌟, 🔮, 🎉, ⚡️, ❤️) ลื่นไหล 60fps
     - **ก้านไม้สอย Pickup Rod**: ไม้สอยด้ามยาวสีดำเมทัลลิกคาดปลอกทองเหลือง ปลายไม้ติดหัวจับ **Pickup Rod Head** (กล่องจับทรงสี่เหลี่ยมพร้อม Crosshair และไฟสถานะ LED ตรงตามรูปสเก็ตช์)
     - **Realistic Scooping & Splash**: เมื่อคลิกสอย หัว Pickup Rod จะล็อคเข้ากับลูกบอล ยกตัวช้อนลอยขึ้นพ้นผิวน้ำ เกิดคลื่นน้ำกระเพื่อม ละอองน้ำพุ่งกระจาย (Radial Water Splash) หยดน้ำหยดกลับลงอ่าง และลูกบอลเปล่งแสงสีทองพร้อมประกายระยิบระยับ (Wet Glisten Sparkles) ก่อนเปิดเผยชื่อผู้ชนะ
-  - 🎡 **วงล้อปริศนาคาร์นิวัล (Mystery Carnival Wheel - 16 Segments)**: วงล้อ 16 ช่องสีสันสดใส ลวดลายไอคอนนำโชคและหมุดไฟนีออนสีทอง พร้อมฟิสิกส์ชะลอความเร็ว (Deceleration), เข็มกระตุกพร้อมเสียงตึ๊กๆ, พลุ Confetti และเสียง Fanfare
+    - **Auto State Release**: เมื่อปิดหน้าต่างประกาศผู้โชคดี (Dismiss Modal) ด้ามไม้ Pickup Rod จะปลดล็อกคืนสู่ผิวน้ำ และรีเฟรชลูกบอลที่เหลืออยู่ในอ่างทันที พร้อมสำหรับการตักรอบถัดไป
+  - 🎡 **วงล้อปริศนาคาร์นิวัล (`drawStyle: 'WHEEL'`)**: วงล้อ 16 ช่องสีสันสดใส ลวดลายไอคอนนำโชคและหมุดไฟนีออนสีทอง พร้อมฟิสิกส์ชะลอความเร็ว (Deceleration), เข็มกระตุกพร้อมเสียงตึ๊กๆ, พลุ Confetti และเสียง Fanfare
+- **Host vs Player Visual Isolation (แยกโมเดลหน้าจอโฮสต์และผู้เล่นอย่างเด็ดขาด)**:
+  - **Host Arena**: จอผู้สอนไม่แสดง Overlay ชนหรือทับซ้อนหน้าจอตัวเอง
+  - **Player View**: เมื่อโฮสต์สุ่มด้วย `POOL` หน้าจอมือถือผู้เรียนแสดงการ์ดลุ้นตักลูกบอลในน้ำ 🌊 ส่วนเมื่อสุ่มด้วย `WHEEL` แสดงวงล้อหมุน 🎡 ไม่มีการรันชนกันทั้งสองโมเดล
 - **รองรับ 3 แหล่งที่มาของรายชื่อ**:
   - 👥 **ดึงจากห้องเรียน (Room Players)**: เชื่อมโยงรายชื่อและ Avatar ผู้เรียนที่กด Join เข้ามาในห้องอัตโนมัติ
-  - 📱 **สแกน QR Code สดในงาน (Live QR Registration)**: ฉาย QR Code ขึ้นจอใหญ่ ให้คนในงานสัมมนาหรือปาร์ตี้ใช้มือถือสแกนส่งชื่อเข้ามาลุ้นรางวัล พร้อมระบบป้องกันการปั๊มสิทธิ์ (1 เครื่อง = 1 สิทธิ์)
+  - 📱 **สแกน QR Code สดในงาน (Live QR Registration)**: ฉาย QR Code ขึ้นจอใหญ่ ให้คนในงานสัมมนาหรือปาร์ตี้ใช้มือถือสแกนส่งชื่อเข้ามาลุ้นรางวัล (`/?pin=XXXXXX&luckydraw=1`) พร้อมระบบป้องกันการปั๊มสิทธิ์ (1 เครื่อง = 1 สิทธิ์)
   - ✍️ **กรอกเอง / CSV Import (Manual & Standalone)**: พิมพ์/Paste รายชื่ออิสระ, ปุ่มนำเข้าไฟล์ `.csv` (UTF-8 ภาษาไทย), และปุ่ม **ดาวน์โหลด Template CSV** เพื่อเปิดกรอกใน Excel/Google Sheets
+- **ระบบล็อกการลงทะเบียน (Attendance Lock)**:
+  - ปุ่มเปิด/ปิดรับรายชื่อแบบเรียลไทม์ (`host_toggle_luckydraw_lock`) ป้องกันคนส่งชื่อแทรก
+  - ตัวเลือกปิดรับรายชื่ออัตโนมัติทันทีเมื่อเริ่มหมุนหรือตักรางวัล (Auto-lock on Draw)
 - **ตัวเลือกการคัดกรอง (Toggleable Exclusions)**:
   - 🚫 **ตัดผู้ได้รับรางวัลไปแล้ว**: ป้องกันคนเดิมได้รางวัลซ้ำ (เปิด-ปิดได้อิสระ)
   - 🥉 **ตัด 3 อันดับแรก (Top 3) จาก Quiz**: สำหรับสุ่มแจก **"รางวัลปลอบใจ"** ให้ผู้ที่ไม่ได้ขึ้นแท่น Podium
 - **ประวัติผู้โชคดี (Winner History)**: แสดงรายการผู้ชนะและชื่อรางวัล พร้อมปุ่มคัดลอกลง Clipboard และปุ่มคืนสิทธิ์เข้าวงล้อ (Undo)
-- **Real-time Mobile Sync**: เมื่อ Host ในห้องสั่งสุ่ม/ตักลูกบอล มือถือของผู้เรียนจะแสดงแอนิเมชันไปพร้อมกัน และขึ้นป๊อปอัปฉลองหากตนเองคือผู้โชคดี
+- **Strict Mode Isolation (การแยกห้องเฉพาะกิจ)**:
+  - ห้อง Lucky Draw ถูกกำหนดเป็น `mode: 'LUCKY_DRAW'` และจะไม่ปรากฏในรายการ Active Sessions สำหรับ Resume โหมดข้อสอบที่หน้าแรก
 
 ---
 
@@ -278,32 +287,35 @@ docker compose logs -f kaojai
 ### ฝั่ง Client ส่งหา Server (`socket.emit`)
 | Event Name | Payloads | คำอธิบาย |
 | :--- | :--- | :--- |
-| `create_room` | `{ customQuizId? }` | วิทยากรสร้างห้องใหม่ |
+| `create_room` | `{ customQuizId?, mode?, isLuckyDraw? }` | วิทยากรสร้างห้องใหม่ (ระบุ `mode: 'LUCKY_DRAW'` เมื่อเริ่มสุ่มรางวัล) |
 | `join_room` | `{ pin, name, avatar, playerId? }` | ผู้เรียนขอเข้าร่วมห้อง |
-| `start_quiz` | `{ pin }` | วิทยากรเริ่มนับถอยหลัง 5 วินาทีก่อนเข้าข้อแรก |
-| `next_question` | `{ pin }` | วิทยากรเริ่มนับถอยหลัง 5 วินาทีไปยังคำถามถัดไป |
+| `start_quiz` | `{ pin, hostToken, quizId?, quizMode? }` | วิทยากรเริ่มนับถอยหลัง 5 วินาทีก่อนเข้าข้อแรก |
+| `next_question` | `{ pin, hostToken }` | วิทยากรเริ่มนับถอยหลัง 5 วินาทีไปยังคำถามถัดไป |
 | `submit_answer` | `{ pin, playerId, optionId? \| orderedItemIds? }` | ผู้เรียนส่งคำตอบ (รองรับทั้งช้อยส์ปกติ และลำดับขั้นตอน Sequence) |
-| `switch_mode` | `{ pin, mode: 'QUIZ' \| 'PULSE' }` | วิทยากรสลับโหมดระหว่าง Quiz และ Pulse |
+| `switch_mode` | `{ pin, hostToken, mode: 'QUIZ' \| 'PULSE' }` | วิทยากรสลับโหมดระหว่าง Quiz และ Pulse |
 | `submit_pulse` | `{ pin, playerId, choice: 'green' \| 'yellow' \| 'red' }` | ผู้เรียนส่งระดับความเข้าใจ |
-| `send_pulse_nudge` | `{ pin }` | วิทยากรกดส่งสัญญาณเตือนคนที่ยังไม่ส่งผลประเมิน |
+| `send_pulse_nudge` | `{ pin, hostToken }` | วิทยากรกดส่งสัญญาณเตือนคนที่ยังไม่ส่งผลประเมิน |
 | `send_pulse_reaction` | `{ pin, emoji, playerId }` | ผู้เรียนส่งปฏิกิริยา Reaction ลอยขึ้นหน้าจอ |
-| `show_leaderboard` | `{ pin }` | วิทยากรเรียกดูอันดับคะแนน |
-| `reconnect_host` | `{ pin }` | วิทยากรเชื่อมต่อกลับเข้าห้องเดิมหลังรีเฟรช |
-| `toggle_teams` | `{ pin, enabled }` | วิทยากรเปิด/ปิดโหมดทีมในห้องกิจกรรม |
-| `create_team` | `{ pin, name, color }` | วิทยากรสร้างทีมใหม่ |
-| `remove_team` | `{ pin, teamId }` | วิทยากรลบทีม |
+| `show_leaderboard` | `{ pin, hostToken }` | วิทยากรเรียกดูอันดับคะแนน |
+| `reconnect_host` | `{ pin, hostToken }` | วิทยากรเชื่อมต่อกลับเข้าห้องเดิมหลังรีเฟรช |
+| `toggle_teams` | `{ pin, hostToken, enabled }` | วิทยากรเปิด/ปิดโหมดทีมในห้องกิจกรรม |
+| `create_team` | `{ pin, hostToken, name, color }` | วิทยากรสร้างทีมใหม่ |
+| `remove_team` | `{ pin, hostToken, teamId }` | วิทยากรลบทีม |
 | `assign_team` | `{ pin, playerId, teamId }` | กำหนดผู้เล่นเข้าทีม (ใช้ได้ทั้งผู้สอนและผู้เรียนเลือกเอง) |
-| `auto_assign_teams` | `{ pin, teamCount? }` | วิทยากรสั่งสุ่มจัดทีมผู้เรียนอัตโนมัติ |
+| `auto_assign_teams` | `{ pin, hostToken, teamCount? }` | วิทยากรสั่งสุ่มจัดทีมผู้เรียนอัตโนมัติ |
 | `get_teams` | `{ pin }` | ดึงรายชื่อทีมและสมาชิกปัจจุบัน |
 | `get_roster` | `{ pin }` | ผู้เรียนดึงรายชื่อเพื่อนที่เคยทำ Pre-test ในห้องเพื่อเลือกชื่อตัวเอง (1-Click Claim) |
-| `get_active_sessions` | `(ackCallback)` | วิทยากรดึงประวัติห้องที่เปิดค้างไว้หรือรอทำ Post-test จาก SQLite เพื่อเปิดห้องต่อ |
-| `host_spin_lucky_draw` | `{ pin, hostToken, prizeName, winner, candidateNames, durationMs }` | วิทยากรสั่งหมุนวงล้อหรือตักลูกบอลสุ่มผู้โชคดี |
+| `get_active_sessions` | `(ackCallback)` | วิทยากรดึงประวัติห้องที่เปิดค้างไว้จาก SQLite (ไม่รวม Lucky Draw) |
+| `host_spin_lucky_draw` | `{ pin, hostToken, prizeName, winner, candidateNames, durationMs, drawStyle }` | วิทยากรสั่งสุ่มรางวัล (ระบุ `drawStyle: 'POOL' \| 'WHEEL'`) |
 | `host_close_lucky_draw` | `{ pin, hostToken }` | วิทยากรปิดหน้าต่าง Lucky Draw |
+| `host_toggle_luckydraw_lock` | `{ pin, hostToken, isLocked }` | วิทยากรเปิด/ปิดรับรายชื่อผู้ลงทะเบียน Lucky Draw |
+| `get_luckydraw_status` | `{ pin }` | ดึงสถานะล็อกการลงทะเบียนของห้อง Lucky Draw |
+| `close_room` | `{ pin, hostToken }` | ปิดห้องและล้างข้อมูลห้องทิ้งทันที |
 
 ### ฝั่ง Server ส่งหา Client (`io.to(pin).emit` หรือ `socket.emit`)
 | Event Name | Payloads | คำอธิบาย |
 | :--- | :--- | :--- |
-| `room_created` | `{ pin, mode, status, players, counts, teamsEnabled, teams }` | ส่งกลับหาวิทยากรเมื่อสร้างห้องเสร็จ |
+| `room_created` | `{ pin, mode, status, quizSet, players, counts, hostToken }` | ส่งกลับหาวิทยากรเมื่อสร้างห้องเสร็จ |
 | `join_success` | `{ pin, player, mode, status, counts, teamsEnabled, teams }` | ส่งกลับหาผู้เรียนเมื่อเข้าร่วมสำเร็จ |
 | `room_updated` | `{ players, counts }` | แจ้งอัปเดตรายชื่อและยอดผู้เล่นในห้อง |
 | `teams_toggled` | `{ teamsEnabled, teams, players }` | แจ้งสถานะเปิด/ปิดโหมดทีมพร้อมข้อมูลล่าสุด |
@@ -318,17 +330,44 @@ docker compose logs -f kaojai
 | `pulse_updated` | `{ pulseVotes, pulseAnsweredCount, totalPlayers }` | สรุปคะแนนโหวตความเข้าใจ |
 | `show_leaderboard` | `{ leaderboard, status }` | แสดงอันดับคะแนนผู้เรียน |
 | `quiz_ended` | `{ leaderboard, isEnded: true }` | สิ้นสุดเกมและประกาศผล Podium |
-| `lucky_draw_spin` | `{ prizeName, winner, candidateNames, durationMs }` | ถ่ายทอดสดแอนิเมชันสุ่มรางวัลไปยังมือถือของผู้เรียนทุกคน |
+| `lucky_draw_spin` | `{ prizeName, winner, candidateNames, durationMs, drawStyle }` | ถ่ายทอดสดแอนิเมชันสุ่มรางวัลไปยังมือถือของผู้เรียนทุกคน |
 | `lucky_draw_closed` | `{ closedAt }` | แจ้งปิดหน้าจอ Lucky Draw ฝั่งผู้เรียน |
+| `luckydraw_lock_updated` | `{ isLocked }` | แจ้งสถานะเปิด/ปิดรับรายชื่อผู้เข้าร่วม Lucky Draw แบบเรียลไทม์ |
+
+---
+
+## 🛠️ คู่มือสำหรับนักพัฒนาในการเพิ่มหรือปรับแต่งโหมด (Developer Guidelines)
+
+เพื่อให้ผู้พัฒนาที่เข้ามาดูแลระบบต่อสามารถเพิ่มโหมดกิจกรรมใหม่ (เช่น Mini-Game, Word Cloud, Q&A Board) หรือปรับปรุงโหมดเดิม (Quiz, Pulse, Lucky Draw) ได้อย่างราบรื่น ไม่เกิดข้อผิดพลาด ให้ปฏิบัติตามกฎสถาปัตยกรรม 3 ข้อหลัก:
+
+### 1. กฎการแยกโหมดฝั่ง Backend (`server/src/roomManager.js` & `socketHandler.js`):
+- **กำหนด `room.mode` ให้ชัดเจน**: เมื่อสร้างห้องด้วย `createRoom(hostSocketId, customQuizSetOrId)` ให้กำหนด `mode` เป็นค่าเฉพาะของโหมดนั้น (เช่น `'QUIZ'`, `'PULSE'`, `'LUCKY_DRAW'`)
+- **Dummy Quiz Prevention**: หากโหมดใหม่ไม่มีข้อสอบ Choice/Sequence ให้ระบุ Dummy Quiz Object เสมอ (`{ id: 'mode_name', questions: [] }`) เพื่อป้องกันไม่ให้ระบบ In-Memory ดึงข้อสอบชุดแรกจาก `quizzes.json` มาผูกทับ
+- **Active Sessions Resume Filtering**: ใน `getAllActiveSessions()` ให้ตรวจสอบว่าหากห้องไม่ใช่โหมดการเรียนการสอน (เช่น `r.mode === 'LUCKY_DRAW'`) ต้องทำการ `continue;` ข้ามไป เพื่อไม่ให้ห้องไปแสดงปะปนในรายการ "ห้องที่เปิดค้างไว้ / รอทำ Post-test" บนหน้าแรกของวิทยากร
+
+### 2. กฎการควบคุมมุมมองและ Overlay ฝั่ง Frontend (`client/src/App.jsx`):
+- **Exclusive View Routing**: กำหนดค่า `viewMode` ให้ชัดเจน และใน `onRoomCreated` หรือ `onHostReconnected` ให้ตรวจสอบ `data.mode` ก่อนเปลี่ยนหน้าเสมอ ป้องกันการเด้งผิดหน้าจอ
+- **Strict Player Overlay Guard**: ป๊อปอัปหรือโมดอลของผู้เข้าร่วม (เช่น `PlayerLuckyDrawOverlay`) **จะต้องครอบด้วยเงื่อนไขตรวจสอบผู้เรียนเสมอ**:
+  ```jsx
+  {viewMode === 'PLAYER_GAME' && !session?.isHost && (
+    <PlayerLuckyDrawOverlay ... />
+  )}
+  ```
+  เพื่อป้องกันไม่ให้หน้าต่างของผู้เรียนเด้งขึ้นมาซ้อนทับบนหน้าจอของโฮสต์
+- **Clean Room Teardown**: เมื่อผู้ใช้ออกจากโหมดเฉพาะกิจ ให้ส่ง `socket.emit('close_room')` เพื่อล้างข้อมูลห้องทั้งใน Memory และ SQLite ไม่ให้มีห้องขยะค้างในระบบ
+
+### 3. กฎความปลอดภัยด้าน Terminal (Terminal Execution Security):
+- **ห้ามรันคำสั่งผ่าน PowerShell โดยตรงเด็ดขาด**: เครื่องผู้ใช้มีการติดตั้ง EDR / Antivirus ที่จะแจ้งเตือนความปลอดภัยทันทีหากใช้ PowerShell ดิบ
+- **ต้องรันผ่าน `cmd.exe /c "..."` เสมอ**: ทุกคำสั่งทดสอบหรือบิลด์ เช่น `cmd.exe /c "npm test"` หรือ `cmd.exe /c "npm run build"`
 
 ---
 
 ## 🧪 การทดสอบระบบ (Automated Testing)
 
-โปรเจกต์มีชุดทดสอบอัตโนมัติครบถ้วนทั้ง Unit Tests, Integration Tests และ API Tests:
+โปรเจกต์มีชุดทดสอบอัตโนมัติครบถ้วนทั้ง Unit Tests, Integration Tests, Database Persistence, และ API Tests รวมทั้งหมด **8 Test Suites (100% Pass)**:
 
 ```bash
-# รันชุดทดสอบ Backend Server ทั้งหมด (4 Test Suites)
+# รันชุดทดสอบ Backend Server ทั้งหมด
 cd server
 npm test
 ```
@@ -336,8 +375,12 @@ npm test
 ผลการทดสอบครอบคลุม:
 1. `quizData.test.js`: การดึง/บันทึก/ลบ/คัดลอกชุดคำถาม (ทั้ง Choice และ Sequence)
 2. `roomManager.test.js`: การสร้างห้อง, คำนวณคะแนนความเร็ว, Disconnect Grace Period, การสลับโหมด, การประเมิน Sequence Race, และ Team Management Lifecycle
-3. `socketHandler.test.js`: จำลอง Socket Connection, การนับถอยหลัง 5 วินาที, การส่ง Nudge, การรับส่งคำตอบแบบ Sequence, และการจัดการทีม
+3. `socketHandler.test.js`: จำลอง Socket Connection, การนับถอยหลัง 5 วินาที, การส่ง Nudge, การรับส่งคำตอบแบบ Sequence, Lucky Draw Events และการจัดการทีม
 4. `api.test.js`: ทดสอบ REST Endpoints `/api/health`, `/api/quizzes`, `/api/upload`
+5. `analyticsReport.test.js`: ทดสอบ Analytics และ Excel/CSV Multi-sheet Reports
+6. `pretestPosttest.test.js`: ทดสอบ Pre-test vs Post-test Learning Gain และ Roster Matching
+7. `db.test.js`: ทดสอบ SQLite Persistence CRUD, Room Snapshots, และ Schemas
+8. `rosterPersistence.test.js`: ทดสอบ End-to-End Server Restart & 1-Click Roster Claim
 
 ```bash
 # ทดสอบการ Compile และ Bundle ฝั่ง Frontend Client
