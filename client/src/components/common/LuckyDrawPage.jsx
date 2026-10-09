@@ -81,13 +81,29 @@ export const LuckyDrawPage = ({
     }
   }, [players]);
 
+  const isCreatingRoomRef = useRef(false);
+
+  useEffect(() => {
+    if (activePin) {
+      isCreatingRoomRef.current = true;
+    }
+  }, [activePin]);
+
   // If activeTab is QR and no activePin yet, auto-create a room via socket
   useEffect(() => {
-    if (activeTab === 'QR' && !activePin && socket) {
-      socket.emit('create_room', { title: 'KaoJai Lucky Draw Event', questions: [] }, (res) => {
+    if (activeTab === 'QR' && !activePin && socket && !isCreatingRoomRef.current) {
+      isCreatingRoomRef.current = true;
+      socket.emit('create_room', {
+        title: 'KaoJai Lucky Draw Event',
+        questions: [],
+        mode: 'LUCKY_DRAW',
+        isLuckyDraw: true
+      }, (res) => {
         if (res && res.success) {
           setActivePin(res.pin);
           setActiveHostToken(res.hostToken);
+        } else {
+          isCreatingRoomRef.current = false;
         }
       });
     }

@@ -24,29 +24,52 @@ class RoomManager {
   createRoom(hostSocketId, customQuizSetOrId = null) {
     const pin = this.generatePin();
     let quizSet = null;
-    if (typeof customQuizSetOrId === 'string') {
-      quizSet = getQuizById(customQuizSetOrId);
-    } else if (customQuizSetOrId && typeof customQuizSetOrId === 'object') {
-      const targetId = typeof customQuizSetOrId.customQuizId === 'string'
-        ? customQuizSetOrId.customQuizId
-        : (typeof customQuizSetOrId.quizId === 'string' ? customQuizSetOrId.quizId : null);
-      if (targetId) {
-        quizSet = getQuizById(targetId);
-      } else if (Array.isArray(customQuizSetOrId.questions)) {
-        quizSet = customQuizSetOrId;
+    let isLuckyDraw = false;
+    let mode = 'QUIZ';
+
+    if (customQuizSetOrId && typeof customQuizSetOrId === 'object') {
+      if (
+        customQuizSetOrId.mode === 'LUCKY_DRAW' ||
+        customQuizSetOrId.isLuckyDraw ||
+        (typeof customQuizSetOrId.title === 'string' && customQuizSetOrId.title.toLowerCase().includes('lucky draw'))
+      ) {
+        isLuckyDraw = true;
+        mode = 'LUCKY_DRAW';
+        quizSet = {
+          id: 'luckydraw',
+          title: customQuizSetOrId.title || '🎁 KaoJai Lucky Draw Event',
+          questions: []
+        };
       }
     }
-    if (!quizSet) {
-      const all = getAllQuizzes();
-      quizSet = (all && all.length > 0) ? all[0] : this.quizSets[0];
+
+    if (!isLuckyDraw) {
+      if (typeof customQuizSetOrId === 'string') {
+        quizSet = getQuizById(customQuizSetOrId);
+      } else if (customQuizSetOrId && typeof customQuizSetOrId === 'object') {
+        const targetId = typeof customQuizSetOrId.customQuizId === 'string'
+          ? customQuizSetOrId.customQuizId
+          : (typeof customQuizSetOrId.quizId === 'string' ? customQuizSetOrId.quizId : null);
+        if (targetId) {
+          quizSet = getQuizById(targetId);
+        } else if (Array.isArray(customQuizSetOrId.questions)) {
+          quizSet = customQuizSetOrId;
+        }
+      }
+      if (!quizSet) {
+        const all = getAllQuizzes();
+        quizSet = (all && all.length > 0) ? all[0] : this.quizSets[0];
+      }
     }
+
     const hostToken = crypto.randomUUID();
     
     const room = {
       pin,
       hostSocketId,
       hostToken,
-      mode: 'QUIZ', // 'QUIZ' or 'PULSE'
+      mode, // 'QUIZ', 'PULSE', or 'LUCKY_DRAW'
+      isLuckyDraw,
       quizSet,
       currentQuestionIndex: -1,
       questionStartTime: null,
@@ -83,12 +106,14 @@ class RoomManager {
       // Rehydrate room from SQLite database if memory was cleared (e.g. after server restart)
       const persisted = db.getRoom(pin);
       if (persisted) {
+        const isLucky = persisted.mode === 'LUCKY_DRAW' || persisted.quizSet?.id === 'luckydraw';
         room = {
           pin: persisted.pin,
           hostSocketId: null, // Host will reconnect and update socket id
           hostToken: persisted.hostToken,
-          mode: persisted.mode || 'QUIZ',
-          quizSet: persisted.quizSet || this.quizSets[0],
+          mode: persisted.mode || (isLucky ? 'LUCKY_DRAW' : 'QUIZ'),
+          isLuckyDraw: isLucky,
+          quizSet: persisted.quizSet || (isLucky ? { id: 'luckydraw', title: '🎁 KaoJai Lucky Draw Event', questions: [] } : this.quizSets[0]),
           currentQuestionIndex: -1,
           questionStartTime: null,
           questionTimer: null,
@@ -211,6 +236,7 @@ class RoomManager {
 
     // From SQLite: only include rooms that have a completed pre-test waiting for post-test within the last 24 hours
     for (const r of dbRooms) {
+      if (r.mode === 'LUCKY_DRAW') continue;
       const hasCompletedPretest = Boolean(r.pretestData && r.pretestData.completed);
       const isRecent = (now - (r.updatedAt || r.createdAt || 0)) <= ONE_DAY_MS;
 
@@ -233,6 +259,7 @@ class RoomManager {
 
     // Merge in-memory active rooms (currently live sessions)
     for (const r of this.rooms.values()) {
+      if (r.mode === 'LUCKY_DRAW' || r.isLuckyDraw) continue;
       const counts = this.getPlayerCounts(r.pin);
       const existing = sessionsMap.get(r.pin) || {};
       sessionsMap.set(r.pin, {

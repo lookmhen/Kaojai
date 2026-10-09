@@ -28,6 +28,7 @@ export function AppContent() {
     const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const isLuckyDrawScan = urlParams && (urlParams.get('luckydraw') === '1' || urlParams.get('mode') === 'luckydraw');
     if (isLuckyDrawScan) return 'LUCKY_DRAW_PLAYER';
+    if (session?.isLuckyDraw && session?.pin) return 'LUCKY_DRAW';
     if (session?.isHost && session?.pin) return 'HOST_GAME';
     if (session?.playerId && session?.pin) return 'PLAYER_GAME';
     return 'PLAYER_JOIN';
@@ -98,7 +99,8 @@ export function AppContent() {
 
     const onRoomCreated = (data) => {
       setPin(data.pin);
-      setRoomMode(data.mode || 'QUIZ');
+      const isLucky = data.mode === 'LUCKY_DRAW' || data.isLuckyDraw;
+      setRoomMode(data.mode || (isLucky ? 'LUCKY_DRAW' : 'QUIZ'));
       setPlayers(data.players || []);
       setCounts(data.counts || { totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 });
       if (data.pulseRound) setPulseRound(data.pulseRound);
@@ -106,13 +108,19 @@ export function AppContent() {
       if (data.teams) setTeams(data.teams);
       if (data.quizSet?.id) setSelectedQuizId(data.quizSet.id);
       setStatus('LOBBY');
-      setViewMode(prev => prev === 'LUCKY_DRAW' ? 'LUCKY_DRAW' : 'HOST_GAME');
-      saveSessionData({ pin: data.pin, isHost: true, hostToken: data.hostToken });
+      setViewMode(prev => (prev === 'LUCKY_DRAW' || isLucky) ? 'LUCKY_DRAW' : 'HOST_GAME');
+      saveSessionData({
+        pin: data.pin,
+        isHost: true,
+        hostToken: data.hostToken,
+        isLuckyDraw: isLucky
+      });
     };
 
     const onHostReconnected = (data) => {
       setPin(data.pin);
-      setRoomMode(data.mode);
+      const isLucky = data.mode === 'LUCKY_DRAW' || data.isLuckyDraw;
+      setRoomMode(data.mode || (isLucky ? 'LUCKY_DRAW' : 'QUIZ'));
       setStatus(data.status || 'LOBBY');
       if (data.quizMode) setQuizMode(data.quizMode);
       setPlayers(data.players || []);
@@ -134,8 +142,13 @@ export function AppContent() {
       if (data.sequenceIntroData) {
         setSequenceIntroData(data.sequenceIntroData);
       }
-      setViewMode(prev => prev === 'LUCKY_DRAW' ? 'LUCKY_DRAW' : 'HOST_GAME');
-      saveSessionData({ pin: data.pin, isHost: true, hostToken: data.hostToken || session.hostToken });
+      setViewMode(prev => (prev === 'LUCKY_DRAW' || isLucky) ? 'LUCKY_DRAW' : 'HOST_GAME');
+      saveSessionData({
+        pin: data.pin,
+        isHost: true,
+        hostToken: data.hostToken || session.hostToken,
+        isLuckyDraw: isLucky
+      });
     };
 
     const onRoomUpdated = (data) => {
@@ -613,6 +626,23 @@ export function AppContent() {
     setCounts({ totalPlayers: 0, answeredCount: 0, pulseAnsweredCount: 0 });
   };
 
+  const handleBackFromLuckyDraw = () => {
+    if (previousViewMode === 'PLAYER_JOIN' || roomMode === 'LUCKY_DRAW') {
+      const token = getEffectiveHostToken();
+      if (socket && pin && token) {
+        socket.emit('close_room', { pin, hostToken: token });
+      }
+      clearSession();
+      setPin('');
+      setRoomMode('QUIZ');
+      setPlayers([]);
+      setLeaderboard([]);
+      setViewMode('PLAYER_JOIN');
+    } else {
+      setViewMode(previousViewMode || (session?.isHost ? 'HOST_GAME' : 'PLAYER_JOIN'));
+    }
+  };
+
   const handleToggleTeams = (enabled) => {
     if (!socket) return;
     const isBool = typeof enabled === 'boolean' ? enabled : !teamsEnabled;
@@ -715,7 +745,7 @@ export function AppContent() {
           players={players}
           leaderboard={leaderboard}
           socket={socket}
-          onBack={() => setViewMode(previousViewMode || (session?.isHost ? 'HOST_GAME' : 'PLAYER_JOIN'))}
+          onBack={handleBackFromLuckyDraw}
         />
       )}
 

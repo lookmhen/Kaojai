@@ -40,6 +40,7 @@ export const SocketProvider = ({ children }) => {
       name: getStorageItem('kaojai_name'),
       avatar: getStorageItem('kaojai_avatar'),
       isHost: getStorageItem('kaojai_isHost') === 'true',
+      isLuckyDraw: getStorageItem('kaojai_isLuckyDraw') === 'true',
       hostToken: getStorageItem('kaojai_hostToken')
     };
   });
@@ -108,12 +109,13 @@ export const SocketProvider = ({ children }) => {
 
   const saveSessionData = (patch) => {
     if (!patch || typeof patch !== 'object') return;
-    const { pin, playerId, name, avatar, isHost, hostToken } = patch;
+    const { pin, playerId, name, avatar, isHost, hostToken, isLuckyDraw } = patch;
     if (pin) setStorageItem('kaojai_pin', pin);
     if (playerId) setStorageItem('kaojai_playerId', playerId);
     if (name) setStorageItem('kaojai_name', name);
     if (avatar) setStorageItem('kaojai_avatar', avatar);
     if (isHost !== undefined) setStorageItem('kaojai_isHost', String(isHost));
+    if (isLuckyDraw !== undefined) setStorageItem('kaojai_isLuckyDraw', String(isLuckyDraw));
     if (hostToken) setStorageItem('kaojai_hostToken', hostToken);
 
     setSession(prev => ({
@@ -128,8 +130,9 @@ export const SocketProvider = ({ children }) => {
     removeStorageItem('kaojai_name');
     removeStorageItem('kaojai_avatar');
     removeStorageItem('kaojai_isHost');
+    removeStorageItem('kaojai_isLuckyDraw');
     removeStorageItem('kaojai_hostToken');
-    setSession({ pin: null, playerId: null, name: null, avatar: null, isHost: false, hostToken: null });
+    setSession({ pin: null, playerId: null, name: null, avatar: null, isHost: false, isLuckyDraw: false, hostToken: null });
   }, []);
 
   // Keep ref up to date

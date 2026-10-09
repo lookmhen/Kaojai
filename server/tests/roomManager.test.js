@@ -91,6 +91,33 @@ async function testRoomManager() {
     console.log('    ✓ setRoomQuiz passed');
   }
 
+  // Test 3.2: Lucky Draw Room Creation and Active Sessions Isolation
+  {
+    console.log('  Testing Lucky Draw Room Creation & Session Isolation...');
+    const rm = new RoomManager();
+    const ldRoom = rm.createRoom('host-socket-ld', {
+      title: 'KaoJai Lucky Draw Event',
+      questions: [],
+      mode: 'LUCKY_DRAW',
+      isLuckyDraw: true
+    });
+    assert.strictEqual(ldRoom.mode, 'LUCKY_DRAW');
+    assert.strictEqual(ldRoom.isLuckyDraw, true);
+    assert.strictEqual(ldRoom.quizSet.id, 'luckydraw');
+    assert.strictEqual(ldRoom.quizSet.questions.length, 0);
+
+    const normalRoom = rm.createRoom('host-socket-normal');
+    assert.strictEqual(normalRoom.mode, 'QUIZ');
+
+    const activeSessions = rm.getAllActiveSessions();
+    const ldInSessions = activeSessions.find(s => s.pin === ldRoom.pin);
+    const normalInSessions = activeSessions.find(s => s.pin === normalRoom.pin);
+
+    assert.strictEqual(ldInSessions, undefined, 'Lucky Draw room should NOT appear in getAllActiveSessions');
+    assert.ok(normalInSessions, 'Normal quiz room should appear in getAllActiveSessions');
+    console.log('    ✓ Lucky Draw room isolation passed');
+  }
+
   // Test 4: Player Joining, Nickname Trimming, Avatar Handling
   {
     console.log('  Testing Player Joining, Nickname Trimming, and Avatar Handling...');
