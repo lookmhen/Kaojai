@@ -3,7 +3,7 @@ import { useSocket } from '../../context/SocketContext';
 import { AvatarPicker, getRandomAvatar } from './AvatarPicker';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
-import { Gift, Trophy, Sparkles, CheckCircle2, User, RefreshCw, AlertCircle } from 'lucide-react';
+import { Gift, Trophy, Sparkles, CheckCircle2, User, RefreshCw, AlertCircle, Lock, Unlock } from 'lucide-react';
 
 export const LuckyDrawPlayerJoin = ({ initialPin = '' }) => {
   const { socket, isConnected } = useSocket();
@@ -26,6 +26,29 @@ export const LuckyDrawPlayerJoin = ({ initialPin = '' }) => {
   const [isRegistered, setIsRegistered] = useState(Boolean(savedData?.isRegistered));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [isRegistrationLocked, setIsRegistrationLocked] = useState(false);
+
+  // Real-time registration lock listener and initial status fetch
+  useEffect(() => {
+    if (!socket || !targetPin) return;
+
+    socket.emit('get_luckydraw_status', { pin: targetPin }, (res) => {
+      if (res && typeof res.isLocked === 'boolean') {
+        setIsRegistrationLocked(res.isLocked);
+      }
+    });
+
+    const handleLockUpdated = (data) => {
+      if (data && typeof data.isLocked === 'boolean') {
+        setIsRegistrationLocked(data.isLocked);
+      }
+    };
+
+    socket.on('luckydraw_lock_updated', handleLockUpdated);
+    return () => {
+      socket.off('luckydraw_lock_updated', handleLockUpdated);
+    };
+  }, [socket, targetPin]);
 
   // Real-time winner announcement state
   const [winResult, setWinResult] = useState(null); // { isMe: boolean, winnerName: string, prizeName: string }
@@ -278,29 +301,91 @@ export const LuckyDrawPlayerJoin = ({ initialPin = '' }) => {
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={handleEditName}
-              style={{
-                background: '#F8FAFC',
-                border: '1px solid #CBD5E1',
+            {isRegistrationLocked ? (
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: '#FEF2F2',
+                border: '1px solid #FECACA',
                 borderRadius: '12px',
                 padding: '8px 16px',
                 fontSize: '0.82rem',
                 fontWeight: 700,
-                color: '#475569',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              <RefreshCw size={14} /> แก้ไขชื่อหรือรูปโปรไฟล์
-            </button>
+                color: '#B91C1C'
+              }}>
+                <Lock size={14} /> ปิดรับลงทะเบียนแล้ว (คุณอยู่ในรายชื่อพร้อมลุ้นรางวัล)
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleEditName}
+                style={{
+                  background: '#F8FAFC',
+                  border: '1px solid #CBD5E1',
+                  borderRadius: '12px',
+                  padding: '8px 16px',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  color: '#475569',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <RefreshCw size={14} /> แก้ไขชื่อหรือรูปโปรไฟล์
+              </button>
+            )}
+          </div>
+        ) : isRegistrationLocked ? (
+          /* =========================================
+             STATE 2.1: REGISTRATION CLOSED (LOCKED)
+             ========================================= */
+          <div style={{
+            background: '#FEF2F2',
+            border: '1.5px solid #FECACA',
+            borderRadius: '20px',
+            padding: '28px 20px',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              background: '#FEE2E2',
+              color: '#DC2626',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px',
+              boxShadow: '0 4px 14px rgba(220, 38, 38, 0.2)'
+            }}>
+              <Lock size={32} />
+            </div>
+
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#991B1B', margin: '0 0 8px' }}>
+              ปิดรับลงทะเบียนแล้ว 🔒
+            </h3>
+            <p style={{ fontSize: '0.88rem', color: '#7F1D1D', lineHeight: 1.5, margin: '0 0 16px' }}>
+              ผู้จัดงานได้ปิดรับรายชื่อสำหรับกิจกรรมรอบนี้แล้วครับ ขออภัยในความไม่สะดวก ✨
+            </p>
+
+            <div style={{
+              background: '#FFFFFF',
+              borderRadius: '12px',
+              padding: '10px 14px',
+              fontSize: '0.82rem',
+              color: '#64748B',
+              fontWeight: 700,
+              border: '1px solid #FEE2E2'
+            }}>
+              💡 หากผู้จัดงานเปิดรับรอบถัดไป หน้าจอนี้จะปลดล็อกให้กรอกชื่อโดยอัตโนมัติ
+            </div>
           </div>
         ) : (
           /* =========================================
-             STATE 2: REGISTRATION FORM
+             STATE 2.2: REGISTRATION FORM
              ========================================= */
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '16px', textAlign: 'left' }}>

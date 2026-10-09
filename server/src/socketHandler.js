@@ -692,6 +692,10 @@ module.exports = function setupSocketHandlers(io) {
           throw new Error('ไม่พบห้องดังกล่าว');
         }
 
+        // Auto-lock registration if not already locked
+        room.isLuckyDrawLocked = true;
+        io.to(pin).emit('luckydraw_lock_updated', { isLocked: true });
+
         const safePayload = {
           prizeName: (prizeName && String(prizeName).trim()) || 'รางวัลพิเศษ 🎉',
           winner: winner || null,
@@ -710,6 +714,35 @@ module.exports = function setupSocketHandlers(io) {
           ackCallback({ success: false, message: err.message });
         }
         socket.emit('error_message', { message: err.message });
+      }
+    });
+
+    socket.on('host_toggle_luckydraw_lock', ({ pin, hostToken, isLocked }, ackCallback) => {
+      try {
+        const room = verifyHost(pin, hostToken);
+        room.isLuckyDrawLocked = Boolean(isLocked);
+        io.to(pin).emit('luckydraw_lock_updated', { isLocked: room.isLuckyDrawLocked });
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: true, isLocked: room.isLuckyDrawLocked });
+        }
+      } catch (err) {
+        console.error('[Socket Error] host_toggle_luckydraw_lock:', err);
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: false, message: err.message });
+        }
+        socket.emit('error_message', { message: err.message });
+      }
+    });
+
+    socket.on('get_luckydraw_status', ({ pin }, ackCallback) => {
+      try {
+        const room = roomManager.getRoom(pin);
+        const isLocked = Boolean(room?.isLuckyDrawLocked);
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: true, isLocked });
+        }
+      } catch (e) {
+        if (typeof ackCallback === 'function') ackCallback({ success: false, isLocked: false });
       }
     });
 
@@ -867,7 +900,8 @@ module.exports = function setupSocketHandlers(io) {
           counts: joinData.counts,
           quizMode: joinData.quizMode || 'NORMAL',
           teamsEnabled: joinData.room.teamsEnabled,
-          teams: roomManager.getTeamList(cleanPin)
+          teams: roomManager.getTeamList(cleanPin),
+          isLuckyDrawLocked: Boolean(joinData.room.isLuckyDrawLocked)
         };
 
         if (typeof ackCallback === 'function') {

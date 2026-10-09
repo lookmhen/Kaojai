@@ -8,7 +8,7 @@ import { sfx } from '../../utils/audioSFX';
 import {
   Gift, Trophy, Users, QrCode, FileSpreadsheet, Download, Upload,
   RotateCcw, Sparkles, X, Check, Copy, Trash2, ArrowLeft, ShieldAlert,
-  Sliders, Award, RefreshCw, ChevronRight, Maximize2
+  Sliders, Award, RefreshCw, ChevronRight, Maximize2, Lock, Unlock
 } from 'lucide-react';
 
 const SAMPLE_NAMES = [
@@ -31,6 +31,8 @@ export const LuckyDrawPage = ({
   const [livePlayers, setLivePlayers] = useState(players || []);
   const [isQrFullscreen, setIsQrFullscreen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isRegistrationLocked, setIsRegistrationLocked] = useState(false);
+  const [autoLockOnDraw, setAutoLockOnDraw] = useState(true);
 
   // Tabs: 'QR' | 'MANUAL' | 'ROOM'
   const [activeTab, setActiveTab] = useState(() => (pin ? 'ROOM' : 'QR'));
@@ -105,6 +107,40 @@ export const LuckyDrawPage = ({
       socket.off('room_updated', handleRoomUpdated);
     };
   }, [socket, activePin]);
+
+  // Real-time registration lock listener and initial status fetch
+  useEffect(() => {
+    if (!socket || !activePin) return;
+
+    socket.emit('get_luckydraw_status', { pin: activePin }, (res) => {
+      if (res && typeof res.isLocked === 'boolean') {
+        setIsRegistrationLocked(res.isLocked);
+      }
+    });
+
+    const handleLockUpdated = (data) => {
+      if (data && typeof data.isLocked === 'boolean') {
+        setIsRegistrationLocked(data.isLocked);
+      }
+    };
+
+    socket.on('luckydraw_lock_updated', handleLockUpdated);
+    return () => {
+      socket.off('luckydraw_lock_updated', handleLockUpdated);
+    };
+  }, [socket, activePin]);
+
+  const handleToggleRegistrationLock = (newLockedState) => {
+    const nextVal = (typeof newLockedState === 'boolean') ? newLockedState : !isRegistrationLocked;
+    setIsRegistrationLocked(nextVal);
+    if (socket && activePin && activeHostToken) {
+      socket.emit('host_toggle_luckydraw_lock', {
+        pin: activePin,
+        hostToken: activeHostToken,
+        isLocked: nextVal
+      });
+    }
+  };
 
   // Save manual text to localStorage
   useEffect(() => {
@@ -186,6 +222,10 @@ export const LuckyDrawPage = ({
     setCurrentWinner(null);
     setIsSpinning(true);
 
+    if (autoLockOnDraw && !isRegistrationLocked) {
+      handleToggleRegistrationLock(true);
+    }
+
     if (socket && activePin && activeHostToken) {
       try {
         socket.emit('host_spin_lucky_draw', {
@@ -240,6 +280,10 @@ export const LuckyDrawPage = ({
 
     sfx.playFanfare();
     fireConfetti();
+
+    if (autoLockOnDraw && !isRegistrationLocked) {
+      handleToggleRegistrationLock(true);
+    }
 
     if (socket && activePin && activeHostToken) {
       try {
@@ -817,6 +861,75 @@ export const LuckyDrawPage = ({
 
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '10px', color: '#059669', fontSize: '0.8rem', fontWeight: 700 }}>
                         <ShieldAlert size={15} /> ป้องกันชื่อซ้ำ: 1 เครื่อง = 1 สิทธิ์ลงทะเบียน
+                      </div>
+
+                      {/* Registration Status Toggle Bar */}
+                      <div style={{
+                        marginTop: '14px',
+                        padding: '12px 16px',
+                        borderRadius: '16px',
+                        background: isRegistrationLocked ? '#FEF2F2' : '#F0FDF4',
+                        border: `1.5px solid ${isRegistrationLocked ? '#FECACA' : '#BBF7D0'}`,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{
+                              width: '10px',
+                              height: '10px',
+                              borderRadius: '50%',
+                              background: isRegistrationLocked ? '#EF4444' : '#22C55E',
+                              boxShadow: isRegistrationLocked ? '0 0 8px #EF4444' : '0 0 8px #22C55E'
+                            }} />
+                            <span style={{ fontSize: '0.88rem', fontWeight: 800, color: isRegistrationLocked ? '#991B1B' : '#166534' }}>
+                              {isRegistrationLocked ? '🔒 ปิดรับลงทะเบียนแล้ว' : '🟢 กำลังเปิดรับลงทะเบียน'}
+                            </span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleToggleRegistrationLock(!isRegistrationLocked)}
+                            style={{
+                              padding: '6px 14px',
+                              borderRadius: '10px',
+                              border: 'none',
+                              background: isRegistrationLocked ? '#DC2626' : '#16A34A',
+                              color: '#FFFFFF',
+                              fontSize: '0.8rem',
+                              fontWeight: 800,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                            }}
+                          >
+                            {isRegistrationLocked ? <Unlock size={14} /> : <Lock size={14} />}
+                            {isRegistrationLocked ? 'เปิดรับใหม่' : 'ปิดรับลงทะเบียน'}
+                          </button>
+                        </div>
+
+                        <label style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '0.78rem',
+                          color: '#64748B',
+                          cursor: 'pointer',
+                          width: '100%',
+                          justifyContent: 'flex-start'
+                        }}>
+                          <input
+                            type="checkbox"
+                            checked={autoLockOnDraw}
+                            onChange={(e) => setAutoLockOnDraw(e.target.checked)}
+                            style={{ accentColor: '#EA580C', width: '15px', height: '15px' }}
+                          />
+                          <span>ปิดรับลงทะเบียนอัตโนมัติเมื่อเริ่มจับรางวัล (Auto-Lock)</span>
+                        </label>
                       </div>
                     </div>
 
@@ -1460,8 +1573,32 @@ export const LuckyDrawPage = ({
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontSize: '1.05rem', fontWeight: 800, color: '#059669' }}>
-              <Users size={20} /> ลงทะเบียนแล้ว {livePlayers.length} คน
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '1.05rem', fontWeight: 800, color: '#059669' }}>
+                <Users size={20} /> ลงทะเบียนแล้ว {livePlayers.length} คน
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleToggleRegistrationLock(!isRegistrationLocked)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  fontSize: '0.88rem',
+                  fontWeight: 800,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: isRegistrationLocked ? '#FEE2E2' : '#DCFCE7',
+                  color: isRegistrationLocked ? '#B91C1C' : '#15803D',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {isRegistrationLocked ? <Lock size={15} /> : <Unlock size={15} />}
+                {isRegistrationLocked ? '🔒 ปิดรับลงทะเบียนแล้ว' : '🟢 เปิดรับลงทะเบียน'}
+              </button>
             </div>
           </div>
         </div>

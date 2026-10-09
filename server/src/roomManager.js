@@ -64,7 +64,8 @@ class RoomManager {
       pendingQuestionIndex: null, // Tracks target question index while in SEQUENCE_INTRO
       pretestData: null,  // Snapshot of pre-test results for learning gain comparison
       currentAnswers: new Map(), // playerId -> { optionId, isCorrect, timeUsed, pointsEarned }
-      questionHistory: [] // Array of historical question result snapshots for detailed analytics
+      questionHistory: [], // Array of historical question result snapshots for detailed analytics
+      isLuckyDrawLocked: false // Tracks if Lucky Draw attendee registration is closed
     };
 
     this.rooms.set(pin, room);
@@ -299,6 +300,9 @@ class RoomManager {
         existingPlayer.comebackBonus = 0;
       }
     } else {
+      if (room.isLuckyDrawLocked) {
+        throw new Error('การลงทะเบียนถูกปิดแล้ว ผู้จัดงานได้ปิดรับรายชื่อสำหรับกิจกรรมรอบนี้แล้ว');
+      }
       isReconnect = false;
       existingPlayer = {
         playerId,
