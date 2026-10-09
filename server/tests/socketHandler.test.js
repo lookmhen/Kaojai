@@ -621,7 +621,8 @@ async function testSocketHandlers() {
     prizeName: 'รางวัลที่ 1 ทีวี 55 นิ้ว',
     winner: { id: 'p_winner', name: 'Lucky Winner', avatar: '0291dcc0ce.svg' },
     candidateNames: ['Lucky Winner', 'Participant 2'],
-    durationMs: 4000
+    durationMs: 4000,
+    drawStyle: 'POOL'
   }, (r) => { spinAck = r; });
 
   assert.ok(spinAck && spinAck.success, 'host_spin_lucky_draw should acknowledge success');
@@ -630,6 +631,7 @@ async function testSocketHandlers() {
   assert.strictEqual(spinBroadcast.payload.prizeName, 'รางวัลที่ 1 ทีวี 55 นิ้ว');
   assert.strictEqual(spinBroadcast.payload.winner.name, 'Lucky Winner');
   assert.strictEqual(spinBroadcast.payload.durationMs, 4000);
+  assert.strictEqual(spinBroadcast.payload.drawStyle, 'POOL');
 
   // Unauthorized spin attempt
   let failSpinAck;

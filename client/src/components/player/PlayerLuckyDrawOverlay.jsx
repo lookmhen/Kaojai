@@ -122,26 +122,55 @@ export const PlayerLuckyDrawOverlay = ({
             marginBottom: '10px'
           }}
         >
-          <Gift size={16} /> LUCKY DRAW LIVE 🎡
+          <Gift size={16} /> {spinData?.drawStyle === 'POOL' ? 'LUCKY DRAW LIVE 🌊' : 'LUCKY DRAW LIVE 🎡'}
         </div>
 
         <h3 style={{ margin: '0 0 4px', fontSize: '1.25rem', fontWeight: 900, color: '#1E293B' }}>
-          {isSpinning ? 'กำลังลุ้นผู้โชคดี... 🎲' : 'ผลการจับรางวัล! 🎉'}
+          {isSpinning
+            ? (spinData?.drawStyle === 'POOL' ? 'กำลังตักลูกบอลในอ่างน้ำ... 🌊' : 'กำลังลุ้นผู้โชคดี... 🎲')
+            : 'ผลการจับรางวัล! 🎉'}
         </h3>
 
         <div style={{ fontSize: '0.9rem', color: '#EA580C', fontWeight: 800, marginBottom: '16px' }}>
           🎁 {prizeName}
         </div>
 
-        {/* Wheel View while spinning */}
+        {/* Wheel or Water Pool Scoop View while drawing */}
         <div style={{ margin: '8px 0', opacity: showCelebration ? 0.35 : 1, transition: 'opacity 0.3s' }}>
-          <LuckyWheel
-            candidates={candidateNames}
-            isSpinning={isSpinning}
-            winnerIndex={winnerIndex}
-            duration={spinData.durationMs || 4500}
-            size={280}
-          />
+          {spinData?.drawStyle === 'POOL' ? (
+            <div style={{
+              width: '260px',
+              height: '240px',
+              margin: '0 auto',
+              borderRadius: '24px',
+              background: 'radial-gradient(circle at 35% 35%, #E0F2FE 0%, #BAE6FD 50%, #0284C7 100%)',
+              border: '4px solid #38BDF8',
+              boxShadow: '0 12px 28px rgba(2, 132, 199, 0.25)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px'
+            }}>
+              <div style={{ fontSize: '3.8rem', animation: 'bounce 0.8s infinite alternate' }}>
+                🌊
+              </div>
+              <div style={{ fontSize: '1rem', fontWeight: 900, color: '#0369A1', marginTop: '10px' }}>
+                กำลังลุ้นลูกบอลในอ่างน้ำ...
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#0284C7', marginTop: '4px', fontWeight: 700 }}>
+                ✨ ขอให้เป็นชื่อคุณ! ✨
+              </div>
+            </div>
+          ) : (
+            <LuckyWheel
+              candidates={candidateNames}
+              isSpinning={isSpinning}
+              winnerIndex={winnerIndex}
+              duration={spinData?.durationMs || 4500}
+              size={280}
+            />
+          )}
         </div>
 
         {/* Winner Celebration View */}

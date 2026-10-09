@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { sfx } from '../../utils/audioSFX';
 
 const BALL_PALETTES = [
@@ -49,13 +49,11 @@ export const LuckyWaterPool = ({
   const waterRx = rx - 12;
   const waterRy = ry - 8;
 
+  const wasLockedRef = useRef(false);
+
   // Initialize Mystery Floating Balls (อ้างอิงตามจำนวนคน แต่จำกัด Max Cap 10 ลูก ไม่ให้ล้นและไม่หน่วง)
-  useEffect(() => {
+  const initBalls = useCallback(() => {
     const state = stateRef.current;
-    // ป้องกันการรีเซ็ตลูกบอล หากกำลังมีลูกบอลถูกช้อนขึ้นมาอยู่
-    if (state.scoopedBall) {
-      return;
-    }
     const candidateCount = candidates.length;
     const MAX_BALLS = 10;
     const numBalls = Math.min(candidateCount, MAX_BALLS);
@@ -354,7 +352,24 @@ export const LuckyWaterPool = ({
     state.splashes = [];
     state.drips = [];
     state.sparkles = [];
-  }, [candidates, width, height, cx, waterCy, waterRx, waterRy]);
+  }, [candidates.length, width, height, cx, waterCy, waterRx, waterRy]);
+
+  // Initial setup and candidate pool update effect
+  useEffect(() => {
+    // Only re-init if there's no ball actively scooped
+    if (!stateRef.current.scoopedBall) {
+      initBalls();
+    }
+  }, [candidates, initBalls]);
+
+  // Unlock transition effect: when winner spotlight modal is dismissed or draw finished,
+  // immediately release the pickup rod and refresh the pool balls for the next draw
+  useEffect(() => {
+    if (wasLockedRef.current && !isLocked) {
+      initBalls();
+    }
+    wasLockedRef.current = isLocked;
+  }, [isLocked, initBalls]);
 
   // Main Canvas Render & Physics Loop (Optimized 60fps)
   useEffect(() => {

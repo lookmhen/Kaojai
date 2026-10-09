@@ -412,6 +412,8 @@ export function AppContent() {
     };
 
     const onLuckyDrawSpin = (data) => {
+      // Never display player overlay to the Host or while in LuckyDraw / Host views
+      if (session?.isHost || viewMode === 'LUCKY_DRAW' || viewMode === 'HOST_GAME') return;
       setPlayerLuckyDrawSpinData(data);
     };
 
@@ -934,13 +936,14 @@ export function AppContent() {
         />
       )}
 
-      {/* PLAYER LUCKY DRAW OVERLAY */}
-
-      <PlayerLuckyDrawOverlay
-        spinData={playerLuckyDrawSpinData}
-        currentPlayerData={playerData}
-        onClose={() => setPlayerLuckyDrawSpinData(null)}
-      />
+      {/* PLAYER LUCKY DRAW OVERLAY (Only for participants playing in PLAYER_GAME, never for Host) */}
+      {viewMode === 'PLAYER_GAME' && !session?.isHost && (
+        <PlayerLuckyDrawOverlay
+          spinData={playerLuckyDrawSpinData}
+          currentPlayerData={playerData}
+          onClose={() => setPlayerLuckyDrawSpinData(null)}
+        />
+      )}
     </div>
   );
 }

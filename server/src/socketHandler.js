@@ -685,7 +685,7 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('host_spin_lucky_draw', ({ pin, hostToken, prizeName, winner, candidateNames, durationMs }, ackCallback) => {
+    socket.on('host_spin_lucky_draw', ({ pin, hostToken, prizeName, winner, candidateNames, durationMs, drawStyle }, ackCallback) => {
       try {
         const room = verifyHost(pin, hostToken);
         if (!room) {
@@ -700,7 +700,8 @@ module.exports = function setupSocketHandlers(io) {
           prizeName: (prizeName && String(prizeName).trim()) || 'รางวัลพิเศษ 🎉',
           winner: winner || null,
           candidateNames: Array.isArray(candidateNames) ? candidateNames : [],
-          durationMs: (typeof durationMs === 'number' && durationMs > 0) ? durationMs : 4500
+          durationMs: (typeof durationMs === 'number' && durationMs > 0) ? durationMs : 4500,
+          drawStyle: drawStyle === 'POOL' ? 'POOL' : 'WHEEL'
         };
 
         io.to(pin).emit('lucky_draw_spin', safePayload);

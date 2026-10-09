@@ -272,7 +272,8 @@ export const LuckyDrawPage = ({
             avatar: chosenWinner.avatar
           },
           candidateNames: candidatePool.map(c => c.name),
-          durationMs: 4500
+          durationMs: 4500,
+          drawStyle: 'WHEEL'
         });
       } catch (err) {
         console.warn('Lucky draw spin emit warning:', err);
@@ -331,7 +332,8 @@ export const LuckyDrawPage = ({
             avatar: winnerCand.avatar
           },
           candidateNames: candidatePool.map(c => c.name),
-          durationMs: 1500
+          durationMs: 1500,
+          drawStyle: 'POOL'
         });
       } catch (err) {
         console.warn('Lucky draw pool winner emit warning:', err);
@@ -1423,6 +1425,9 @@ export const LuckyDrawPage = ({
             padding: '20px',
             animation: 'fadeIn 0.25s ease-out'
           }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setCurrentWinner(null);
+          }}
         >
           <div
             className="glass-card"
@@ -1435,9 +1440,33 @@ export const LuckyDrawPage = ({
               textAlign: 'center',
               boxShadow: '0 25px 60px -15px rgba(245, 158, 11, 0.4)',
               border: '3px solid #F59E0B',
-              animation: 'scaleIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+              animation: 'scaleIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              position: 'relative'
             }}
           >
+            {/* Close button X in top-right */}
+            <button
+              type="button"
+              onClick={() => setCurrentWinner(null)}
+              style={{
+                position: 'absolute',
+                top: '18px',
+                right: '18px',
+                background: '#F1F5F9',
+                border: 'none',
+                borderRadius: '50%',
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#64748B'
+              }}
+              title="ปิด"
+            >
+              <X size={18} />
+            </button>
             <div
               style={{
                 display: 'inline-flex',
