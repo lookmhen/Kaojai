@@ -1581,10 +1581,19 @@ export const LuckyDrawPage = ({
                 border: '2px solid #E2E8F0',
                 marginBottom: '20px'
               }}
-              dangerouslySetInnerHTML={{
-                __html: generateQRCodeSVG(joinUrl, 260)
-              }}
-            />
+            >
+              {qrSvgUrl ? (
+                <img
+                  src={qrSvgUrl}
+                  alt="Lucky Draw QR Code"
+                  style={{ width: '240px', height: '240px', display: 'block', borderRadius: '12px' }}
+                />
+              ) : (
+                <div style={{ width: '240px', height: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8' }}>
+                  กำลังสร้าง QR Code...
+                </div>
+              )}
+            </div>
 
             <div style={{ background: '#F8FAFC', borderRadius: '16px', padding: '14px 20px', border: '1px solid #E2E8F0', marginBottom: '20px' }}>
               <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '4px' }}>หรือเข้าผ่านลิงก์</div>
