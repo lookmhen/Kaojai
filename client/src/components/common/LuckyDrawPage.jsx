@@ -85,15 +85,15 @@ export const LuckyDrawPage = ({
   const candidatePool = useMemo(() => {
     if (activeTab === 'MANUAL') {
       const rawNames = manualText
-        .split(/[\n,]+/)
-        .map(n => n.trim())
+        .split(/[\r\n,，、;；|]+/)
+        .map(n => n.replace(/^\s*\d+[\.\)\-:]\s*/, '').replace(/^\s*[-*•]\s*/, '').trim())
         .filter(n => n.length > 0);
 
       const uniqueNames = Array.from(new Set(rawNames));
 
       return uniqueNames
-        .map((name, idx) => ({
-          id: `manual_${idx}_${name}`,
+        .map((name) => ({
+          id: `manual_${name.toLowerCase()}`,
           name,
           avatar: null,
           key: name.toLowerCase()
@@ -244,9 +244,8 @@ export const LuckyDrawPage = ({
   };
 
   const handleAddSampleNames = () => {
-    const existing = manualText.trim();
-    const joined = SAMPLE_NAMES.join('\n');
-    setManualText(existing ? `${existing}\n${joined}` : joined);
+    setManualText(SAMPLE_NAMES.join('\n'));
+    setExcludedIds(new Set());
   };
 
   const handleDownloadTemplate = () => {
@@ -792,7 +791,10 @@ export const LuckyDrawPage = ({
                         </button>
                         <button
                           type="button"
-                          onClick={() => setManualText('')}
+                          onClick={() => {
+                            setManualText('');
+                            setExcludedIds(new Set());
+                          }}
                           style={{
                             background: '#FEF2F2',
                             border: '1px solid #FECACA',
@@ -825,6 +827,55 @@ export const LuckyDrawPage = ({
                         boxSizing: 'border-box'
                       }}
                     />
+
+                    {/* Candidate Preview & Counter */}
+                    {candidatePool.length > 0 && (
+                      <div style={{ marginTop: '10px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
+                            ตรวจพบรายชื่อ: <strong style={{ color: '#0284C7' }}>{candidatePool.length}</strong> คน
+                          </span>
+                          <span style={{ fontSize: '0.78rem', color: '#64748B' }}>
+                            ลูกบอลในอ่าง: <strong style={{ color: '#EA580C' }}>{Math.min(candidatePool.length, 10)}</strong> / 10 ลูก
+                          </span>
+                        </div>
+
+                        <div
+                          style={{
+                            maxHeight: '110px',
+                            overflowY: 'auto',
+                            border: '1px solid #E2E8F0',
+                            borderRadius: '12px',
+                            padding: '8px',
+                            background: '#F8FAFC',
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '6px'
+                          }}
+                        >
+                          {candidatePool.map((c, i) => (
+                            <span
+                              key={c.id}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '3px 8px',
+                                background: '#FFFFFF',
+                                borderRadius: '12px',
+                                fontSize: '0.78rem',
+                                fontWeight: 700,
+                                color: '#1E293B',
+                                border: '1px solid #CBD5E1'
+                              }}
+                            >
+                              <span style={{ color: '#0284C7', fontSize: '0.72rem' }}>#{i + 1}</span>
+                              {c.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* CSV Actions Toolbar */}
                     <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>

@@ -53,10 +53,10 @@ export const LuckyWaterPool = ({
   useEffect(() => {
     const state = stateRef.current;
     const candidateCount = candidates.length;
-    const MAX_BALLS = 14;
+    const MAX_BALLS = 10;
     const numBalls = Math.min(candidateCount, MAX_BALLS);
 
-    const ballBaseRadius = numBalls <= 6 ? 28 : (numBalls <= 10 ? 25 : 22);
+    const ballBaseRadius = numBalls <= 3 ? 26 : (numBalls <= 6 ? 24 : 21);
 
     const balls = [];
     if (numBalls > 0) {
@@ -76,12 +76,81 @@ export const LuckyWaterPool = ({
           vAngle: 0,
           bobPhase: 0
         });
-      } else if (numBalls <= 6) {
-        // Single gentle ring
-        for (let i = 0; i < numBalls; i++) {
-          const ang = (i / numBalls) * Math.PI * 2;
-          const x = cx + Math.cos(ang) * (waterRx - ballBaseRadius - 16) * 0.55;
-          const y = waterCy + Math.sin(ang) * (waterRy - ballBaseRadius - 10) * 0.55;
+      } else if (numBalls === 2) {
+        // 2 balls: Left & Right with wide spacing
+        const coords = [
+          { x: cx - 78, y: waterCy },
+          { x: cx + 78, y: waterCy }
+        ];
+        coords.forEach((pos, i) => {
+          balls.push({
+            id: `mystery_ball_${i}`,
+            icon: MYSTERY_ICONS[i % MYSTERY_ICONS.length],
+            ballNumber: i + 1,
+            x: pos.x,
+            y: pos.y,
+            vx: 0,
+            vy: 0,
+            radius: ballBaseRadius,
+            palette: BALL_PALETTES[i % BALL_PALETTES.length],
+            angle: 0,
+            vAngle: 0,
+            bobPhase: i * 0.9
+          });
+        });
+      } else if (numBalls === 3) {
+        // 3 balls: Balanced Triangle
+        const coords = [
+          { x: cx, y: waterCy - 26 },
+          { x: cx - 85, y: waterCy + 18 },
+          { x: cx + 85, y: waterCy + 18 }
+        ];
+        coords.forEach((pos, i) => {
+          balls.push({
+            id: `mystery_ball_${i}`,
+            icon: MYSTERY_ICONS[i % MYSTERY_ICONS.length],
+            ballNumber: i + 1,
+            x: pos.x,
+            y: pos.y,
+            vx: 0,
+            vy: 0,
+            radius: ballBaseRadius,
+            palette: BALL_PALETTES[i % BALL_PALETTES.length],
+            angle: 0,
+            vAngle: 0,
+            bobPhase: i * 0.9
+          });
+        });
+      } else if (numBalls === 4) {
+        // 4 balls: Staggered Diamond/Oval
+        const coords = [
+          { x: cx + 110, y: waterCy },
+          { x: cx, y: waterCy + 28 },
+          { x: cx - 110, y: waterCy },
+          { x: cx, y: waterCy - 28 }
+        ];
+        coords.forEach((pos, i) => {
+          balls.push({
+            id: `mystery_ball_${i}`,
+            icon: MYSTERY_ICONS[i % MYSTERY_ICONS.length],
+            ballNumber: i + 1,
+            x: pos.x,
+            y: pos.y,
+            vx: 0,
+            vy: 0,
+            radius: ballBaseRadius,
+            palette: BALL_PALETTES[i % BALL_PALETTES.length],
+            angle: 0,
+            vAngle: 0,
+            bobPhase: i * 0.9
+          });
+        });
+      } else if (numBalls === 5) {
+        // 5 balls: Staggered Pentagon Ring
+        for (let i = 0; i < 5; i++) {
+          const ang = (i / 5) * Math.PI * 2 - Math.PI / 2;
+          const x = cx + Math.cos(ang) * 120;
+          const y = waterCy + Math.sin(ang) * 32;
           balls.push({
             id: `mystery_ball_${i}`,
             icon: MYSTERY_ICONS[i % MYSTERY_ICONS.length],
@@ -97,15 +166,12 @@ export const LuckyWaterPool = ({
             bobPhase: i * 0.9
           });
         }
-      } else {
-        // Two concentric non-overlapping rings (Inner + Outer)
-        const innerCount = Math.floor(numBalls * 0.35);
-        const outerCount = numBalls - innerCount;
-
-        for (let i = 0; i < innerCount; i++) {
-          const ang = (i / innerCount) * Math.PI * 2 + 0.3;
-          const x = cx + Math.cos(ang) * (waterRx - ballBaseRadius - 16) * 0.38;
-          const y = waterCy + Math.sin(ang) * (waterRy - ballBaseRadius - 10) * 0.38;
+      } else if (numBalls === 6) {
+        // 6 balls: Oval Ring
+        for (let i = 0; i < 6; i++) {
+          const ang = (i / 6) * Math.PI * 2;
+          const x = cx + Math.cos(ang) * 135;
+          const y = waterCy + Math.sin(ang) * 36;
           balls.push({
             id: `mystery_ball_${i}`,
             icon: MYSTERY_ICONS[i % MYSTERY_ICONS.length],
@@ -118,28 +184,159 @@ export const LuckyWaterPool = ({
             palette: BALL_PALETTES[i % BALL_PALETTES.length],
             angle: 0,
             vAngle: 0,
-            bobPhase: i * 0.8
+            bobPhase: i * 0.9
           });
         }
-
-        for (let i = 0; i < outerCount; i++) {
-          const ang = (i / outerCount) * Math.PI * 2;
-          const x = cx + Math.cos(ang) * (waterRx - ballBaseRadius - 16) * 0.82;
-          const y = waterCy + Math.sin(ang) * (waterRy - ballBaseRadius - 10) * 0.82;
-          const idx = innerCount + i;
+      } else if (numBalls === 7) {
+        // 7 balls: 1 Center + 6 Oval Ring
+        balls.push({
+          id: 'mystery_ball_0',
+          icon: MYSTERY_ICONS[0],
+          ballNumber: 1,
+          x: cx,
+          y: waterCy,
+          vx: 0,
+          vy: 0,
+          radius: ballBaseRadius,
+          palette: BALL_PALETTES[0],
+          angle: 0,
+          vAngle: 0,
+          bobPhase: 0
+        });
+        for (let i = 0; i < 6; i++) {
+          const ang = (i / 6) * Math.PI * 2;
+          const x = cx + Math.cos(ang) * 140;
+          const y = waterCy + Math.sin(ang) * 38;
           balls.push({
-            id: `mystery_ball_${idx}`,
-            icon: MYSTERY_ICONS[idx % MYSTERY_ICONS.length],
-            ballNumber: idx + 1,
+            id: `mystery_ball_${i + 1}`,
+            icon: MYSTERY_ICONS[(i + 1) % MYSTERY_ICONS.length],
+            ballNumber: i + 2,
             x,
             y,
             vx: 0,
             vy: 0,
             radius: ballBaseRadius,
-            palette: BALL_PALETTES[idx % BALL_PALETTES.length],
+            palette: BALL_PALETTES[(i + 1) % BALL_PALETTES.length],
             angle: 0,
             vAngle: 0,
-            bobPhase: idx * 0.8
+            bobPhase: (i + 1) * 0.8
+          });
+        }
+      } else if (numBalls === 8) {
+        // 8 balls: 2 Inner + 6 Outer Ring (Rotated offset for zero overlap)
+        const inner = [
+          { x: cx - 52, y: waterCy },
+          { x: cx + 52, y: waterCy }
+        ];
+        inner.forEach((pos, i) => {
+          balls.push({
+            id: `mystery_ball_${i}`,
+            icon: MYSTERY_ICONS[i % MYSTERY_ICONS.length],
+            ballNumber: i + 1,
+            x: pos.x,
+            y: pos.y,
+            vx: 0,
+            vy: 0,
+            radius: ballBaseRadius,
+            palette: BALL_PALETTES[i % BALL_PALETTES.length],
+            angle: 0,
+            vAngle: 0,
+            bobPhase: i * 0.8
+          });
+        });
+        for (let i = 0; i < 6; i++) {
+          const ang = (i / 6) * Math.PI * 2 + Math.PI / 6;
+          const x = cx + Math.cos(ang) * 144;
+          const y = waterCy + Math.sin(ang) * 38;
+          balls.push({
+            id: `mystery_ball_${i + 2}`,
+            icon: MYSTERY_ICONS[(i + 2) % MYSTERY_ICONS.length],
+            ballNumber: i + 3,
+            x,
+            y,
+            vx: 0,
+            vy: 0,
+            radius: ballBaseRadius,
+            palette: BALL_PALETTES[(i + 2) % BALL_PALETTES.length],
+            angle: 0,
+            vAngle: 0,
+            bobPhase: (i + 2) * 0.8
+          });
+        }
+      } else if (numBalls === 9) {
+        // 9 balls: 1 Center + 8 Outer Ring (Offset for zero overlap)
+        balls.push({
+          id: 'mystery_ball_0',
+          icon: MYSTERY_ICONS[0],
+          ballNumber: 1,
+          x: cx,
+          y: waterCy,
+          vx: 0,
+          vy: 0,
+          radius: ballBaseRadius,
+          palette: BALL_PALETTES[0],
+          angle: 0,
+          vAngle: 0,
+          bobPhase: 0
+        });
+        for (let i = 0; i < 8; i++) {
+          const ang = (i / 8) * Math.PI * 2 + Math.PI / 8;
+          const x = cx + Math.cos(ang) * 146;
+          const y = waterCy + Math.sin(ang) * 39;
+          balls.push({
+            id: `mystery_ball_${i + 1}`,
+            icon: MYSTERY_ICONS[(i + 1) % MYSTERY_ICONS.length],
+            ballNumber: i + 2,
+            x,
+            y,
+            vx: 0,
+            vy: 0,
+            radius: ballBaseRadius,
+            palette: BALL_PALETTES[(i + 1) % BALL_PALETTES.length],
+            angle: 0,
+            vAngle: 0,
+            bobPhase: (i + 1) * 0.8
+          });
+        }
+      } else if (numBalls === 10) {
+        // 10 balls: 2 Inner + 8 Outer Ring (Max cap 10, perfectly non-overlapping)
+        const inner = [
+          { x: cx - 40, y: waterCy },
+          { x: cx + 40, y: waterCy }
+        ];
+        inner.forEach((pos, i) => {
+          balls.push({
+            id: `mystery_ball_${i}`,
+            icon: MYSTERY_ICONS[i % MYSTERY_ICONS.length],
+            ballNumber: i + 1,
+            x: pos.x,
+            y: pos.y,
+            vx: 0,
+            vy: 0,
+            radius: ballBaseRadius,
+            palette: BALL_PALETTES[i % BALL_PALETTES.length],
+            angle: 0,
+            vAngle: 0,
+            bobPhase: i * 0.8
+          });
+        });
+        for (let i = 0; i < 8; i++) {
+          const ang = (i / 8) * Math.PI * 2 + Math.PI / 8;
+          const x = cx + Math.cos(ang) * 148;
+          const y = waterCy + Math.sin(ang) * 40;
+          balls.push({
+            id: `mystery_ball_${i + 2}`,
+            icon: MYSTERY_ICONS[(i + 2) % MYSTERY_ICONS.length],
+            ballNumber: i + 3,
+            x,
+            y,
+            vx: 0,
+            vy: 0,
+            radius: ballBaseRadius,
+            palette: BALL_PALETTES[(i + 2) % BALL_PALETTES.length],
+            angle: 0,
+            vAngle: 0,
+            bobPhase: (i + 2) * 0.8
           });
         }
       }
