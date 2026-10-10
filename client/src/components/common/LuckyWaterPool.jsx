@@ -1101,6 +1101,7 @@ export const LuckyWaterPool = ({
         onMouseMove={handleMouseMove}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onPointerDown={() => sfx.unlock()}
         onClick={handleClick}
         style={{
           cursor: stateRef.current.scoopedBall ? 'default' : 'crosshair',

@@ -3,14 +3,57 @@ class SoundEffects {
     this.ctx = null;
     this.muted = typeof window !== 'undefined' ? localStorage.getItem('kaojai_sfx_muted') === 'true' : false;
     this.listeners = new Set();
+    this._hasUserGesture = false;
+
+    if (typeof window !== 'undefined') {
+      const unlockAudio = () => {
+        this._hasUserGesture = true;
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) {
+            try { this.ctx = new AudioCtx(); } catch (e) {}
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume().catch(() => {});
+        }
+      };
+
+      ['click', 'pointerdown', 'touchstart', 'keydown'].forEach(evt => {
+        window.addEventListener(evt, unlockAudio, { capture: true, passive: true });
+      });
+    }
+  }
+
+  unlock() {
+    this._hasUserGesture = true;
+    if (!this.ctx) {
+      const AudioCtx = typeof window !== 'undefined' ? (window.AudioContext || window.webkitAudioContext) : null;
+      if (AudioCtx) {
+        try { this.ctx = new AudioCtx(); } catch (e) {}
+      }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
   }
 
   init() {
+    if (this.muted) return;
+    const hasGesture = this._hasUserGesture || (typeof navigator !== 'undefined' && navigator.userActivation?.hasBeenActive);
+    if (!hasGesture && !this.ctx) {
+      return;
+    }
     if (!this.ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const AudioCtx = typeof window !== 'undefined' ? (window.AudioContext || window.webkitAudioContext) : null;
       if (AudioCtx) {
-        this.ctx = new AudioCtx();
+        try {
+          this.ctx = new AudioCtx();
+        } catch (e) {}
       }
+    }
+    if (this.ctx && this.ctx.state === 'suspended' && hasGesture) {
+      this.ctx.resume().catch(() => {});
     }
   }
 
@@ -305,9 +348,8 @@ class SoundEffects {
 
   playWaterStir(intensity = 0.5) {
     if (this.muted) return;
+    if (!this.ctx || this.ctx.state !== 'running') return;
     try {
-      this.init();
-      if (!this.ctx) return;
       const now = this.ctx.currentTime;
       if (this._lastStirTime && now - this._lastStirTime < 0.12) return;
       this._lastStirTime = now;
@@ -343,9 +385,8 @@ class SoundEffects {
 
   playBallClack() {
     if (this.muted) return;
+    if (!this.ctx || this.ctx.state !== 'running') return;
     try {
-      this.init();
-      if (!this.ctx) return;
       const now = this.ctx.currentTime;
       if (this._lastClackTime && now - this._lastClackTime < 0.08) return;
       this._lastClackTime = now;
