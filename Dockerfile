@@ -4,7 +4,7 @@
 # =============================================================================
 
 # --- STAGE 1: Build Frontend React Client ---
-FROM node:22-alpine AS client-build
+FROM node:24-alpine AS client-build
 WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm ci
@@ -12,7 +12,7 @@ COPY client/ ./
 RUN npm run build
 
 # --- STAGE 2: Production Server Environment ---
-FROM node:22-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 
 # Set production environment

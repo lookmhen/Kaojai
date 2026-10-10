@@ -161,7 +161,7 @@ KaoJai/
 - **HTTP Server**: Express.js
 - **Real-time Gateway**: Socket.io 4
 - **Testing Framework**: Node.js Native Assertion (`node:assert/strict`)
-- **Container**: Docker & Docker Compose with Alpine Linux (Node 22 Alpine)
+- **Container**: Docker & Docker Compose with Alpine Linux (Node 24 Alpine)
 
 ---
 
@@ -203,7 +203,7 @@ npm run dev
 
 ## 🐳 การรันผ่าน Docker (Container Deployment)
 
-ระบบมี All-in-One Multi-Stage Dockerfile (Node 22 Alpine) รองรับ Production รวมทั้ง Client (React Static Build) และ Server (Socket.io + SQLite):
+ระบบมี All-in-One Multi-Stage Dockerfile (Node 24 Alpine) รองรับ Production รวมทั้ง Client (React Static Build) และ Server (Socket.io + SQLite):
 
 ```bash
 # 1. (ทางเลือก) สร้างไฟล์ .env หากต้องการระบุ GEMINI_API_KEY หรือ HOST_PORT
