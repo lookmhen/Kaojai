@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Lock, User, Eye, EyeOff, ShieldCheck, GraduationCap, X, AlertCircle, Loader2, Sparkles, KeyRound } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, X, AlertCircle, Loader2, KeyRound } from 'lucide-react';
 
 export const AdminLoginModal = ({ isOpen, onClose, onSuccess, redirectLabel = '' }) => {
   const { login, isAuthenticated, user } = useAuth();
@@ -66,18 +66,6 @@ export const AdminLoginModal = ({ isOpen, onClose, onSuccess, redirectLabel = ''
       return;
     }
     handlePerformLogin(username, password);
-  };
-
-  const handleQuickDemoLogin = (role) => {
-    if (role === 'ADMIN') {
-      setUsername('admin');
-      setPassword('admin1234');
-      handlePerformLogin('admin', 'admin1234');
-    } else {
-      setUsername('teacher');
-      setPassword('teacher1234');
-      handlePerformLogin('teacher', 'teacher1234');
-    }
   };
 
   return (
@@ -300,63 +288,6 @@ export const AdminLoginModal = ({ isOpen, onClose, onSuccess, redirectLabel = ''
             )}
           </button>
         </form>
-
-        {/* Quick Demo 1-Click Login Section */}
-        <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px dashed #E2E8F0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-muted, #64748B)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
-            <Sparkles size={14} color="#D97706" /> เข้าสู่ระบบด่วนสำหรับการทดสอบ (Demo 1-Click)
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <button
-              type="button"
-              onClick={() => handleQuickDemoLogin('ADMIN')}
-              disabled={isLoading}
-              style={{
-                background: '#F0FDF4',
-                border: '1.5px solid #86EFAC',
-                borderRadius: '12px',
-                padding: '10px 8px',
-                textAlign: 'center',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.15s'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#166534', fontWeight: 800, fontSize: '0.85rem' }}>
-                <ShieldCheck size={16} /> Admin
-              </div>
-              <div style={{ fontSize: '0.72rem', color: '#15803D', marginTop: '2px', fontWeight: 600 }}>
-                admin / admin1234
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickDemoLogin('TEACHER')}
-              disabled={isLoading}
-              style={{
-                background: '#EFF6FF',
-                border: '1.5px solid #93C5FD',
-                borderRadius: '12px',
-                padding: '10px 8px',
-                textAlign: 'center',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.15s'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#1E40AF', fontWeight: 800, fontSize: '0.85rem' }}>
-                <GraduationCap size={16} /> อาจารย์ (Teacher)
-              </div>
-              <div style={{ fontSize: '0.72rem', color: '#2563EB', marginTop: '2px', fontWeight: 600 }}>
-                teacher / teacher1234
-              </div>
-            </button>
-          </div>
-
-          <p style={{ fontSize: '0.75rem', color: '#94A3B8', textAlign: 'center', marginTop: '14px', marginBottom: 0 }}>
-            💡 Model 2-Tier: Admin จัดการผู้ใช้งานได้ | Teacher จัดการคลังข้อสอบและเปิดห้องได้
-          </p>
-        </div>
       </div>
     </div>
   );
