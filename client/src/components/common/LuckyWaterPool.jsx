@@ -51,11 +51,11 @@ export const LuckyWaterPool = ({
 
   const wasLockedRef = useRef(false);
 
-  // Initialize Mystery Floating Balls (อ้างอิงตามจำนวนคน แต่จำกัด Max Cap 10 ลูก ไม่ให้ล้นและไม่หน่วง)
+  // Initialize Mystery Floating Balls (อ้างอิงตามจำนวนคน แต่จำกัด Max Cap 20 ลูก พร้อมการจัดเรียง concentric และคงขนาดลูกบอลเดิม)
   const initBalls = useCallback(() => {
     const state = stateRef.current;
     const candidateCount = candidates.length;
-    const MAX_BALLS = 10;
+    const MAX_BALLS = 20;
     const numBalls = Math.min(candidateCount, MAX_BALLS);
 
     const ballBaseRadius = numBalls <= 3 ? 26 : (numBalls <= 6 ? 24 : 21);
@@ -340,6 +340,63 @@ export const LuckyWaterPool = ({
             vAngle: 0,
             bobPhase: (i + 2) * 0.8
           });
+        }
+      } else {
+        // 11 to 20 balls: 2 Concentric Rings (Inner Core + Outer Ring, non-overlapping)
+        // With MAX_BALLS = 20 and ballBaseRadius = 21, distributed smoothly across water surface
+        const innerCount = Math.max(3, Math.round(numBalls * 0.3));
+        const outerCount = numBalls - innerCount;
+
+        const innerRadiusX = 72;
+        const innerRadiusY = 22;
+        const outerRadiusX = 152;
+        const outerRadiusY = 41;
+
+        let ballIdx = 0;
+
+        // Inner Ring
+        for (let i = 0; i < innerCount; i++) {
+          const ang = (i / innerCount) * Math.PI * 2;
+          const x = cx + Math.cos(ang) * innerRadiusX;
+          const y = waterCy + Math.sin(ang) * innerRadiusY;
+          balls.push({
+            id: `mystery_ball_${ballIdx}`,
+            icon: MYSTERY_ICONS[ballIdx % MYSTERY_ICONS.length],
+            ballNumber: ballIdx + 1,
+            x,
+            y,
+            vx: 0,
+            vy: 0,
+            radius: ballBaseRadius,
+            palette: BALL_PALETTES[ballIdx % BALL_PALETTES.length],
+            angle: 0,
+            vAngle: 0,
+            bobPhase: ballIdx * 0.8
+          });
+          ballIdx++;
+        }
+
+        // Outer Ring (staggered angular phase offset for interlocking layout)
+        const phaseOffset = Math.PI / outerCount;
+        for (let i = 0; i < outerCount; i++) {
+          const ang = (i / outerCount) * Math.PI * 2 + phaseOffset;
+          const x = cx + Math.cos(ang) * outerRadiusX;
+          const y = waterCy + Math.sin(ang) * outerRadiusY;
+          balls.push({
+            id: `mystery_ball_${ballIdx}`,
+            icon: MYSTERY_ICONS[ballIdx % MYSTERY_ICONS.length],
+            ballNumber: ballIdx + 1,
+            x,
+            y,
+            vx: 0,
+            vy: 0,
+            radius: ballBaseRadius,
+            palette: BALL_PALETTES[ballIdx % BALL_PALETTES.length],
+            angle: 0,
+            vAngle: 0,
+            bobPhase: ballIdx * 0.8
+          });
+          ballIdx++;
         }
       }
     }
