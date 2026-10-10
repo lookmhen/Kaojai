@@ -463,7 +463,40 @@ async function testPretestPosttest() {
     rm.getQuestionResult(room.pin);
     const snap = rm.savePretestSnapshot(room.pin);
     assert.strictEqual(snap.overallAccuracyPct, 100, 'Snapshot accuracy must still calculate correctly');
+    assert.ok(snap.playerScores[0].score > 0, 'Snapshot playerScores must record non-zero rawScore/benchmark score');
     console.log('    ✓ PT-16 passed');
+  }
+
+  // PT-17: Pre-test score retention into Post-test learnerComparisons
+  {
+    console.log('  [PT-17] Pre-test score retention into Post-test learnerComparisons...');
+    const rm = new RoomManager();
+    const room = rm.createRoom('host-pt17', SAMPLE_QUIZ);
+    room.quizMode = 'PRETEST';
+    const p1 = rm.joinPlayer(room.pin, 'sock-pt17', { name: 'Kao' }).player;
+
+    // Run Pre-test question 0
+    rm.startQuestion(room.pin, 0);
+    rm.submitAnswer(room.pin, p1.playerId, 'q1b'); // Correct
+    rm.getQuestionResult(room.pin);
+    rm.savePretestSnapshot(room.pin);
+
+    assert.ok(room.pretestData?.playerScores?.[0]?.score > 0, 'Pre-test snapshot score must be > 0');
+    const recordedPreScore = room.pretestData.playerScores[0].score;
+
+    // Switch to POSTTEST
+    room.quizMode = 'POSTTEST';
+    rm.startQuestion(room.pin, 0);
+    rm.submitAnswer(room.pin, p1.playerId, 'q1b'); // Correct
+    rm.getQuestionResult(room.pin);
+
+    const analytics = rm.getQuizAnalytics(room.pin);
+    assert.ok(analytics.learningGain, 'learningGain must be present');
+    const kaoComp = analytics.learningGain.learnerComparisons.find(c => c.name === 'Kao');
+    assert.ok(kaoComp, 'Kao must be in learnerComparisons');
+    assert.strictEqual(kaoComp.preScore, recordedPreScore, 'learnerComparisons preScore must match pretest snapshot score');
+    assert.ok(kaoComp.postScore > 0, 'learnerComparisons postScore must be > 0');
+    console.log('    ✓ PT-17 passed');
   }
 
   console.log('  ✅ All Pre-test & Post-test tests passed!\n');

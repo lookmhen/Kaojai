@@ -6,16 +6,18 @@
 ## 2. Technology Stack
 *   **Frontend (ผู้เล่น & หน้าจอโฮสต์):** React 18 + Vite (Fast routing, Client-side rendering, Responsive Touch Support)
 *   **Backend (เซิร์ฟเวอร์ & API):** Node.js + Express
-*   **Real-time Engine:** Socket.io (จัดการ WebSocket, Room, Broadcasting)
+*   **Authentication & Security:** JSON Web Token (JWT), `crypto.scryptSync` Password Hashing, Content Security Policy (CSP), In-Memory Rate Limiting
+*   **Real-time Engine:** Socket.io (จัดการ WebSocket, Room, Broadcasting, Socket Ownership Guards)
 *   **In-Memory State Engine:** `RoomManager` สำหรับควบคุม Live Quiz, Timers, และ Streak คะแนนระดับมิลลิวินาที
-*   **Persistence & Database:** Built-in SQLite (`node:sqlite` DatabaseSync with WAL Mode) เก็บ Snapshot ห้อง, ผล Pre-test, และ Roster Players ถาวร
+*   **Persistence & Database:** Built-in SQLite (`node:sqlite` DatabaseSync with WAL Mode) เก็บ Snapshot ห้อง, ผล Pre-test, Roster Players และบัญชีผู้ใช้ถาวร
 *   **Deployment Environment:** Docker / Docker Compose & Nginx Reverse Proxy
 
 ---
 
 ## 3. User Roles
-1.  **Host (วิทยากร / แอดมิน):** ผู้สร้างห้อง, ควบคุมคำถาม, สลับโหมด Quiz/Pulse, จัดทีม, ดู Leaderboard/Learning Gain, และเปิดเซสชันเดิมต่อ (Resume Room)
-2.  **Participant (ผู้เข้าอบรม / ผู้เล่น):** ผู้เข้าร่วมผ่านสมาร์ทโฟนหรือแล็ปท็อปโดยใช้ Room PIN หรือสแกน QR Code ไม่ต้องติดตั้งแอป พร้อมระบบ 1-Click Roster Claim จากรอบ Pre-test
+1.  **Admin (ผู้ดูแลระบบ):** สิทธิ์สูงสุดในการบริหารจัดการระบบ สามารถจัดการบัญชีผู้ใช้งานทั้งหมด (สร้าง/ลบ/เปลี่ยน Role), นำเข้าข้อสอบแบบแทนที่ทั้งหมด (`replaceAll: true`), จัดการคลังคำถาม, สร้างห้องกิจกรรม, และใช้งาน Lucky Draw
+2.  **Teacher (อาจารย์ผู้สอน):** ผู้สร้างห้องและจัดการบทเรียน สามารถจัดการคลังข้อสอบของตนเอง, สร้าง/แก้ไข/โคลนชุดคำถาม, ควบคุมห้องกิจกรรม (Quiz / Pulse), สลับโหมด, จัดทีม, และดูบทวิเคราะห์ Learning Gain
+3.  **Participant (ผู้เข้าอบรม / ผู้เล่น):** ผู้เข้าร่วมผ่านสมาร์ทโฟนหรือแล็ปท็อปโดยใช้ Room PIN หรือสแกน QR Code ไม่ต้องสมัครสมาชิกหรือติดตั้งแอป พร้อมระบบ 1-Click Roster Claim จากรอบ Pre-test และร่วมกิจกรรม Lucky Draw
 
 ---
 
@@ -96,6 +98,42 @@
         -   เมื่อปิด Modal (กดปุ่ม "สุ่มรางวัลต่อไป", กดปุ่ม `✕` หรือแตะนอกการ์ด)
         -   ระบบจะปลดล็อกสถานะ: `state.scoopedBall = null`, `state.liftProgress = 0`, `state.hasSplashedOnExit = false`
         -   เรียก `initBalls()` เพื่อคำนวณตำแหน่งและแสดงผลลูกบอลที่เหลืออยู่ในอ่างใหม่ทันที พร้อมสำหรับกดตักลูกถัดไปได้อย่างต่อเนื่อง
+
+### 4.8 Backend JWT Authentication & Authorization Model
+*   **Database Table `users` (SQLite):**
+    -   `id` (INTEGER PRIMARY KEY AUTOINCREMENT)
+    -   `username` (TEXT UNIQUE NOT NULL)
+    -   `password_hash` (TEXT NOT NULL) — เข้ารหัสด้วย `crypto.scryptSync` (16 bytes random salt)
+    -   `display_name` (TEXT NOT NULL)
+    -   `role` (TEXT DEFAULT 'TEACHER') — ค่าที่อนุญาต: `'ADMIN'`, `'TEACHER'`
+    -   `created_at`, `updated_at` (INTEGER)
+*   **Auto-seed Accounts:**
+    -   `admin` / `admin1234` (Role: ADMIN)
+    -   `teacher` / `teacher1234` (Role: TEACHER)
+*   **Password Policy:** บังคับความยาวรหัสผ่านอย่างน้อย 6 ตัวอักษร
+*   **REST API Endpoints (`/api/auth`):**
+    -   `POST /api/auth/login`: ตรวจสอบรหัสผ่าน คืน JWT Token (อายุ 12 ชั่วโมง) พร้อม Rate Limiter 15 ครั้ง/นาที
+    -   `GET /api/auth/me`: ตรวจสอบความถูกต้องของ Token
+    -   `POST /api/auth/change-password`: เปลี่ยนรหัสผ่านของตนเอง
+    -   `GET /api/auth/users`: รายชื่อผู้ใช้ทั้งหมด (เฉพาะ ADMIN)
+    -   `POST /api/auth/users`: สร้างผู้ใช้ใหม่ (เฉพาะ ADMIN)
+    -   `DELETE /api/auth/users/:id`: ลบผู้ใช้ (เฉพาะ ADMIN, ห้ามลบบัญชีตัวเอง)
+    -   `PATCH /api/auth/users/:id/role`: เปลี่ยนแปลงบทบาทผู้ใช้ (เฉพาะ ADMIN)
+*   **Protected Endpoints:**
+    -   `POST /api/quizzes`, `POST /api/quizzes/:id/duplicate`, `DELETE /api/quizzes/:id`, `GET /api/quizzes/export`, `POST /api/quizzes/generate-ai`, `POST /api/upload` ต้องมี Bearer JWT Token
+    -   `POST /api/quizzes/import` ที่มี `replaceAll: true` อนุญาตเฉพาะบทบาท ADMIN เท่านั้น
+
+### 4.9 Production Security Hardening & Vulnerability Defenses
+*   **Content Security Policy (CSP):** กำหนดผ่าน Meta tag ใน `client/index.html` ป้องกัน XSS, Code Injection และควบคุม Endpoint อนุญาต WebSocket
+*   **Public Quiz Data Sanitization:** `GET /api/quizzes` ตัด `options.isCorrect` ออกเมื่อเข้าถึงโดยไม่มี Token ครู/แอดมิน เพื่อป้องกันการเปิดดูเฉลยผ่าน Browser Network Inspector
+*   **Image Upload Magic Bytes Validation:** ตรวจสอบ Binary Header 4-8 ไบต์แรกของรูปภาพ ป้องกันการเปลี่ยนนามสกุลไฟล์เพื่ออัปโหลด Script หรือ Executable
+*   **Socket Impersonation & Ownership Checks:**
+    -   `submit_answer`, `submit_pulse`, `leave_room` ตรวจสอบ `socket.id === player.socketId` เพื่อป้องกันผู้เล่นสวมรอยส่งคำตอบแทนคนอื่น
+    -   `verifyHost(pin, hostToken)` ป้องกันผู้เล่นทั่วไปส่งคำสั่งของ Host เช่น สลับทีม, สุ่ม Lucky Draw หรือดึงข้อมูล Analytics
+    -   `reconnect_host` บังคับตรวจสอบ `hostToken` ตรงกับค่าที่บันทึกไว้ในห้อง ป้องกันการแอบขโมยห้อง Host
+*   **Rate Limiting & DoS Mitigations:**
+    -   In-memory Token Bucket ป้องกัน Brute-force บน `/api/auth/login`, `/api/quizzes/generate-ai`, และ `/api/upload`
+    -   จำกัดผู้เล่นห้องละ 500 คน และจำกัดความถี่ส่ง Reaction 4 ครั้ง/วินาทีต่อคน
 
 ---
 

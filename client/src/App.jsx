@@ -657,28 +657,28 @@ export function AppContent() {
   const handleToggleTeams = (enabled) => {
     if (!socket) return;
     const isBool = typeof enabled === 'boolean' ? enabled : !teamsEnabled;
-    socket.emit('toggle_teams', { pin, enabled: isBool });
+    socket.emit('toggle_teams', { pin, enabled: isBool, hostToken: getEffectiveHostToken() });
   };
 
   const handleAutoAssignTeams = (teamCount) => {
     if (!socket) return;
     const count = typeof teamCount === 'number' && Number.isFinite(teamCount) ? teamCount : 2;
-    socket.emit('auto_assign_teams', { pin, teamCount: count });
+    socket.emit('auto_assign_teams', { pin, teamCount: count, hostToken: getEffectiveHostToken() });
   };
 
   const handleCreateTeam = (name, color) => {
     if (!socket || typeof name !== 'string' || !name.trim()) return;
-    socket.emit('create_team', { pin, name: name.trim(), color: typeof color === 'string' ? color : '#2563EB' });
+    socket.emit('create_team', { pin, name: name.trim(), color: typeof color === 'string' ? color : '#2563EB', hostToken: getEffectiveHostToken() });
   };
 
   const handleRemoveTeam = (teamId) => {
     if (!socket || typeof teamId !== 'string') return;
-    socket.emit('remove_team', { pin, teamId });
+    socket.emit('remove_team', { pin, teamId, hostToken: getEffectiveHostToken() });
   };
 
   const handleAssignTeam = (playerId, teamId) => {
     if (!socket || typeof playerId !== 'string') return;
-    socket.emit('assign_team', { pin, playerId, teamId: typeof teamId === 'string' ? teamId : null });
+    socket.emit('assign_team', { pin, playerId, teamId: typeof teamId === 'string' ? teamId : null, hostToken: getEffectiveHostToken() });
   };
 
   return (
@@ -745,7 +745,17 @@ export function AppContent() {
 
       {/* TEACHER BACKOFFICE ROUTING */}
       {viewMode === 'TEACHER_BACKOFFICE' && (
-        <TeacherBackoffice onBack={() => setViewMode('PLAYER_JOIN')} />
+        isAuthenticated ? (
+          <TeacherBackoffice onBack={() => setViewMode('PLAYER_JOIN')} />
+        ) : (
+          <JoinRoom
+            onJoined={() => setViewMode('PLAYER_GAME')}
+            onSwitchToHost={() => setViewMode('HOST_GAME')}
+            onResumeRoom={handleResumeRoom}
+            onOpenTeacherBackoffice={() => setViewMode('TEACHER_BACKOFFICE')}
+            onOpenLuckyDraw={handleOpenLuckyDraw}
+          />
+        )
       )}
 
       {/* LUCKY DRAW DEDICATED FULL-PAGE ROUTING */}

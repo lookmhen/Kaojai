@@ -91,6 +91,9 @@ module.exports = function setupSocketHandlers(io) {
     socket.on('reconnect_host', ({ pin, hostToken }, ackCallback) => {
       try {
         if (!pin) return;
+        if (!hostToken || typeof hostToken !== 'string') {
+          throw new Error('รหัสยืนยันผู้สอนไม่ถูกต้อง คุณไม่มีสิทธิ์เข้าถึงห้องนี้');
+        }
         const snapshot = roomManager.reconnectHost(pin, socket.id, hostToken);
         socket.join(pin);
 
@@ -540,8 +543,9 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('get_quiz_analytics', ({ pin }, ackCallback) => {
+    socket.on('get_quiz_analytics', ({ pin, hostToken }, ackCallback) => {
       try {
+        verifyHost(pin, hostToken);
         const analytics = roomManager.getQuizAnalytics(pin);
         if (typeof ackCallback === 'function') {
           ackCallback({ success: true, quizAnalytics: analytics });
@@ -657,12 +661,19 @@ module.exports = function setupSocketHandlers(io) {
         const playerList = roomManager.getPlayerList(pin);
         const counts = roomManager.getPlayerCounts(pin);
 
+        const safeQuizSet = room.quizSet ? {
+          id: room.quizSet.id,
+          title: room.quizSet.title,
+          description: room.quizSet.description || '',
+          questionCount: Array.isArray(room.quizSet.questions) ? room.quizSet.questions.length : 0
+        } : null;
+
         io.to(pin).emit('room_reset_to_lobby', {
           status: 'LOBBY',
           players: playerList,
           counts,
           quizMode: room.quizMode,
-          quizSet: room.quizSet,
+          quizSet: safeQuizSet,
           pretestData: room.pretestData
         });
         io.to(pin).emit('room_updated', { players: playerList, counts });
@@ -776,6 +787,13 @@ module.exports = function setupSocketHandlers(io) {
     socket.on('leave_room', ({ pin, playerId }) => {
       try {
         if (!pin || !playerId) return;
+        const room = roomManager.getRoom(pin);
+        if (room && playerId) {
+          const existingPlayer = room.players.get(playerId);
+          if (existingPlayer && existingPlayer.socketId && existingPlayer.socketId !== socket.id) {
+            return;
+          }
+        }
         const result = roomManager.removePlayer(pin, playerId);
         if (typeof socket.leave === 'function') {
           socket.leave(pin);
@@ -880,6 +898,10 @@ module.exports = function setupSocketHandlers(io) {
 
         const playerList = roomManager.getPlayerList(cleanPin);
 
+        const maskedResult = (joinData.quizMode === 'PRETEST' && joinData.questionResult)
+          ? maskPretestResult(joinData.questionResult)
+          : joinData.questionResult;
+
         const successPayload = {
           success: true,
           pin: cleanPin,
@@ -893,7 +915,7 @@ module.exports = function setupSocketHandlers(io) {
           mode: joinData.mode,
           status: joinData.status,
           currentQuestion: joinData.currentQuestion,
-          questionResult: joinData.questionResult,
+          questionResult: maskedResult,
           pulseVotes: joinData.pulseVotes,
           pulseRound: joinData.room.pulseRound || 1,
           leaderboard: joinData.leaderboard,
@@ -926,6 +948,13 @@ module.exports = function setupSocketHandlers(io) {
     socket.on('submit_answer', ({ pin, playerId, optionId, orderedItemIds, questionId }) => {
       try {
         const roomBefore = roomManager.getRoom(pin);
+        if (roomBefore && playerId) {
+          const existingPlayer = roomBefore.players.get(playerId);
+          if (existingPlayer && existingPlayer.socketId && existingPlayer.socketId !== socket.id) {
+            console.warn(`[Security] submit_answer socket mismatch: ${socket.id} attempted to submit for ${playerId}`);
+            return socket.emit('error_message', { message: 'ไม่อนุญาตให้ส่งคำตอบแทนผู้เล่นอื่น' });
+          }
+        }
         const currentQ = roomBefore?.quizSet?.questions[roomBefore?.currentQuestionIndex];
         console.log('[DEBUG Server submit_answer RECEIVED]', {
           pin,
@@ -997,6 +1026,13 @@ module.exports = function setupSocketHandlers(io) {
 
     socket.on('submit_pulse', ({ pin, playerId, choice }) => {
       try {
+        const room = roomManager.getRoom(pin);
+        if (room && playerId) {
+          const existingPlayer = room.players.get(playerId);
+          if (existingPlayer && existingPlayer.socketId && existingPlayer.socketId !== socket.id) {
+            return socket.emit('error_message', { message: 'ไม่อนุญาตให้ลงคะแนนแทนผู้เล่นอื่น' });
+          }
+        }
         const result = roomManager.submitPulse(pin, playerId, choice);
         
         socket.emit('pulse_ack', { choice, success: true });
@@ -1016,6 +1052,11 @@ module.exports = function setupSocketHandlers(io) {
     socket.on('send_pulse_reaction', ({ pin, emoji, playerId }) => {
       try {
         if (!pin || !emoji) return;
+        const now = Date.now();
+        if (socket.lastReactionTime && now - socket.lastReactionTime < 250) {
+          return; // Drop spam
+        }
+        socket.lastReactionTime = now;
         io.to(pin).emit('pulse_reaction_received', {
           emoji,
           playerId,
@@ -1028,8 +1069,9 @@ module.exports = function setupSocketHandlers(io) {
 
     // ─── TEAM HANDLERS (Host) ────────────────────────────────────────────────
 
-    socket.on('toggle_teams', ({ pin, enabled }, ackCallback) => {
+    socket.on('toggle_teams', ({ pin, enabled, hostToken }, ackCallback) => {
       try {
+        verifyHost(pin, hostToken);
         const room = roomManager.getRoom(pin);
         if (!room) return;
         const teamsEnabled = roomManager.setTeamsEnabled(pin, enabled);
@@ -1043,8 +1085,9 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('create_team', ({ pin, name, color }, ackCallback) => {
+    socket.on('create_team', ({ pin, name, color, hostToken }, ackCallback) => {
       try {
+        verifyHost(pin, hostToken);
         const room = roomManager.getRoom(pin);
         if (!room) return;
         const team = roomManager.createTeam(pin, { name, color });
@@ -1058,8 +1101,9 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('remove_team', ({ pin, teamId }, ackCallback) => {
+    socket.on('remove_team', ({ pin, teamId, hostToken }, ackCallback) => {
       try {
+        verifyHost(pin, hostToken);
         const room = roomManager.getRoom(pin);
         if (!room) return;
         roomManager.removeTeam(pin, teamId);
@@ -1073,8 +1117,9 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('assign_team', ({ pin, playerId, teamId }, ackCallback) => {
+    socket.on('assign_team', ({ pin, playerId, teamId, hostToken }, ackCallback) => {
       try {
+        verifyHost(pin, hostToken);
         const room = roomManager.getRoom(pin);
         if (!room) return;
         roomManager.assignPlayerToTeam(pin, playerId, teamId);
@@ -1088,8 +1133,9 @@ module.exports = function setupSocketHandlers(io) {
       }
     });
 
-    socket.on('auto_assign_teams', ({ pin, teamCount }, ackCallback) => {
+    socket.on('auto_assign_teams', ({ pin, teamCount, hostToken }, ackCallback) => {
       try {
+        verifyHost(pin, hostToken);
         const room = roomManager.getRoom(pin);
         if (!room) return;
         const teams = roomManager.autoAssignTeams(pin, teamCount || 2);

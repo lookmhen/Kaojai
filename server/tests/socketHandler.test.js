@@ -650,6 +650,58 @@ async function testSocketHandlers() {
   assert.ok(closeBroadcast, 'lucky_draw_closed broadcast must be emitted');
   console.log('    ✓ Lucky Draw socket events passed');
 
+  // Security Hardening Verification
+  console.log('  Testing Security Hardening & Authorization Controls...');
+  
+  const secHost = mockIo.connectSocket('sec-host');
+  let secHostAck;
+  await secHost.fire('create_room', null, (r) => { secHostAck = r; });
+  const secPin = secHostAck.pin;
+  const secRoom = roomManager.getRoom(secPin);
+
+  // 1. Team action requires valid hostToken
+  const unauthSocket = mockIo.connectSocket('unauth-socket');
+  let unauthTeamAck;
+  await unauthSocket.fire('toggle_teams', { pin: secPin, enabled: true, hostToken: 'invalid-host-token' }, (r) => {
+    unauthTeamAck = r;
+  });
+  assert.ok(unauthTeamAck && !unauthTeamAck.success, 'Unauthorized toggle_teams must fail');
+
+  // 2. reconnect_host rejects invalid or missing token
+  const rogueHost = mockIo.connectSocket('rogue-host');
+  let reconnectAck;
+  await rogueHost.fire('reconnect_host', { pin: secPin, hostToken: 'fake-token' }, (r) => {
+    reconnectAck = r;
+  });
+  assert.ok(reconnectAck && !reconnectAck.success, 'reconnect_host with fake token must fail');
+
+  // 3. submit_answer impersonation prevention (player 2 trying to answer for player 1)
+  const p1Socket = mockIo.connectSocket('p1-socket');
+  const p2Socket = mockIo.connectSocket('p2-socket');
+  let p1JoinAck;
+  await p1Socket.fire('join_room', { pin: secPin, name: 'Player One', avatar: '0291dcc0ce.svg' }, (r) => { p1JoinAck = r; });
+  assert.ok(p1JoinAck && p1JoinAck.success, 'Player One should join successfully');
+  const p1PlayerId = p1JoinAck.player.playerId;
+
+  let p2JoinAck;
+  await p2Socket.fire('join_room', { pin: secPin, name: 'Player Two', avatar: '0291dcc0ce.svg' }, (r) => { p2JoinAck = r; });
+  assert.ok(p2JoinAck && p2JoinAck.success, 'Player Two should join successfully');
+
+  // Start question so we are in QUESTION state
+  await secHost.fire('start_quiz', { pin: secPin, hostToken: secRoom.hostToken });
+  await new Promise(r => setTimeout(r, 35)); // Wait prepare timer
+
+  // p2Socket attempts to submit answer using p1's playerId
+  await p2Socket.fire('submit_answer', {
+    pin: secPin,
+    playerId: p1PlayerId,
+    optionId: 'opt1'
+  });
+  const p2Errors = p2Socket.getEmitted('error_message');
+  assert.ok(p2Errors.length > 0, 'Impersonated submit_answer must trigger error_message');
+  assert.ok(p2Errors[0].message.includes('แทนผู้เล่นอื่น'));
+  console.log('    ✓ Socket Security Hardening & Impersonation Prevention passed');
+
   console.log('✅ socketHandler tests passed cleanly!');
 }
 

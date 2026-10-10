@@ -257,11 +257,69 @@ async function testAuth() {
     assert.equal(resProtectedInvalid.statusCode, 401);
     console.log('    ✓ Protected Endpoints reject invalid token with 401');
 
+    // 11. Security Hardening & Vulnerability Verifications
+    console.log('  Testing Security Hardening & Vulnerability Protections...');
+    
+    // 11.1 Short password rejected for user creation
+    const resShortPwUser = await makeRequest(`${baseUrl}/api/auth/users`, 'POST', {
+      username: 'shortpw_user',
+      password: '123',
+      displayName: 'Short PW',
+      role: 'TEACHER'
+    }, adminToken);
+    assert.equal(resShortPwUser.statusCode, 400);
+    assert.ok(resShortPwUser.body.message.includes('6'));
+
+    // 11.2 Short password rejected for password change
+    const resShortPwChange = await makeRequest(`${baseUrl}/api/auth/change-password`, 'POST', {
+      currentPassword: 'teacher1234',
+      newPassword: 'abc'
+    }, teacherToken);
+    assert.equal(resShortPwChange.statusCode, 400);
+    assert.ok(resShortPwChange.body.message.includes('6'));
+
+    // 11.3 Public GET /api/quizzes strips isCorrect
+    const resPublicQuizzes = await makeRequest(`${baseUrl}/api/quizzes`, 'GET');
+    assert.equal(resPublicQuizzes.statusCode, 200);
+    assert.ok(Array.isArray(resPublicQuizzes.body.quizzes));
+    for (const q of resPublicQuizzes.body.quizzes) {
+      if (q.questions) {
+        for (const question of q.questions) {
+          if (question.options) {
+            for (const opt of question.options) {
+              assert.strictEqual(opt.isCorrect, undefined, 'Public quizzes must not expose isCorrect');
+            }
+          }
+        }
+      }
+    }
+    console.log('    ✓ Public GET /api/quizzes sanitized (no isCorrect leaked)');
+
+    // 11.4 Authenticated Teacher GET /api/quizzes retains isCorrect
+    const resTeacherQuizzes = await makeRequest(`${baseUrl}/api/quizzes`, 'GET', null, teacherToken);
+    assert.equal(resTeacherQuizzes.statusCode, 200);
+    const quiz1 = resTeacherQuizzes.body.quizzes.find(q => q.id === 'quiz-1');
+    assert.ok(quiz1, 'quiz-1 must exist');
+    const firstQChoice = quiz1.questions.find(q => q.type === 'CHOICE');
+    if (firstQChoice && firstQChoice.options) {
+      const hasIsCorrect = firstQChoice.options.some(opt => opt.isCorrect === true);
+      assert.ok(hasIsCorrect, 'Authenticated teacher must see isCorrect for editing');
+    }
+    console.log('    ✓ Authenticated Teacher retains isCorrect in quizzes');
+
+    // 11.5 Non-admin cannot import with replaceAll: true
+    const resImportForbidden = await makeRequest(`${baseUrl}/api/quizzes/import`, 'POST', {
+      quizzes: [],
+      replaceAll: true
+    }, teacherToken);
+    assert.equal(resImportForbidden.statusCode, 403);
+    console.log('    ✓ Non-admin replaceAll import rejected with 403');
+
   } finally {
     await new Promise(resolve => testServer.close(resolve));
   }
 
-  console.log('✅ JWT Authentication unit & integration tests passed cleanly!\n');
+  console.log('✅ JWT Authentication & Security Hardening unit tests passed cleanly!\n');
 }
 
 module.exports = { testAuth };

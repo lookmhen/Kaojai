@@ -18,9 +18,13 @@ function prepareReportData({ pin, leaderboard = [], pulseVotes, totalPlayers, qu
   const totalQuestions = quizAnalytics?.totalQuestions || questionHistory.length || (pretestData?.totalQuestions || 0);
 
   let averageScore = quizAnalytics?.averageScore;
-  if (averageScore === undefined || averageScore === null) {
-    const sumScore = leaderboard.reduce((acc, p) => acc + (Number(p.score) || 0), 0);
-    averageScore = leaderboard.length > 0 ? Math.round(sumScore / leaderboard.length) : (pretestData?.averageScore || 0);
+  if (averageScore === undefined || averageScore === null || averageScore === 0) {
+    if (pretestData?.averageScore) {
+      averageScore = pretestData.averageScore;
+    } else {
+      const sumScore = leaderboard.reduce((acc, p) => acc + (Number(p.rawScore || p.score) || 0), 0);
+      averageScore = leaderboard.length > 0 ? Math.round(sumScore / leaderboard.length) : (pretestData?.averageScore || 0);
+    }
   }
 
   let overallAccuracyPct = quizAnalytics?.overallAccuracyPct;
@@ -79,7 +83,8 @@ function prepareReportData({ pin, leaderboard = [], pulseVotes, totalPlayers, qu
     pulseRound: quizAnalytics?.pulseRound || 1,
     pulseHistory: effectivePulseHistory,
     learningGain: quizAnalytics?.learningGain || null,
-    pretestData
+    pretestData,
+    quizMode: quizAnalytics?.quizMode || (pretestData?.completed && !quizAnalytics?.learningGain ? 'PRETEST' : 'NORMAL')
   };
 }
 
@@ -142,11 +147,17 @@ export function exportGameReportExcel(params) {
   // ─────────────────────────────────────────────────────────────────────────────
   // SHEET 2: อันดับคะแนนผู้เรียน (Leaderboard)
   // ─────────────────────────────────────────────────────────────────────────────
-  const lbHeaders = ['อันดับ', 'ชื่อผู้เรียน', 'คะแนนรวม', 'ตอบถูก (ข้อ)', 'อัตราตอบถูก (%)', 'Streak สูงสุด', 'สถานะ'];
+  const hasLearningGain = Boolean(data.learningGain);
+  const isPretestOnly = data.quizMode === 'PRETEST' || (!hasLearningGain && Boolean(data.pretestData?.completed));
+  const scoreColName = isPretestOnly ? 'คะแนน Pre-test' : 'คะแนนรวม';
+
+  const lbHeaders = hasLearningGain
+    ? ['อันดับ', 'ชื่อผู้เรียน', 'คะแนน Post-test', 'คะแนน Pre-test', 'ส่วนต่างคะแนน', 'ตอบถูก Post (ข้อ)', 'ความแม่นยำ Post (%)', 'ความแม่นยำ Pre (%)', 'Accuracy Gain (%)', 'Streak สูงสุด', 'สถานะ']
+    : ['อันดับ', 'ชื่อผู้เรียน', scoreColName, 'ตอบถูก (ข้อ)', 'อัตราตอบถูก (%)', 'Streak สูงสุด', 'สถานะ'];
   const lbRows = [lbHeaders];
 
   if (data.leaderboard.length === 0) {
-    lbRows.push(['-', 'ไม่มีข้อมูลผู้เรียน', 0, '0/0', '0%', 0, '-']);
+    lbRows.push(hasLearningGain ? ['-', 'ไม่มีข้อมูลผู้เรียน', 0, 0, '0', '0/0', '0%', '0%', '0%', 0, '-'] : ['-', 'ไม่มีข้อมูลผู้เรียน', 0, '0/0', '0%', 0, '-']);
   } else {
     data.leaderboard.forEach((player, idx) => {
       let correctCount = 0;
@@ -160,30 +171,57 @@ export function exportGameReportExcel(params) {
 
       // In pre-test mode where player.score is 0, check if rawScore or pretestData has score
       let displayScore = player.score || 0;
-      if (displayScore === 0 && player.rawScore) {
+      if (displayScore === 0 && (player.rawScore || player.rawScore === 0)) {
         displayScore = player.rawScore;
-      } else if (displayScore === 0 && data.pretestData?.playerScores) {
+      }
+      if (displayScore === 0 && data.pretestData?.playerScores) {
         const ptPlayer = data.pretestData.playerScores.find(p => p.playerId === player.playerId || p.name === player.name);
-        if (ptPlayer && ptPlayer.score) {
-          displayScore = ptPlayer.score;
+        if (ptPlayer && (ptPlayer.score || ptPlayer.rawScore)) {
+          displayScore = ptPlayer.score || ptPlayer.rawScore;
         }
       }
 
-      lbRows.push([
-        idx + 1,
-        player.name || 'ไม่ระบุชื่อ',
-        displayScore,
-        `${correctCount}/${totalQ}`,
-        `${accPct}%`,
-        player.highestStreak || 0,
-        player.connected !== false ? 'ออนไลน์' : 'ออฟไลน์'
-      ]);
+      if (hasLearningGain) {
+        const comp = data.learningGain.learnerComparisons?.find(
+          c => c.playerId === player.playerId || c.name?.toLowerCase() === player.name?.toLowerCase()
+        );
+        const preScore = comp ? comp.preScore : (data.pretestData?.playerScores?.find(p => p.playerId === player.playerId || p.name === player.name)?.score || 0);
+        const preAcc = comp ? comp.preAccuracyPct : 0;
+        const scoreDiff = displayScore - preScore;
+        const accDiff = accPct - preAcc;
+
+        lbRows.push([
+          idx + 1,
+          player.name || 'ไม่ระบุชื่อ',
+          displayScore,
+          preScore,
+          `${scoreDiff >= 0 ? '+' : ''}${scoreDiff}`,
+          `${correctCount}/${totalQ}`,
+          `${accPct}%`,
+          `${preAcc}%`,
+          `${accDiff >= 0 ? '+' : ''}${accDiff}%`,
+          player.highestStreak || 0,
+          player.connected !== false ? 'ออนไลน์' : 'ออฟไลน์'
+        ]);
+      } else {
+        lbRows.push([
+          idx + 1,
+          player.name || 'ไม่ระบุชื่อ',
+          displayScore,
+          `${correctCount}/${totalQ}`,
+          `${accPct}%`,
+          player.highestStreak || 0,
+          player.connected !== false ? 'ออนไลน์' : 'ออฟไลน์'
+        ]);
+      }
     });
   }
 
   const wsLeaderboard = XLSX.utils.aoa_to_sheet(lbRows);
-  wsLeaderboard['!cols'] = [{ wch: 8 }, { wch: 25 }, { wch: 14 }, { wch: 14 }, { wch: 16 }, { wch: 14 }, { wch: 12 }];
-  XLSX.utils.book_append_sheet(wb, wsLeaderboard, 'อันดับคะแนน');
+  wsLeaderboard['!cols'] = hasLearningGain
+    ? [{ wch: 8 }, { wch: 25 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 12 }]
+    : [{ wch: 8 }, { wch: 25 }, { wch: 16 }, { wch: 14 }, { wch: 16 }, { wch: 14 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, wsLeaderboard, isPretestOnly ? 'คะแนน Pre-test' : 'อันดับคะแนน');
 
   // ─────────────────────────────────────────────────────────────────────────────
   // SHEET 3: วิเคราะห์ข้อสอบรายข้อ (Item Analysis)
@@ -330,7 +368,7 @@ export function exportGameReportExcel(params) {
       ['Post-test Accuracy (%)', `${data.learningGain.postOverallAccuracyPct}%`],
       ['Learning Gain (%)', `${data.learningGain.classGainPct >= 0 ? '+' : ''}${data.learningGain.classGainPct}%`],
       [],
-      ['รายชื่อผู้เรียน', 'Pre-test Score', 'Post-test Score', 'ส่วนต่างคะแนน', 'Pre Accuracy', 'Post Accuracy', 'Accuracy Gain']
+      ['รายชื่อผู้เรียน', 'Pre-test Score', 'Post-test Score', 'ส่วนต่างคะแนน', 'Pre ตอบถูก (ข้อ)', 'Post ตอบถูก (ข้อ)', 'Pre Accuracy (%)', 'Post Accuracy (%)', 'Accuracy Gain (%)']
     ];
 
     if (Array.isArray(data.learningGain.learnerComparisons)) {
@@ -340,6 +378,8 @@ export function exportGameReportExcel(params) {
           lc.preScore || 0,
           lc.postScore || 0,
           `${lc.scoreDiff >= 0 ? '+' : ''}${lc.scoreDiff || 0}`,
+          lc.preCorrectCount !== undefined ? `${lc.preCorrectCount}` : '-',
+          lc.postCorrectCount !== undefined ? `${lc.postCorrectCount}` : '-',
           `${lc.preAccuracyPct || 0}%`,
           `${lc.postAccuracyPct || 0}%`,
           `${lc.accuracyDiff >= 0 ? '+' : ''}${lc.accuracyDiff || 0}%`
@@ -348,8 +388,36 @@ export function exportGameReportExcel(params) {
     }
 
     const wsLG = XLSX.utils.aoa_to_sheet(lgRows);
-    wsLG['!cols'] = [{ wch: 25 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }];
+    wsLG['!cols'] = [{ wch: 25 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
     XLSX.utils.book_append_sheet(wb, wsLG, 'ผลสัมฤทธิ์ Pre-Post');
+  } else if (data.pretestData && Array.isArray(data.pretestData.playerScores) && data.pretestData.playerScores.length > 0) {
+    // If exported directly after Pre-test (before Post-test is run)
+    const ptRows = [
+      ['📊 สรุปผลการประเมินความรู้ก่อนเรียน (Pre-test Benchmark Report)'],
+      ['หัวข้อแบบทดสอบ', data.title],
+      ['รหัสห้อง (Game PIN)', data.pin],
+      ['จำนวนผู้เรียนทั้งหมด', `${data.pretestData.totalPlayers || data.totalCount} คน`],
+      ['จำนวนข้อสอบทั้งหมด', `${data.pretestData.totalQuestions || data.totalQuestions} ข้อ`],
+      ['คะแนนเฉลี่ยทั้งห้อง', `${data.pretestData.averageScore || data.averageScore} คะแนน`],
+      ['ความแม่นยำเฉลี่ยทั้งห้อง', `${data.pretestData.overallAccuracyPct || data.overallAccuracyPct}%`],
+      [],
+      ['อันดับ', 'ชื่อผู้เรียน', 'คะแนน Pre-test', 'ตอบถูก (ข้อ)', 'ความแม่นยำ (%)']
+    ];
+
+    const sortedPT = [...data.pretestData.playerScores].sort((a, b) => ((b.score || b.rawScore || 0) - (a.score || a.rawScore || 0)) || (b.accuracyPct - a.accuracyPct));
+    sortedPT.forEach((p, idx) => {
+      ptRows.push([
+        idx + 1,
+        p.name || 'ไม่ระบุชื่อ',
+        p.score ?? p.rawScore ?? 0,
+        `${p.correctCount || 0}/${data.pretestData.totalQuestions || data.totalQuestions || 1}`,
+        `${p.accuracyPct || 0}%`
+      ]);
+    });
+
+    const wsPT = XLSX.utils.aoa_to_sheet(ptRows);
+    wsPT['!cols'] = [{ wch: 8 }, { wch: 25 }, { wch: 16 }, { wch: 16 }, { wch: 16 }];
+    XLSX.utils.book_append_sheet(wb, wsPT, 'สรุปผล Pre-test');
   }
 
   // Write file to download
@@ -514,13 +582,23 @@ export async function exportGameReportPDF(params) {
             });
             const tQ = data.questionHistory.length || 1;
             const pAcc = Math.round((pCorrect / tQ) * 100);
+            let displayScore = player.score || 0;
+            if (displayScore === 0 && (player.rawScore || player.rawScore === 0)) {
+              displayScore = player.rawScore;
+            }
+            if (displayScore === 0 && data.pretestData?.playerScores) {
+              const ptPlayer = data.pretestData.playerScores.find(p => p.playerId === player.playerId || p.name === player.name);
+              if (ptPlayer && (ptPlayer.score || ptPlayer.rawScore)) {
+                displayScore = ptPlayer.score || ptPlayer.rawScore;
+              }
+            }
             return `
               <tr style="border-bottom: 1px solid #E2E8F0; background: ${idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC'};">
                 <td style="padding: 8px 10px; font-weight: 800; color: ${idx === 0 ? '#D97706' : idx === 1 ? '#475569' : idx === 2 ? '#B45309' : '#64748B'};">
                   ${idx + 1}
                 </td>
                 <td style="padding: 8px 10px; font-weight: 700;">${player.name || 'ไม่ระบุชื่อ'}</td>
-                <td style="padding: 8px 10px; font-weight: 800; text-align: right; color: #1E293B;">${(player.score || 0).toLocaleString()}</td>
+                <td style="padding: 8px 10px; font-weight: 800; text-align: right; color: #1E293B;">${displayScore.toLocaleString()}</td>
                 <td style="padding: 8px 10px; text-align: center;">${pCorrect}/${tQ}</td>
                 <td style="padding: 8px 10px; text-align: right; font-weight: 700; color: ${pAcc >= 70 ? '#166534' : '#B45309'};">${pAcc}%</td>
                 <td style="padding: 8px 10px; text-align: center;">${player.highestStreak || 0}</td>

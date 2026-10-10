@@ -7,17 +7,19 @@
 
 ---
 
-## 📑 สารบัญ (Table of Contents)
+### 📑 สารบัญ (Table of Contents)
 1. [สถาปัตยกรรมของระบบ (Architecture Overview)](#-สถาปัตยกรรมของระบบ-architecture-overview)
 2. [โครงสร้างไดเรกทอรี (Directory Structure)](#-โครงสร้างไดเรกทอรี-directory-structure)
 3. [เทคโนโลยีที่เลือกใช้ (Tech Stack)](#-เทคโนโลยีที่เลือกใช้-tech-stack)
 4. [คู่มือการติดตั้งและเริ่มต้นใช้งาน (Getting Started)](#-คู่มือการติดตั้งและเริ่มต้นใช้งาน-getting-started)
 5. [การรันผ่าน Docker (Container Deployment)](#-การรันผ่าน-docker-container-deployment)
 6. [ฟีเจอร์หลักของระบบ (Key Features)](#-ฟีเจอร์หลักของระบบ-key-features)
-7. [สารบบ Socket Events (Socket.io API Reference)](#-สารบบ-socket-events-socketio-api-reference)
-8. [คู่มือสำหรับนักพัฒนาในการเพิ่มหรือปรับแต่งโหมด (Developer Guidelines)](#-คู่มือสำหรับนักพัฒนาในการเพิ่มหรือปรับแต่งโหมด-developer-guidelines)
-9. [การทดสอบระบบ (Automated Testing)](#-การทดสอบระบบ-automated-testing)
-10. [แนวทางการพัฒนาต่อยอด (Future Roadmap)](#-แนวทางการพัฒนาต่อยอด-future-roadmap)
+7. [ระบบยืนยันตัวตนและการจัดการสิทธิ์ (Authentication & Roles)](#-ระบบยืนยันตัวตนและการจัดการสิทธิ์-authentication--roles)
+8. [ความมั่นคงปลอดภัยระดับ Production (Security Hardening)](#-ความมั่นคงปลอดภัยระดับ-production-security-hardening)
+9. [สารบบ Socket Events (Socket.io API Reference)](#-สารบบ-socket-events-socketio-api-reference)
+10. [คู่มือสำหรับนักพัฒนาในการเพิ่มหรือปรับแต่งโหมด (Developer Guidelines)](#-คู่มือสำหรับนักพัฒนาในการเพิ่มหรือปรับแต่งโหมด-developer-guidelines)
+11. [การทดสอบระบบ (Automated Testing)](#-การทดสอบระบบ-automated-testing)
+12. [แนวทางการพัฒนาต่อยอด (Future Roadmap)](#-แนวทางการพัฒนาต่อยอด-future-roadmap)
 
 ---
 
@@ -25,31 +27,34 @@
 
 ระบบใช้สถาปัตยกรรมแบบ **Hybrid Real-time Architecture**:
 - **Live Game State (ระหว่างเล่นกิจกรรม)**: จัดการผ่าน **Node.js + Socket.io (In-Memory Engine)** ภายในคลาส `RoomManager` เพื่อให้ได้ความเร็วสูงสุดระดับมิลลิวินาที (Sub-second Latency) ทั้งการส่งคำตอบ, จับเวลา, และคำนวณคะแนนตามความเร็ว
-- **Persistence & Session Recovery (จัดเก็บข้อมูลถาวร)**: บันทึกสถานะห้อง, ผลสอบ Pre-test, และรายชื่อผู้เรียนลง **SQLite (Node.js Built-in `node:sqlite`)** ป้องกันข้อมูลสูญหายเมื่อเซิร์ฟเวอร์รีสตาร์ตหรือพักการอบรมข้ามมื้อเที่ยง
-- **Management & Assets (การจัดการและสื่อประกอบ)**: ทำงานผ่าน Express REST API สำหรับสร้าง/แก้ไข/คัดลอกชุดคำถาม และให้บริการ Static Uploads สำหรับรูปภาพประกอบคำถาม
+- **Persistence & Session Recovery (จัดเก็บข้อมูลถาวร)**: บันทึกสถานะห้อง, ผลสอบ Pre-test, รายชื่อผู้เรียน และบัญชีผู้ใช้ลง **SQLite (Node.js Built-in `node:sqlite`)** ป้องกันข้อมูลสูญหายเมื่อเซิร์ฟเวอร์รีสตาร์ตหรือพักการอบรมข้ามมื้อเที่ยง
+- **Authentication & Authorization**: ตรวจสอบสิทธิ์ด้วย JWT Token (HMAC SHA-256) และ Hash รหัสผ่านด้วย Node.js Built-in `crypto.scryptSync` รองรับ 2 บทบาท (ADMIN และ TEACHER)
+- **Management & Assets (การจัดการและสื่อประกอบ)**: ทำงานผ่าน Express REST API สำหรับจัดการบัญชีผู้ใช้, สร้าง/แก้ไข/คัดลอก/สร้างด้วย AI ชุดคำถาม และให้บริการ Static Uploads พร้อม Magic Bytes Validation
 
 ```
                ┌───────────────────────────────┐
                │    จอใหญ่ของผู้สอน (Host)      │
                │   และมือถือผู้เรียน (Players)  │
                └───────────────┬───────────────┘
-                               │ (WebSockets & REST API)
+                               │ (WebSockets & REST API + JWT)
                                ▼
 ┌──────────────────────────────────────────────────────────────┐
 │                    KaoJai Backend Server                     │
 │                                                              │
 │  ┌─────────────────────────┐    ┌─────────────────────────┐  │
 │  │    Express REST API     │    │   Socket.io Handler     │  │
-│  │   • /api/quizzes (CRUD) │    │   • Room Management     │  │
-│  │   • /api/upload (Image) │    │   • Real-time Timers    │  │
-│  │   • /uploads (Static)   │    │   • Score & Pulse Votes │  │
-│  └─────────────────────────┘    │   • Roster & Claiming   │  │
+│  │   • /api/auth (JWT)     │    │   • Room Management     │  │
+│  │   • /api/quizzes (CRUD) │    │   • Real-time Timers    │  │
+│  │   • /api/upload (Image) │    │   • Score & Pulse Votes │  │
+│  │   • /uploads (Static)   │    │   • Roster & Claiming   │  │
+│  └─────────────────────────┘    │   • Security Ownership  │  │
 │                                 └────────────┬────────────┘  │
 │                                              │               │
 │  ┌─────────────────────────┐    ┌────────────▼────────────┐  │
 │  │  SQLite (node:sqlite)   │◄───┤   RoomManager Engine    │  │
 │  │  • rooms (Snapshot)     │    │   (In-Memory + Rehydrate│  │
 │  │  • roster_players       │    └─────────────────────────┘  │
+│  │  • users (Auth)         │                                 │
 │  └─────────────────────────┘                                 │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -65,6 +70,8 @@ KaoJai/
 │   │   └── avatars/                  # ไฟล์ไอคอน Avatar ผู้เรียน 30 รูปแบบ (.svg)
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── auth/                 # ระบบยืนยันตัวตน (Authentication)
+│   │   │   │   └── AdminLoginModal.jsx # หน้าต่างเข้าสู่ระบบ Admin และ Teacher (Earth Tone)
 │   │   │   ├── common/               # คอมโพเนนต์ส่วนกลาง (PrepareCountdown, SequenceIntroGuide, LuckyDraw)
 │   │   │   │   ├── PrepareCountdown.jsx # ป๊อปอัปนับถอยหลัง 5 วินาทีก่อนเริ่มคำถาม
 │   │   │   │   ├── SequenceIntroGuide.jsx # หน้าต่างแนะนำกติกาข้อ Sequence ครั้งแรก (Animated Drag Demo)
@@ -78,9 +85,8 @@ KaoJai/
 │   │   │   │   ├── HostPulse.jsx        # หน้ารับผลโหวตความเข้าใจ พร้อมปุ่มเรียกตาม (Nudge)
 │   │   │   │   ├── HostLeaderboard.jsx  # สรุปคะแนนเรซซิ่ง, Learning Gain, และปุ่ม Export
 │   │   │   │   └── SportsPodium.jsx     # แท่นรับรางวัลสไตล์นักกีฬาโอลิมปิก 3 อันดับ (🥇🥈🥉) พร้อม Avatar & มงกุฎลอยได้
-
 │   │   │   ├── player/               # หน้าจอสำหรับผู้เรียนบนมือถือ (Player Views)
-│   │   │   │   ├── JoinRoom.jsx         # หน้าแรก: กรอก PIN, 1-Click Roster Claim, และเลือกบทบาท
+│   │   │   │   ├── JoinRoom.jsx         # หน้าแรก: กรอก PIN, 1-Click Roster Claim, และปุ่มเข้าสู่ระบบ
 │   │   │   │   ├── AvatarPicker.jsx     # ตัวเลือกรูปโปรไฟล์ 30 แบบ (พร้อมสุ่มอัตโนมัติ)
 │   │   │   │   ├── PlayerLobby.jsx      # หน้ารอวิทยากรเริ่มกิจกรรม พร้อมตัวเลือกทีม
 │   │   │   │   ├── PlayerQuiz.jsx       # หน้ากดเลือกคำตอบ 4 สี
@@ -89,12 +95,17 @@ KaoJai/
 │   │   │   │   ├── PlayerLeaderboardView.jsx # หน้ารอดูคะแนนและอันดับของตนเองระหว่างข้อ
 │   │   │   │   └── PlayerEndedView.jsx  # หน้าสรุปผลคะแนนส่วนตัวเมื่อจบกิจกรรม
 │   │   │   └── teacher/
-│   │   │       └── TeacherBackoffice.jsx # จัดการชุดคำถาม (สร้าง/แก้ไข/โคลน/อัปโหลดรูป)
-│   │   ├── context/                  # Socket.io Context & Session Recovery Hooks
+│   │   │       ├── TeacherBackoffice.jsx # จัดการชุดคำถาม (สร้าง/แก้ไข/โคลน/อัปโหลดรูป)
+│   │   │       ├── UserManagementModal.jsx # จัดการผู้ใช้งาน (เพิ่ม/ลบ/เปลี่ยน Role สำหรับ Admin)
+│   │   │       └── AiQuizGeneratorModal.jsx # หน้าต่างสร้างชุดข้อสอบอัตโนมัติด้วย AI
+│   │   ├── context/                  # Socket.io Context, Session Recovery & AuthContext (JWT)
+│   │   │   ├── AuthContext.jsx       # State จัดการ JWT Token, User Profile, Roles, และ authFetch
+│   │   │   └── SocketContext.jsx     # Real-time WebSocket Context & Session Persistence
 │   │   ├── styles/                   # สไตล์หลักและตัวแปรกำหนดชุดสี
 │   │   ├── utils/                    # Audio SFX, QR Generator, Export Reports
-│   │   ├── App.jsx                   # Main Router & State Orchestrator
+│   │   ├── App.jsx                   # Main Router, Role Guards & State Orchestrator
 │   │   └── main.jsx
+│   ├── index.html                    # HTML Shell พร้อม Content Security Policy (CSP Meta Tag)
 │   ├── nginx.conf                    # Nginx Configuration สำหรับ Production Container
 │   ├── Dockerfile                    # Multi-stage Build สำหรับ React Client
 │   └── vite.config.js                # Vite Config รองรับ allowedHosts & Proxy
@@ -102,25 +113,28 @@ KaoJai/
 ├── server/                           # Backend (Node.js Express + Socket.io + SQLite)
 │   ├── data/
 │   │   ├── quizzes.json              # ฐานข้อมูลชุดคำถาม JSON
-│   │   └── kaojai.sqlite             # ฐานข้อมูล SQLite เก็บ Rooms และ Roster Players
+│   │   └── kaojai.sqlite             # ฐานข้อมูล SQLite เก็บ Rooms, Roster Players และ Users
 │   ├── public/
 │   │   └── uploads/                  # ที่จัดเก็บรูปประกอบคำถาม (Persistent Volume)
 │   ├── src/
-│   │   ├── index.js                  # Entrypoint, Express API, และ Static Serving
-│   │   ├── db.js                     # SQLite Engine (node:sqlite) รองรับ WAL mode
+│   │   ├── index.js                  # Entrypoint, Express API, Rate Limiters, Static Serving
+│   │   ├── auth.js                   # JWT Authentication, Password Policies, Role Middleware
+│   │   ├── db.js                     # SQLite Engine (node:sqlite) รองรับ Rooms, Rosters, Users
 │   │   ├── roomManager.js            # Core Engine (Rooms, Scores, Teams, Rehydration, Roster)
-│   │   ├── socketHandler.js          # จัดการ WebSocket Events ทั้งหมด (รวม get_roster, get_active_sessions)
-│   │   └── quizData.js               # จัดการคลังชุดคำถามตัวอย่าง และฟังก์ชัน Duplicate
-│   ├── tests/                        # Automated Test Suite (8 Test Suites 100% Pass)
+│   │   ├── socketHandler.js          # จัดการ WebSocket Events ทั้งหมด (พร้อม Security Ownership)
+│   │   ├── quizData.js               # จัดการคลังชุดคำถามตัวอย่าง และฟังก์ชัน Duplicate
+│   │   └── aiService.js              # บริการสร้างข้อสอบด้วย Google Gemini AI
+│   ├── tests/                        # Automated Test Suite (9 Test Suites 100% Pass)
 │   │   ├── run-tests.js              # Master Test Runner
 │   │   ├── roomManager.test.js       # ทดสอบ Engine, Sequence, Teams, และ Reset Lifecycle
-│   │   ├── socketHandler.test.js     # ทดสอบ Real-time Socket Flows & Reconnection
+│   │   ├── socketHandler.test.js     # ทดสอบ Real-time Socket Flows, Security & Reconnection
 │   │   ├── quizData.test.js          # ทดสอบ CRUD ชุดคำถาม
-│   │   ├── api.test.js               # ทดสอบ REST Endpoints
+│   │   ├── api.test.js               # ทดสอบ REST Endpoints & Frontend Serving
 │   │   ├── analyticsReport.test.js   # ทดสอบ Analytics และ Excel/CSV Multi-sheet
 │   │   ├── pretestPosttest.test.js   # ทดสอบ Pre-test vs Post-test Learning Gain
 │   │   ├── db.test.js                # ทดสอบ SQLite Persistence CRUD & Schemas
-│   │   └── rosterPersistence.test.js # ทดสอบ End-to-End Server Restart & 1-Click Roster Claim
+│   │   ├── rosterPersistence.test.js # ทดสอบ End-to-End Server Restart & 1-Click Roster Claim
+│   │   └── auth.test.js              # ทดสอบ JWT Authentication, User Roles & API Security
 │   ├── Dockerfile                    # Node.js Alpine Container
 │   └── package.json
 │
@@ -282,6 +296,61 @@ docker compose logs -f kaojai
 
 ---
 
+## 🔐 ระบบยืนยันตัวตนและการจัดการสิทธิ์ (Authentication & Roles)
+
+ระบบใช้สถาปัตยกรรมยืนยันตัวตนแบบ **Model 2 ระบบ (ADMIN & TEACHER)** ด้วย **JSON Web Token (JWT)** และฐานข้อมูล SQLite:
+
+### 1. บทบาทของผู้ใช้งาน (User Roles)
+| บทบาท (Role) | สิทธิ์การเข้าถึง | การจัดการผู้ใช้ | การจัดการข้อสอบ |
+| :--- | :--- | :---: | :---: |
+| **`ADMIN`** (ผู้ดูแลระบบ) | เข้าถึงทุกเมนู, สร้างห้อง, สุ่ม Lucky Draw | สร้าง / ลบ / เปลี่ยน Role ผู้ใช้อื่น | จัดการคลังข้อสอบทั้งหมด, Import แบบ `replaceAll: true` |
+| **`TEACHER`** (อาจารย์ผู้สอน) | สร้างห้อง, คลังคำถาม, สุ่ม Lucky Draw | เปลี่ยนรหัสผ่านของตนเอง | สร้าง / แก้ไข / โคลน / Import แบบ Append |
+| **`PARTICIPANT`** (ผู้เรียน) | ไม่ต้องล็อกอิน เข้าร่วมผ่าน Room PIN หรือ QR Code | - | ร่วมกิจกรรม Quiz / Pulse / Lucky Draw |
+
+### 2. มาตรการรหัสผ่านและความปลอดภัย
+- **Password Hashing**: เข้ารหัสด้วย Node.js Built-in `crypto.scryptSync` พร้อม Random Salt 16 ไบต์ ปลอดภัยสูงโดยไม่ต้องพึ่งพา Native Binary ภายนอก
+- **Password Length Enforcement**: บังคับความยาวรหัสผ่านขั้นต่ำอย่างน้อย 6 ตัวอักษร
+- **Auto-seeded Accounts** (สำหรับการเริ่มต้นใช้งานครั้งแรก):
+  - บัญชี Admin: `admin` / `admin1234`
+  - บัญชี Teacher: `teacher` / `teacher1234`
+  *(ระบบแนะนำให้เปลี่ยนรหัสผ่านทันทีเมื่อนำขึ้น Production)*
+- **REST Endpoints (`/api/auth`)**:
+  - `POST /api/auth/login`: เข้าสู่ระบบ (มี Rate Limiter ป้องกัน Brute-force)
+  - `GET /api/auth/me`: ตรวจสอบสถานะ Token และโปรไฟล์ปัจจุบัน
+  - `POST /api/auth/change-password`: เปลี่ยนรหัสผ่านของผู้ใช้ที่ล็อกอินอยู่
+  - `GET /api/auth/users`: รายชื่อผู้ใช้ทั้งหมด (เฉพาะ ADMIN)
+  - `POST /api/auth/users`: สร้างผู้ใช้ใหม่ (เฉพาะ ADMIN)
+  - `DELETE /api/auth/users/:id`: ลบผู้ใช้ (เฉพาะ ADMIN, ห้ามลบบัญชีตัวเอง)
+  - `PATCH /api/auth/users/:id/role`: เปลี่ยนบทบาท ADMIN ↔ TEACHER (เฉพาะ ADMIN)
+
+---
+
+## 🛡️ ความมั่นคงปลอดภัยระดับ Production (Security Hardening)
+
+ระบบได้รับการ Audit และทำ Security Hardening ครบถ้วนทุกเลเยอร์ก่อนการ Deploy:
+
+1. **Content Security Policy (CSP)**:
+   - ป้องกัน XSS และ Data Injection ผ่าน `<meta http-equiv="Content-Security-Policy">`
+   - อนุญาตเฉพาะ WebSocket (`ws:`, `wss:`), Vite Assets, Google Fonts, Web Audio และ Canvas/SVG Data URLs
+2. **API Rate Limiting (In-Memory Zero-Dependency)**:
+   - `POST /api/auth/login`: จำกัด 15 ครั้ง/นาที ต่อ IP
+   - `POST /api/quizzes/generate-ai`: จำกัด 10 ครั้ง/นาที ต่อ IP
+   - `POST /api/upload`: จำกัด 30 ครั้ง/นาที ต่อ IP
+   - มีระบบเคลียร์ IP ที่หมดเวลาทุก 2 นาที ป้องกัน Memory Leak
+3. **Public Quiz Data Sanitization (`GET /api/quizzes`)**:
+   - เมื่อเข้าดูคลังข้อสอบโดยไม่มีสิทธิ์ครู/แอดมิน ฟิลด์เฉลย `options.isCorrect` จะถูกคัดกรองออก 100% ป้องกันผู้เรียนแอบ Inspect คำตอบ
+4. **File Upload Magic Bytes Validation (`POST /api/upload`)**:
+   - ตรวจสอบ Binary Header จริงของไฟล์ภาพ (PNG `0x89504E47`, JPG `0xFFD8FF`, GIF `GIF`, WEBP `RIFF...WEBP`) ป้องกันการปลอมแปลงนามสกุลไฟล์
+5. **Real-time Socket Ownership & Impersonation Defense**:
+   - `submit_answer`, `submit_pulse`, `leave_room` ตรวจสอบ `socket.id === player.socketId` เพื่อป้องกันการส่งคำตอบหรือเตะผู้อื่นออกจากห้อง
+   - ทุกคำสั่งควบคุมห้อง (`toggle_teams`, `create_team`, `get_quiz_analytics` ฯลฯ) ตรวจสอบ `verifyHost(pin, hostToken)` อย่างเคร่งครัด
+   - การ Reconnect ของ Host ตรวจสอบ `hostToken` ตรงกับ Snapshot ในห้อง ป้องกันการแอบยึดห้อง
+6. **Denial of Service (DoS) Protections**:
+   - จำกัดจำนวนผู้เรียนสูงสุด 500 คนต่อห้อง
+   - จำกัดความถี่การส่งอีโมจิ (`send_pulse_reaction`) ไม่เกิน 4 ครั้ง/วินาทีต่อคน
+
+---
+
 ## 📡 สารบบ Socket Events (Socket.io API Reference)
 
 ### ฝั่ง Client ส่งหา Server (`socket.emit`)
@@ -364,7 +433,7 @@ docker compose logs -f kaojai
 
 ## 🧪 การทดสอบระบบ (Automated Testing)
 
-โปรเจกต์มีชุดทดสอบอัตโนมัติครบถ้วนทั้ง Unit Tests, Integration Tests, Database Persistence, และ API Tests รวมทั้งหมด **8 Test Suites (100% Pass)**:
+โปรเจกต์มีชุดทดสอบอัตโนมัติครบถ้วนทั้ง Unit Tests, Integration Tests, Database Persistence, API Tests, และ Security Tests รวมทั้งหมด **9 Test Suites (100% Pass)**:
 
 ```bash
 # รันชุดทดสอบ Backend Server ทั้งหมด
@@ -375,12 +444,13 @@ npm test
 ผลการทดสอบครอบคลุม:
 1. `quizData.test.js`: การดึง/บันทึก/ลบ/คัดลอกชุดคำถาม (ทั้ง Choice และ Sequence)
 2. `roomManager.test.js`: การสร้างห้อง, คำนวณคะแนนความเร็ว, Disconnect Grace Period, การสลับโหมด, การประเมิน Sequence Race, และ Team Management Lifecycle
-3. `socketHandler.test.js`: จำลอง Socket Connection, การนับถอยหลัง 5 วินาที, การส่ง Nudge, การรับส่งคำตอบแบบ Sequence, Lucky Draw Events และการจัดการทีม
-4. `api.test.js`: ทดสอบ REST Endpoints `/api/health`, `/api/quizzes`, `/api/upload`
+3. `socketHandler.test.js`: จำลอง Socket Connection, การนับถอยหลัง 5 วินาที, การส่ง Nudge, การรับส่งคำตอบแบบ Sequence, Lucky Draw Events, การจัดการทีม, และ Socket Ownership/Impersonation Defenses
+4. `api.test.js`: ทดสอบ REST Endpoints `/api/health`, `/api/quizzes`, `/api/upload`, และ Frontend Static Serving
 5. `analyticsReport.test.js`: ทดสอบ Analytics และ Excel/CSV Multi-sheet Reports
 6. `pretestPosttest.test.js`: ทดสอบ Pre-test vs Post-test Learning Gain และ Roster Matching
 7. `db.test.js`: ทดสอบ SQLite Persistence CRUD, Room Snapshots, และ Schemas
 8. `rosterPersistence.test.js`: ทดสอบ End-to-End Server Restart & 1-Click Roster Claim
+9. `auth.test.js`: ทดสอบระบบ JWT Authentication, Role Authorization (ADMIN vs TEACHER), Password Policy และ Security Hardening
 
 ```bash
 # ทดสอบการ Compile และ Bundle ฝั่ง Frontend Client
@@ -392,15 +462,14 @@ npm run build
 
 ## 🔮 แนวทางการพัฒนาต่อยอด (Future Roadmap)
 
-1. **เชื่อมต่อฐานข้อมูลถาวร (Persistent Database with Supabase)**:
-   - ใช้ **Supabase PostgreSQL** เก็บชุดคำถามและประวัติผลคะแนนกิจกรรมย้อนหลัง
-   - ใช้ **Supabase Storage Bucket** จัดเก็บรูปภาพประกอบคำถามแทนโฟลเดอร์ในเครื่อง
-2. **ระบบจัดการสิทธิ์ผู้สอน (Authentication)**:
-   - ล็อกอินด้วย Email/Google ผ่าน Supabase Auth เพื่อแยกคลังชุดคำถามของอาจารย์แต่ละท่าน
-3. **ระบบสุ่มคำถามและสลับตัวเลือก (Shuffle Questions & Options)**:
-   - ตัวเลือกสุ่มลำดับคำถามและลำดับตัวเลือกเพื่อป้องกันผู้เรียนมองจอกัน
-4. **Team Leaderboard View**:
-   - แสดงหน้าจอสรุปอันดับคะแนนรวมสะสมรายทีมบน Podium
+1. **ระบบสลับตัวเลือกคำถาม (Shuffle Questions & Options)**:
+   - ตัวเลือกสุ่มลำดับคำถามและสลับตำแหน่งตัวเลือกบนหน้าจอมือถือผู้เรียน เพื่อป้องกันการมองจอกันในห้องอบรม
+2. **Team Leaderboard Podium View**:
+   - แสดงหน้าจอสรุปอันดับคะแนนรวมสะสมรายทีมบน Podium สำหรับการแข่งขันแบบกลุ่ม
+3. **Cloud Storage & Sync (Supabase / S3 Integration)**:
+   - ตัวเลือกเชื่อมต่อ External Storage (S3 / Supabase Bucket) สำหรับองค์กรที่ต้องการจัดเก็บภาพสื่อการสอนบน Cloud
+4. **Live Audio Host Announcements (ระบบประกาศเสียงสด)**:
+   - สตรีมเสียงวิทยากรความหน่วงต่ำผ่าน WebRTC / Audio Stream ตรงสู่มือถือผู้เรียน
 
 ---
 

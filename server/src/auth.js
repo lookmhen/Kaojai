@@ -12,7 +12,33 @@ const {
   verifyPassword
 } = require('./db');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'kaojai_jwt_secret_dev_key_2026';
+const isProduction = process.env.NODE_ENV === 'production';
+const DEFAULT_DEV_SECRET = 'kaojai_jwt_secret_dev_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET || DEFAULT_DEV_SECRET;
+
+if (isProduction && (!process.env.JWT_SECRET || process.env.JWT_SECRET === DEFAULT_DEV_SECRET)) {
+  console.warn('⚠️ [SECURITY WARNING] Server is running in production with default or missing JWT_SECRET! Set a secure JWT_SECRET in .env.');
+}
+
+/**
+ * Middleware: Optional Bearer JWT Token verification
+ * If valid token present, populates req.user; otherwise proceeds without req.user
+ */
+function optionalAuthenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+  if (authHeader) {
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : authHeader.trim();
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+      } catch (e) {
+        // Token invalid/expired - treat as unauthenticated
+      }
+    }
+  }
+  next();
+}
 
 /**
  * Generate signed JWT for authenticated user
@@ -160,8 +186,8 @@ router.post('/change-password', authenticateToken, (req, res) => {
       return res.status(400).json({ success: false, message: 'กรุณาระบุรหัสผ่านปัจจุบันและรหัสผ่านใหม่' });
     }
 
-    if (typeof newPassword !== 'string' || newPassword.length < 4) {
-      return res.status(400).json({ success: false, message: 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 4 ตัวอักษร' });
+    if (typeof newPassword !== 'string' || newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร' });
     }
 
     const user = getUserById(req.user.id);
@@ -206,6 +232,13 @@ router.post('/users', authenticateToken, requireRole('ADMIN'), (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'กรุณากรอกข้อมูลให้ครบถ้วน (username, password, displayName)'
+      });
+    }
+
+    if (typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร'
       });
     }
 
@@ -331,6 +364,7 @@ module.exports = {
   authRouter: router,
   generateToken,
   authenticateToken,
+  optionalAuthenticateToken,
   requireRole,
   JWT_SECRET
 };

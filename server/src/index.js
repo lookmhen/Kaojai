@@ -9,7 +9,83 @@ const os = require('os');
 const setupSocketHandlers = require('./socketHandler');
 const { getAllQuizzes, saveQuiz, deleteQuiz, duplicateQuiz, importQuizzes } = require('./quizData');
 const { generateAiQuiz } = require('./aiService');
-const { authRouter, authenticateToken } = require('./auth');
+const { authRouter, authenticateToken, optionalAuthenticateToken } = require('./auth');
+
+function createRateLimiter({ windowMs = 60000, max = 15, message = 'คำขอมากเกินไป กรุณารอสักครู่' }) {
+  const hits = new Map();
+  const timer = setInterval(() => {
+    const now = Date.now();
+    for (const [key, record] of hits.entries()) {
+      if (now - record.startTime > windowMs) {
+        hits.delete(key);
+      }
+    }
+  }, 120000);
+  if (timer.unref) timer.unref();
+
+  return (req, res, next) => {
+    if (process.env.NODE_ENV === 'test') return next();
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    let record = hits.get(ip);
+    if (!record || (now - record.startTime > windowMs)) {
+      record = { count: 1, startTime: now };
+      hits.set(ip, record);
+      return next();
+    }
+    record.count++;
+    if (record.count > max) {
+      return res.status(429).json({ success: false, message });
+    }
+    next();
+  };
+}
+
+const loginLimiter = createRateLimiter({ windowMs: 60000, max: 15, message: 'ลองเข้าสู่ระบบถี่เกินไป กรุณารอ 1 นาที' });
+const aiGenLimiter = createRateLimiter({ windowMs: 60000, max: 10, message: 'เรียกสร้างข้อสอบ AI ถี่เกินไป กรุณารอ 1 นาที' });
+const uploadLimiter = createRateLimiter({ windowMs: 60000, max: 30, message: 'อัปโหลดรูปภาพถี่เกินไป กรุณารอสักครู่' });
+
+function sanitizeQuizForPublic(quiz) {
+  if (!quiz) return null;
+  return {
+    id: quiz.id,
+    title: quiz.title,
+    description: quiz.description || '',
+    questionCount: Array.isArray(quiz.questions) ? quiz.questions.length : 0,
+    questions: Array.isArray(quiz.questions)
+      ? quiz.questions.map(q => ({
+          id: q.id,
+          questionType: q.questionType,
+          questionText: q.questionText,
+          timeLimitSeconds: q.timeLimitSeconds,
+          imageUrl: q.imageUrl || '',
+          options: Array.isArray(q.options)
+            ? q.options.map(opt => ({ id: opt.id, text: opt.text }))
+            : undefined,
+          sequenceItems: Array.isArray(q.sequenceItems)
+            ? q.sequenceItems.map(item => ({ id: item.id, text: item.text }))
+            : undefined
+        }))
+      : []
+  };
+}
+
+function isValidImageBuffer(buffer, ext) {
+  if (!buffer || buffer.length < 8) return false;
+  if (ext === 'png') {
+    return buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47;
+  }
+  if (ext === 'jpg') {
+    return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  }
+  if (ext === 'gif') {
+    return buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46;
+  }
+  if (ext === 'webp') {
+    return buffer.slice(0, 4).toString('ascii') === 'RIFF' && buffer.slice(8, 12).toString('ascii') === 'WEBP';
+  }
+  return false;
+}
 
 function getLocalIpAddress() {
   const interfaces = os.networkInterfaces();
@@ -63,6 +139,7 @@ const io = new Server(server, {
 
 
 // Auth API routes
+app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth', authRouter);
 
 // REST Health Check & Server Info
@@ -81,8 +158,12 @@ app.get('/api/server-info', (req, res) => {
   });
 });
 
-app.get('/api/quizzes', (req, res) => {
-  res.json({ quizzes: getAllQuizzes() });
+app.get('/api/quizzes', optionalAuthenticateToken, (req, res) => {
+  const all = getAllQuizzes();
+  if (req.user && ['ADMIN', 'TEACHER'].includes(req.user.role)) {
+    return res.json({ quizzes: all });
+  }
+  res.json({ quizzes: all.map(sanitizeQuizForPublic) });
 });
 
 app.post('/api/quizzes', authenticateToken, (req, res) => {
@@ -139,6 +220,9 @@ app.post('/api/quizzes/import', authenticateToken, (req, res) => {
     if (!quizzes) {
       return res.status(400).json({ success: false, message: 'ไม่มีข้อมูลชุดคำถามที่ต้องการนำเข้า' });
     }
+    if (Boolean(replaceAll) && req.user?.role !== 'ADMIN') {
+      return res.status(403).json({ success: false, message: 'เฉพาะผู้ดูแลระบบ (ADMIN) เท่านั้นที่สามารถนำเข้าแบบแทนที่ทั้งหมดได้' });
+    }
     const updated = importQuizzes(quizzes, Boolean(replaceAll));
     res.json({ success: true, count: Array.isArray(quizzes) ? quizzes.length : 0, quizzes: updated });
   } catch (err) {
@@ -147,7 +231,7 @@ app.post('/api/quizzes/import', authenticateToken, (req, res) => {
 });
 
 // AI Quiz Generator Endpoint
-app.post('/api/quizzes/generate-ai', authenticateToken, async (req, res) => {
+app.post('/api/quizzes/generate-ai', aiGenLimiter, authenticateToken, async (req, res) => {
   try {
     const { topic, textContent, questionCount, questionTypes, difficulty, language } = req.body;
     if (!topic && !textContent) {
@@ -157,10 +241,12 @@ app.post('/api/quizzes/generate-ai', authenticateToken, async (req, res) => {
       });
     }
 
+    const clampedCount = Math.min(20, Math.max(1, Number(questionCount) || 5));
+
     const result = await generateAiQuiz({
       topic,
       textContent,
-      questionCount: Number(questionCount) || 5,
+      questionCount: clampedCount,
       questionTypes: questionTypes || 'MIXED',
       difficulty: difficulty || 'medium',
       language: language || 'th'
@@ -191,8 +277,8 @@ app.use('/uploads', (req, res, next) => {
   next();
 }, express.static(uploadsDir));
 
-// Image Upload Endpoint with Strict MIME Whitelist and 5MB Limit
-app.post('/api/upload', authenticateToken, (req, res) => {
+// Image Upload Endpoint with Strict MIME Whitelist, Magic Bytes Verification and 5MB Limit
+app.post('/api/upload', uploadLimiter, authenticateToken, (req, res) => {
   try {
     const { imageData } = req.body;
     if (!imageData || typeof imageData !== 'string') {
@@ -211,15 +297,19 @@ app.post('/api/upload', authenticateToken, (req, res) => {
     }
 
     const base64Data = matches[2];
-    const byteLength = Buffer.byteLength(base64Data, 'base64');
-    if (byteLength > 5 * 1024 * 1024) {
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+    if (imageBuffer.length > 5 * 1024 * 1024) {
       return res.status(400).json({ success: false, message: 'ขนาดรูปภาพต้องไม่เกิน 5MB' });
+    }
+
+    if (!isValidImageBuffer(imageBuffer, ext)) {
+      return res.status(400).json({ success: false, message: 'ไฟล์รูปภาพไม่ถูกต้องหรือข้อมูลโครงสร้างรูปภาพเสียหาย' });
     }
 
     const safeFileName = `img_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
     const filePath = path.join(uploadsDir, safeFileName);
 
-    fs.writeFileSync(filePath, base64Data, 'base64');
+    fs.writeFileSync(filePath, imageBuffer);
     
     const imageUrl = `/uploads/${safeFileName}`;
     res.json({ success: true, imageUrl });
