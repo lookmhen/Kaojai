@@ -1,7 +1,18 @@
+export const BALL_SOUND_PROFILES = {
+  PLASTIC: { id: 'PLASTIC', name: '🏓 พลาสติก / ปิงปอง', desc: 'เสียงเคาะลูกพลาสติกกลวง กระชับ คมชัด' },
+  MARBLE:  { id: 'MARBLE',  name: '💎 ลูกแก้วคริสตัล', desc: 'เสียงกิ๊งๆ ใสกังวาน ละมุนหู' },
+  WOOD:    { id: 'WOOD',    name: '🪵 ลูกปัดไม้', desc: 'เสียงต๊อกๆ ป๊อกๆ สไตล์ธรรมชาติ Earth Tone' },
+  BUBBLE:  { id: 'BUBBLE',  name: '🫧 บับเบิ้ลน้ำ', desc: 'เสียงฟองน้ำแตก ปุ๊ๆ จุ๋มๆ เข้ากับอ่างน้ำ' },
+  SOFT:    { id: 'SOFT',    name: '🪀 บอลยางนุ่ม', desc: 'เสียงตึ้บๆ ทุ้มนุ่มนวล สบายหู' }
+};
+
 class SoundEffects {
   constructor() {
     this.ctx = null;
     this.muted = typeof window !== 'undefined' ? localStorage.getItem('kaojai_sfx_muted') === 'true' : false;
+    this.ballSoundType = typeof window !== 'undefined'
+      ? (localStorage.getItem('kaojai_ball_sound') || 'PLASTIC')
+      : 'PLASTIC';
     this.listeners = new Set();
     this._hasUserGesture = false;
 
@@ -383,27 +394,135 @@ class SoundEffects {
     } catch (e) {}
   }
 
-  playBallClack() {
+  getBallSound() {
+    return this.ballSoundType || 'PLASTIC';
+  }
+
+  setBallSound(type) {
+    if (BALL_SOUND_PROFILES[type]) {
+      this.ballSoundType = type;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('kaojai_ball_sound', type);
+      }
+    }
+  }
+
+  playBallClack(forcedType = null) {
     if (this.muted) return;
+    this.init();
     if (!this.ctx || this.ctx.state !== 'running') return;
     try {
       const now = this.ctx.currentTime;
-      if (this._lastClackTime && now - this._lastClackTime < 0.08) return;
+      if (!forcedType && this._lastClackTime && now - this._lastClackTime < 0.08) return;
       this._lastClackTime = now;
 
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(520 + Math.random() * 120, now);
-      osc.frequency.exponentialRampToValueAtTime(220, now + 0.04);
+      const type = forcedType || this.ballSoundType || 'PLASTIC';
 
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      if (type === 'MARBLE') {
+        // 💎 Glass / Crystal Ping (Inharmonic crystalline shimmer)
+        const baseF = 1900 + Math.random() * 220;
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
 
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.04);
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(baseF, now);
+        osc1.frequency.exponentialRampToValueAtTime(baseF * 0.92, now + 0.08);
+
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(baseF * 1.58, now);
+
+        gain.gain.setValueAtTime(0.075, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.08);
+        osc2.stop(now + 0.08);
+      } else if (type === 'WOOD') {
+        // 🪵 Woodblock / Bamboo Knock (Resonant Bandpass Percussion)
+        const osc = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        const gain = this.ctx.createGain();
+
+        const woodFreq = 720 + Math.random() * 150;
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(woodFreq, now);
+        filter.Q.setValueAtTime(3.6, now);
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(woodFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(woodFreq * 0.5, now + 0.045);
+
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.045);
+      } else if (type === 'BUBBLE') {
+        // 🫧 Water Bubble / Droplet Pop (Upward pitch sweep)
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        const startF = 380 + Math.random() * 70;
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(startF, now);
+        osc.frequency.exponentialRampToValueAtTime(startF * 2.2, now + 0.055);
+
+        gain.gain.setValueAtTime(0.11, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.055);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.055);
+      } else if (type === 'SOFT') {
+        // 🪀 Soft Muted Rubber Thud (Warm Lowpass Bump)
+        const osc = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        const gain = this.ctx.createGain();
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(360, now);
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220 + Math.random() * 40, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.04);
+
+        gain.gain.setValueAtTime(0.13, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.04);
+      } else {
+        // 🏓 PLASTIC (Default Crisp Ping-Pong Click)
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(560 + Math.random() * 140, now);
+        osc.frequency.exponentialRampToValueAtTime(200, now + 0.038);
+
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.038);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.038);
+      }
     } catch (e) {}
   }
 

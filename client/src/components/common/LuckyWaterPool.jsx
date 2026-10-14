@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useCallback } from 'react';
-import { sfx } from '../../utils/audioSFX';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
+import { sfx, BALL_SOUND_PROFILES } from '../../utils/audioSFX';
 
 const BALL_PALETTES = [
   { main: '#FF5E62', highlight: '#FFA8A8', rim: '#D9383D' },
@@ -22,6 +22,14 @@ export const LuckyWaterPool = ({
   height = 440
 }) => {
   const canvasRef = useRef(null);
+  const [currentSoundType, setCurrentSoundType] = useState(() => sfx.getBallSound());
+
+  const handleSelectSound = (typeId) => {
+    sfx.unlock();
+    sfx.setBallSound(typeId);
+    setCurrentSoundType(typeId);
+    sfx.playBallClack(typeId);
+  };
   const stateRef = useRef({
     balls: [],
     bubbles: [],
@@ -1188,6 +1196,57 @@ export const LuckyWaterPool = ({
         <span>🎣 เลื่อนก้าน <strong>Pickup Rod</strong> กวนน้ำวนในอ่างกลม</span>
         <span>•</span>
         <span>🔮 <strong>คลิกเพื่อสอยลูกบอลปริศนา ลุ้นผู้โชคดี!</strong></span>
+      </div>
+
+      {/* Ball Collision Sound Profile Selector */}
+      <div
+        style={{
+          marginTop: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid #E2E8F0',
+          padding: '6px 14px',
+          borderRadius: '24px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          maxWidth: '100%'
+        }}
+      >
+        <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748B', marginRight: '4px' }}>
+          🔊 เสียงลูกบอลชนกัน:
+        </span>
+        {Object.values(BALL_SOUND_PROFILES).map((prof) => {
+          const isSelected = currentSoundType === prof.id;
+          return (
+            <button
+              key={prof.id}
+              type="button"
+              onClick={() => handleSelectSound(prof.id)}
+              title={`${prof.name} — ${prof.desc} (คลิกเพื่อทดลองฟังเสียง)`}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '16px',
+                border: isSelected ? '1.5px solid #0284C7' : '1px solid #CBD5E1',
+                background: isSelected ? '#E0F2FE' : '#FFFFFF',
+                color: isSelected ? '#0369A1' : '#475569',
+                fontSize: '0.78rem',
+                fontWeight: isSelected ? 800 : 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                transition: 'all 0.15s ease',
+                boxShadow: isSelected ? '0 1px 4px rgba(2, 132, 199, 0.2)' : 'none'
+              }}
+            >
+              <span>{prof.name}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
