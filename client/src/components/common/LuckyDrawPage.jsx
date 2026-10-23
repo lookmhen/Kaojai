@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { LuckyWheel } from './LuckyWheel';
 import { LuckyWaterPool } from './LuckyWaterPool';
 import { SoundToggle } from './SoundToggle';
 import { generateQRCodeSVG } from '../../utils/qrcode';
@@ -38,15 +37,9 @@ export const LuckyDrawPage = ({
   // Tabs: 'QR' | 'MANUAL' | 'ROOM'
   const [activeTab, setActiveTab] = useState(() => (players && players.length > 0 ? 'ROOM' : 'QR'));
 
-  // Draw Style: 'POOL' (ตักลูกบอลในอ่าง) | 'WHEEL' (วงล้อหมุน)
-  const [drawStyle, setDrawStyle] = useState('POOL');
-
   // Prize configuration
   const [prizeName, setPrizeName] = useState('รางวัลพิเศษ 🎉');
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [winnerIndex, setWinnerIndex] = useState(-1);
   const [currentWinner, setCurrentWinner] = useState(null);
-  const pendingSpinWinnerRef = useRef(null);
   const [winnerHistory, setWinnerHistory] = useState([]);
   const [copiedHistory, setCopiedHistory] = useState(false);
 
@@ -244,62 +237,6 @@ export const LuckyDrawPage = ({
     previousWinnerKeys
   ]);
 
-  // Wheel Spin handler
-  const handleStartSpin = () => {
-    if (isSpinning || candidatePool.length === 0) return;
-
-    const chosenIdx = Math.floor(Math.random() * candidatePool.length);
-    const chosenWinner = candidatePool[chosenIdx];
-    pendingSpinWinnerRef.current = chosenWinner;
-
-    setWinnerIndex(chosenIdx);
-    setCurrentWinner(null);
-    setIsSpinning(true);
-
-    if (autoLockOnDraw && !isRegistrationLocked) {
-      handleToggleRegistrationLock(true);
-    }
-
-    if (socket && activePin && activeHostToken) {
-      try {
-        socket.emit('host_spin_lucky_draw', {
-          pin: activePin,
-          hostToken: activeHostToken,
-          prizeName: prizeName || 'รางวัลพิเศษ 🎉',
-          winner: {
-            id: chosenWinner.id,
-            name: chosenWinner.name,
-            avatar: chosenWinner.avatar
-          },
-          candidateNames: candidatePool.map(c => c.name),
-          durationMs: 4500,
-          drawStyle: 'WHEEL'
-        });
-      } catch (err) {
-        console.warn('Lucky draw spin emit warning:', err);
-      }
-    }
-  };
-
-  const handleSpinEnd = () => {
-    setIsSpinning(false);
-    const winner = pendingSpinWinnerRef.current || (winnerIndex >= 0 && winnerIndex < candidatePool.length ? candidatePool[winnerIndex] : null);
-    pendingSpinWinnerRef.current = null;
-
-    if (winner) {
-      setCurrentWinner(winner);
-
-      const newRecord = {
-        ...winner,
-        prize: prizeName || 'รางวัลพิเศษ 🎉',
-        drawnAt: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-      };
-      setWinnerHistory(prev => [newRecord, ...prev]);
-
-      sfx.playFanfare();
-      fireConfetti();
-    }
-  };
 
   // Water Pool Ball Scoop handler
   const handlePoolWinner = (winnerCand) => {
@@ -332,7 +269,7 @@ export const LuckyDrawPage = ({
             avatar: winnerCand.avatar
           },
           candidateNames: candidatePool.map(c => c.name),
-          durationMs: 1500,
+          durationMs: 2400,
           drawStyle: 'POOL'
         });
       } catch (err) {
@@ -564,7 +501,7 @@ export const LuckyDrawPage = ({
       <main style={{ flex: 1, padding: '24px 32px', maxWidth: '1440px', width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.25fr) minmax(380px, 0.75fr)', gap: '24px', alignItems: 'start' }}>
           
-          {/* LEFT COLUMN: THE ARENA STAGE (Canvas, Mode Switcher, Prize Input) */}
+          {/* LEFT COLUMN: THE ARENA STAGE (Water Pool Stage & Prize Input) */}
           <div
             className="glass-card"
             style={{
@@ -578,52 +515,6 @@ export const LuckyDrawPage = ({
               border: '1px solid #E2E8F0'
             }}
           >
-            {/* Style Switcher Pill */}
-            <div style={{ display: 'inline-flex', background: '#F1F5F9', borderRadius: '30px', padding: '5px', marginBottom: '18px', border: '1px solid #E2E8F0' }}>
-              <button
-                type="button"
-                onClick={() => setDrawStyle('POOL')}
-                style={{
-                  padding: '9px 24px',
-                  borderRadius: '24px',
-                  background: drawStyle === 'POOL' ? 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)' : 'transparent',
-                  color: drawStyle === 'POOL' ? '#FFFFFF' : '#475569',
-                  fontWeight: 800,
-                  fontSize: '0.92rem',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  boxShadow: drawStyle === 'POOL' ? '0 4px 12px rgba(2, 132, 199, 0.35)' : 'none',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                🌊 ตักลูกบอลในอ่างน้ำ (Water Pool)
-              </button>
-              <button
-                type="button"
-                onClick={() => setDrawStyle('WHEEL')}
-                style={{
-                  padding: '9px 24px',
-                  borderRadius: '24px',
-                  background: drawStyle === 'WHEEL' ? 'linear-gradient(135deg, #EA580C 0%, #C2410C 100%)' : 'transparent',
-                  color: drawStyle === 'WHEEL' ? '#FFFFFF' : '#475569',
-                  fontWeight: 800,
-                  fontSize: '0.92rem',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  boxShadow: drawStyle === 'WHEEL' ? '0 4px 12px rgba(234, 88, 12, 0.35)' : 'none',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                🎡 วงล้อหมุน (Wheel of Fortune)
-              </button>
-            </div>
-
             {/* Prize Input */}
             <div style={{ width: '100%', maxWidth: '520px', marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>
@@ -634,7 +525,7 @@ export const LuckyDrawPage = ({
                 value={prizeName}
                 onChange={(e) => setPrizeName(e.target.value)}
                 placeholder="เช่น รางวัลที่ 1 ทีวี 55 นิ้ว, Gift Voucher 500.-"
-                disabled={isSpinning}
+                disabled={Boolean(currentWinner)}
                 style={{
                   width: '100%',
                   padding: '12px 18px',
@@ -653,60 +544,18 @@ export const LuckyDrawPage = ({
 
             {/* The Main Arena Stage Canvas */}
             <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '440px' }}>
-              {drawStyle === 'POOL' ? (
-                <LuckyWaterPool
-                  candidates={candidatePool}
-                  onSelectWinner={handlePoolWinner}
-                  isLocked={isSpinning || Boolean(currentWinner)}
-                  width={600}
-                  height={440}
-                />
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <LuckyWheel
-                    candidates={candidatePool}
-                    isSpinning={isSpinning}
-                    winnerIndex={winnerIndex}
-                    duration={4500}
-                    onSpinEnd={handleSpinEnd}
-                    size={420}
-                  />
-
-                  <div style={{ marginTop: '20px' }}>
-                    <button
-                      type="button"
-                      onClick={handleStartSpin}
-                      disabled={isSpinning || candidatePool.length === 0}
-                      style={{
-                        padding: '16px 52px',
-                        borderRadius: '36px',
-                        border: 'none',
-                        background: candidatePool.length === 0
-                          ? '#94A3B8'
-                          : 'linear-gradient(135deg, #EA580C 0%, #C2410C 100%)',
-                        color: '#FFFFFF',
-                        fontSize: '1.25rem',
-                        fontWeight: 900,
-                        cursor: (isSpinning || candidatePool.length === 0) ? 'not-allowed' : 'pointer',
-                        boxShadow: candidatePool.length === 0 ? 'none' : '0 8px 24px rgba(234, 88, 12, 0.4)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        transform: isSpinning ? 'scale(0.98)' : 'scale(1)',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <Sparkles size={24} />
-                      {isSpinning ? 'กำลังหมุนวงล้อ... 🎰' : `หมุนวงล้อลุ้นรางวัล! (${candidatePool.length} คน)`}
-                    </button>
-                  </div>
-                </div>
-              )}
+              <LuckyWaterPool
+                candidates={candidatePool}
+                onSelectWinner={handlePoolWinner}
+                isLocked={Boolean(currentWinner)}
+                width={600}
+                height={440}
+              />
             </div>
 
             {candidatePool.length === 0 && (
               <div style={{ marginTop: '12px', fontSize: '0.9rem', color: '#DC2626', fontWeight: 700 }}>
-                ⚠️ ไม่มีรายชื่อในวงล้อ กรุณาเพิ่มรายชื่อในแผงด้านขวา หรือปลดล็อกตัวกรอง
+                ⚠️ ไม่มีรายชื่อผู้มีสิทธิ์ลุ้นรางวัล กรุณาเพิ่มรายชื่อในแผงด้านขวา หรือปลดล็อกตัวกรอง
               </div>
             )}
           </div>
@@ -1427,7 +1276,7 @@ export const LuckyDrawPage = ({
       </main>
 
       {/* Winner Spotlight Card Modal Popup */}
-      {currentWinner && !isSpinning && (
+      {currentWinner && (
         <div
           style={{
             position: 'fixed',

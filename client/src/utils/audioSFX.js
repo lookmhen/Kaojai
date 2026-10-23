@@ -574,6 +574,60 @@ class SoundEffects {
       });
     } catch (e) {}
   }
+
+  playBallCrack() {
+    if (this.muted) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+
+      // 1. Crisp Plastic Capsule Snap / Crack Click
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(920, now);
+      osc.frequency.exponentialRampToValueAtTime(160, now + 0.038);
+      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.038);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.038);
+
+      // Micro noise burst for tactile physical crack texture
+      const bufSize = Math.floor(this.ctx.sampleRate * 0.02);
+      const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.45;
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buf;
+      const nGain = this.ctx.createGain();
+      nGain.gain.setValueAtTime(0.15, now);
+      nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+      noise.connect(nGain);
+      nGain.connect(this.ctx.destination);
+      noise.start(now);
+      noise.stop(now + 0.02);
+
+      // 2. Magic Shimmering Sparkle Chimes upon Capsule Opening
+      [1046.50, 1318.51, 1567.98, 2093.00].forEach((freq, idx) => {
+        const t = now + 0.035 + idx * 0.055;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(freq, t);
+        g.gain.setValueAtTime(0.12, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+        o.connect(g);
+        g.connect(this.ctx.destination);
+        o.start(t);
+        o.stop(t + 0.25);
+      });
+    } catch (e) {}
+  }
 }
 
 export const sfx = new SoundEffects();

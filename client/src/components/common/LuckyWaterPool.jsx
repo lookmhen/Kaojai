@@ -23,6 +23,7 @@ export const LuckyWaterPool = ({
 }) => {
   const canvasRef = useRef(null);
   const [currentSoundType, setCurrentSoundType] = useState(() => sfx.getBallSound());
+  const [isReadyToCrack, setIsReadyToCrack] = useState(false);
 
   const handleSelectSound = (typeId) => {
     sfx.unlock();
@@ -41,7 +42,13 @@ export const LuckyWaterPool = ({
     scoopedBall: null,
     scoopStartPos: { x: 0, y: 0 },
     hasSplashedOnExit: false,
-    liftProgress: 0
+    liftProgress: 0,
+    crackPhase: 'IDLE', // 'IDLE' | 'LIFTING' | 'READY_TO_CRACK' | 'CRACKING' | 'CRACKED'
+    crackProgress: 0,
+    sunburstAngle: 0,
+    chosenWinner: null,
+    hasRevealedWinner: false,
+    autoCrackTimer: null
   });
 
   // Tub & Water Geometry (2.5D Isometric Cylindrical Pool)
@@ -58,6 +65,49 @@ export const LuckyWaterPool = ({
   const waterRy = ry - 8;
 
   const wasLockedRef = useRef(false);
+
+  // Trigger Action: Crack mystery capsule ball in half to reveal lucky winner!
+  const triggerCrackBall = useCallback(() => {
+    const state = stateRef.current;
+    if (state.crackPhase !== 'READY_TO_CRACK') return;
+
+    if (state.autoCrackTimer) {
+      clearTimeout(state.autoCrackTimer);
+      state.autoCrackTimer = null;
+    }
+
+    state.crackPhase = 'CRACKING';
+    state.crackProgress = 0;
+    setIsReadyToCrack(false);
+    sfx.unlock();
+    sfx.playBallCrack();
+
+    // Burst of sparkles around the ball
+    const targetX = width / 2;
+    const targetY = topCy - 55;
+    for (let i = 0; i < 22; i++) {
+      state.sparkles.push({
+        x: targetX + (Math.random() - 0.5) * 56,
+        y: targetY + (Math.random() - 0.5) * 56,
+        size: 5 + Math.random() * 8,
+        life: 1.2
+      });
+    }
+  }, [width, topCy]);
+
+  const triggerCrackBallRef = useRef(triggerCrackBall);
+  useEffect(() => {
+    triggerCrackBallRef.current = triggerCrackBall;
+  }, [triggerCrackBall]);
+
+  // Clean up auto crack timer on unmount
+  useEffect(() => {
+    return () => {
+      if (stateRef.current.autoCrackTimer) {
+        clearTimeout(stateRef.current.autoCrackTimer);
+      }
+    };
+  }, []);
 
   // Initialize Mystery Floating Balls (อ้างอิงตามจำนวนคน แต่จำกัด Max Cap 20 ลูก พร้อมการจัดเรียง concentric และคงขนาดลูกบอลเดิม)
   const initBalls = useCallback(() => {
@@ -409,14 +459,25 @@ export const LuckyWaterPool = ({
       }
     }
 
+    if (state.autoCrackTimer) {
+      clearTimeout(state.autoCrackTimer);
+      state.autoCrackTimer = null;
+    }
+
     state.balls = balls;
     state.scoopedBall = null;
     state.hasSplashedOnExit = false;
     state.liftProgress = 0;
+    state.crackPhase = 'IDLE';
+    state.crackProgress = 0;
+    state.sunburstAngle = 0;
+    state.chosenWinner = null;
+    state.hasRevealedWinner = false;
     state.ripples = [];
     state.splashes = [];
     state.drips = [];
     state.sparkles = [];
+    setIsReadyToCrack(false);
   }, [candidates.length, width, height, cx, waterCy, waterRx, waterRy]);
 
   // Initial setup and candidate pool update effect
@@ -783,10 +844,34 @@ export const LuckyWaterPool = ({
       }
 
       // ==========================================
-      // 9. SCOOPING MOTION WITH PICKUP ROD & CELEBRATION
+      // 9. SCOOPING MOTION WITH PICKUP ROD & BALL CRACK ACTION
       // ==========================================
       if (state.scoopedBall) {
-        state.liftProgress = Math.min(1, state.liftProgress + 0.016);
+        if (state.crackPhase === 'LIFTING') {
+          state.liftProgress = Math.min(1, state.liftProgress + 0.016);
+          if (state.liftProgress >= 1) {
+            state.liftProgress = 1;
+            state.crackPhase = 'READY_TO_CRACK';
+            setIsReadyToCrack(true);
+            if (state.autoCrackTimer) clearTimeout(state.autoCrackTimer);
+            state.autoCrackTimer = setTimeout(() => {
+              triggerCrackBallRef.current?.();
+            }, 2500);
+          }
+        } else if (state.crackPhase === 'CRACKING') {
+          state.crackProgress = Math.min(1, state.crackProgress + 0.024);
+          state.sunburstAngle += 0.04;
+          if (state.crackProgress >= 1 && !state.hasRevealedWinner) {
+            state.hasRevealedWinner = true;
+            state.crackPhase = 'CRACKED';
+            setTimeout(() => {
+              if (onSelectWinner && state.chosenWinner) {
+                onSelectWinner(state.chosenWinner);
+              }
+            }, 380);
+          }
+        }
+
         const t = state.liftProgress;
         const sb = state.scoopedBall;
         const start = state.scoopStartPos;
@@ -862,19 +947,39 @@ export const LuckyWaterPool = ({
         // Golden aura ring around winner ball
         if (t > 0.58) {
           const auraProgress = (t - 0.58) / 0.42;
+          const pulse = state.crackPhase === 'READY_TO_CRACK'
+            ? Math.sin(Date.now() * 0.008) * 4
+            : 0;
+
           ctx.save();
           ctx.beginPath();
-          ctx.arc(currentX, currentY, sb.radius * scale + 16, 0, Math.PI * 2);
+          ctx.arc(currentX, currentY, sb.radius * scale + 16 + pulse, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(245, 158, 11, ${auraProgress * 0.38})`;
           ctx.fill();
           ctx.strokeStyle = `rgba(251, 191, 36, ${auraProgress * 0.9})`;
           ctx.lineWidth = 3.5;
           ctx.stroke();
+
+          // Second pulsating ripple ring while waiting for user to crack
+          if (state.crackPhase === 'READY_TO_CRACK') {
+            const pulse2 = ((Date.now() * 0.003) % 1) * 22;
+            const alpha2 = (1 - ((Date.now() * 0.003) % 1)) * 0.6;
+            ctx.beginPath();
+            ctx.arc(currentX, currentY, sb.radius * scale + 16 + pulse2, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(251, 191, 36, ${alpha2})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
           ctx.restore();
         }
 
         drawPickupRod(ctx, currentX, currentY, true);
-        drawBall(ctx, { ...sb, x: currentX, y: currentY }, scale);
+
+        if (state.crackPhase === 'CRACKING' || state.crackPhase === 'CRACKED') {
+          drawSplitBall(ctx, { ...sb, x: currentX, y: currentY }, scale, state.crackProgress, state.sunburstAngle);
+        } else {
+          drawBall(ctx, { ...sb, x: currentX, y: currentY }, scale);
+        }
       }
 
       // Splashing droplets
@@ -994,6 +1099,217 @@ export const LuckyWaterPool = ({
     ctx.ellipse(-r * 0.38, -r * 0.38, r * 0.28, r * 0.15, -Math.PI / 4, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
     ctx.fill();
+
+    ctx.restore();
+  };
+
+  // Helper: Draw Mystery Ball Cracking & Splitting in Half with Golden Sunburst & Lucky Slip
+  const drawSplitBall = (ctx, ball, scale = 1, crackProgress = 0, sunburstAngle = 0) => {
+    const { x, y, radius, palette, icon } = ball;
+    const r = radius * scale;
+
+    const easeOutCubic = (val) => 1 - Math.pow(1 - val, 3);
+    const p = easeOutCubic(crackProgress);
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    // 1. LAYER A: EXPANDING GOLDEN SUNBURST RAYS (Behind the splitting halves)
+    if (p > 0.04) {
+      const rayProgress = (p - 0.04) / 0.96;
+      const rayCount = 12;
+      const maxRayLen = r * (1.8 + rayProgress * 2.2);
+
+      ctx.save();
+      ctx.rotate(sunburstAngle);
+      for (let i = 0; i < rayCount; i++) {
+        const angle = (i / rayCount) * Math.PI * 2;
+        const rayWidth = (Math.PI * 2 / rayCount) * 0.44;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, maxRayLen, angle - rayWidth / 2, angle + rayWidth / 2);
+        ctx.closePath();
+        const rayGrad = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, maxRayLen);
+        rayGrad.addColorStop(0, `rgba(255, 255, 255, ${0.92 * rayProgress})`);
+        rayGrad.addColorStop(0.3, `rgba(251, 191, 36, ${0.75 * rayProgress})`);
+        rayGrad.addColorStop(0.7, `rgba(245, 158, 11, ${0.35 * rayProgress})`);
+        rayGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+        ctx.fillStyle = rayGrad;
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // Central bright golden core
+      ctx.beginPath();
+      ctx.arc(0, 0, r * (0.8 + rayProgress * 0.8), 0, Math.PI * 2);
+      const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * (0.8 + rayProgress * 0.8));
+      coreGrad.addColorStop(0, `rgba(255, 255, 255, ${0.95 * rayProgress})`);
+      coreGrad.addColorStop(0.4, `rgba(253, 230, 138, ${0.7 * rayProgress})`);
+      coreGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+      ctx.fillStyle = coreGrad;
+      ctx.fill();
+    }
+
+    // 2. LAYER B: LUCKY PARCHMENT SCROLL / SLIP (Revealing from center)
+    if (p > 0.12) {
+      const slipP = (p - 0.12) / 0.88;
+      const slipW = r * 1.35;
+      const slipH = r * 1.55 * slipP;
+
+      ctx.save();
+      // Parchment drop shadow
+      ctx.beginPath();
+      ctx.roundRect(-slipW / 2 + 2, -slipH / 2 + 3, slipW, slipH, 6);
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
+      ctx.fill();
+
+      // Parchment body
+      ctx.beginPath();
+      ctx.roundRect(-slipW / 2, -slipH / 2, slipW, slipH, 6);
+      const parchmentGrad = ctx.createLinearGradient(-slipW / 2, -slipH / 2, slipW / 2, slipH / 2);
+      parchmentGrad.addColorStop(0, '#FFFBEB');
+      parchmentGrad.addColorStop(0.5, '#FEF3C7');
+      parchmentGrad.addColorStop(1, '#FDE68A');
+      ctx.fillStyle = parchmentGrad;
+      ctx.fill();
+      ctx.strokeStyle = '#D97706';
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+
+      // Inner decorative border
+      if (slipH > 14) {
+        ctx.beginPath();
+        ctx.roundRect(-slipW / 2 + 3, -slipH / 2 + 3, slipW - 6, slipH - 6, 4);
+        ctx.strokeStyle = 'rgba(217, 119, 6, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // Star / Lucky seal on parchment
+      if (slipP > 0.42) {
+        const sealScale = Math.min(1, (slipP - 0.42) / 0.35);
+        ctx.save();
+        ctx.scale(sealScale, sealScale);
+        ctx.font = `bold ${Math.round(14 * scale)}px "Prompt", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#DC2626';
+        ctx.fillText('★ LUCKY ★', 0, -slipH * 0.18);
+
+        ctx.font = `${Math.round(18 * scale)}px sans-serif`;
+        ctx.fillText('🎁', 0, slipH * 0.16);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    // 3. LAYER C: UPPER HEMISPHERE (Moves Up-Left + Tilts -14 deg)
+    const upDy = -p * 38;
+    const upDx = -p * 14;
+    const upRot = -p * 0.24; // ~ -14 degrees
+
+    ctx.save();
+    ctx.translate(upDx, upDy);
+    ctx.rotate(upRot);
+
+    // Clip upper half circle
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(-r - 4, -r - 4, (r + 4) * 2, r + 4);
+    ctx.clip();
+
+    // Top half spherical gradient
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    const gradTop = ctx.createRadialGradient(-r * 0.35, -r * 0.35, r * 0.1, 0, 0, r);
+    gradTop.addColorStop(0, palette.highlight);
+    gradTop.addColorStop(0.45, palette.main);
+    gradTop.addColorStop(1, palette.rim);
+    ctx.fillStyle = gradTop;
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.lineWidth = 1.8 * scale;
+    ctx.stroke();
+
+    // Icon on upper half
+    ctx.save();
+    ctx.font = `${Math.round(13 * scale)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(icon || '⭐️', 0, -r * 0.38);
+    ctx.restore();
+
+    // Specular Glare on top-left
+    ctx.beginPath();
+    ctx.ellipse(-r * 0.38, -r * 0.38, r * 0.28, r * 0.15, -Math.PI / 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.fill();
+    ctx.restore(); // end clip
+
+    // Inner rim lip of upper hemisphere (at split boundary)
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r, r * 0.22, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+    ctx.strokeStyle = palette.rim;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Inner hollow shadow for upper hemisphere
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r * 0.82, r * 0.16, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
+    ctx.fill();
+
+    ctx.restore();
+
+    // 4. LAYER D: LOWER HEMISPHERE (Moves Down-Right + Tilts +14 deg)
+    const downDy = p * 38;
+    const downDx = p * 14;
+    const downRot = p * 0.24; // ~ +14 degrees
+
+    ctx.save();
+    ctx.translate(downDx, downDy);
+    ctx.rotate(downRot);
+
+    // Clip lower half circle
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(-r - 4, 0, (r + 4) * 2, r + 4);
+    ctx.clip();
+
+    // Bottom half spherical gradient
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    const gradBot = ctx.createRadialGradient(-r * 0.35, -r * 0.35, r * 0.1, 0, 0, r);
+    gradBot.addColorStop(0, palette.highlight);
+    gradBot.addColorStop(0.45, palette.main);
+    gradBot.addColorStop(1, palette.rim);
+    ctx.fillStyle = gradBot;
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.lineWidth = 1.8 * scale;
+    ctx.stroke();
+    ctx.restore(); // end clip
+
+    // Inner rim lip of lower hemisphere (at split boundary)
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r, r * 0.22, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+    ctx.strokeStyle = palette.rim;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Inner hollow shadow for lower hemisphere
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r * 0.82, r * 0.16, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
+    ctx.fill();
+
+    ctx.restore();
 
     ctx.restore();
   };
@@ -1124,8 +1440,14 @@ export const LuckyWaterPool = ({
     stateRef.current.mouse.isHover = false;
   };
 
-  // Click: Scoop up / Pickup a mystery ball with the Pickup Rod!
+  // Click: Scoop up / Pickup a mystery ball, or crack open if already lifted!
   const handleClick = (e) => {
+    // If waiting for crack, user click anywhere on canvas triggers cracking!
+    if (stateRef.current.crackPhase === 'READY_TO_CRACK') {
+      triggerCrackBall();
+      return;
+    }
+
     if (isLocked || stateRef.current.scoopedBall || candidates.length === 0) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -1149,16 +1471,71 @@ export const LuckyWaterPool = ({
     state.scoopStartPos = { x: target.x, y: target.y };
     state.hasSplashedOnExit = false;
     state.liftProgress = 0;
-
-    setTimeout(() => {
-      if (onSelectWinner && chosenWinner) {
-        onSelectWinner(chosenWinner);
-      }
-    }, 1750);
+    state.crackPhase = 'LIFTING';
+    state.crackProgress = 0;
+    state.sunburstAngle = 0;
+    state.chosenWinner = chosenWinner;
+    state.hasRevealedWinner = false;
+    setIsReadyToCrack(false);
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+      {/* Floating Interactive Trigger Button when lifted and ready to crack */}
+      {isReadyToCrack && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '72px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '6px',
+            pointerEvents: 'auto',
+            animation: 'fadeIn 0.25s ease-out'
+          }}
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              triggerCrackBall();
+            }}
+            style={{
+              padding: '12px 28px',
+              borderRadius: '28px',
+              background: 'linear-gradient(135deg, #F59E0B 0%, #EA580C 100%)',
+              color: '#FFFFFF',
+              border: '3px solid #FEF3C7',
+              fontSize: '1.05rem',
+              fontWeight: 900,
+              cursor: 'pointer',
+              boxShadow: '0 8px 25px rgba(234, 88, 12, 0.45)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <span>✨ แตะเพื่อแกะลูกบอล ลุ้นชื่อผู้โชคดี! ✨</span>
+          </button>
+          <span style={{
+            fontSize: '0.78rem',
+            color: '#B45309',
+            fontWeight: 800,
+            background: 'rgba(254, 243, 199, 0.95)',
+            padding: '2px 10px',
+            borderRadius: '12px',
+            border: '1px solid #FDE68A'
+          }}>
+            (คลิกที่ลูกบอล หรือรอระบบแกะให้อัตโนมัติใน 2.5 วินาที)
+          </span>
+        </div>
+      )}
+
       <canvas
         ref={canvasRef}
         width={width}
@@ -1169,7 +1546,9 @@ export const LuckyWaterPool = ({
         onPointerDown={() => sfx.unlock()}
         onClick={handleClick}
         style={{
-          cursor: stateRef.current.scoopedBall ? 'default' : 'crosshair',
+          cursor: stateRef.current.scoopedBall 
+            ? (isReadyToCrack ? 'pointer' : 'default') 
+            : 'crosshair',
           maxWidth: '100%',
           height: 'auto',
           borderRadius: '24px',
@@ -1184,18 +1563,23 @@ export const LuckyWaterPool = ({
           display: 'inline-flex',
           alignItems: 'center',
           gap: '8px',
-          background: '#F0F9FF',
-          border: '1px solid #BAE6FD',
-          color: '#0369A1',
+          background: isReadyToCrack ? '#FEF3C7' : '#F0F9FF',
+          border: isReadyToCrack ? '1px solid #FDE68A' : '1px solid #BAE6FD',
+          color: isReadyToCrack ? '#92400E' : '#0369A1',
           padding: '7px 20px',
           borderRadius: '24px',
           fontSize: '0.86rem',
-          fontWeight: 700
+          fontWeight: 700,
+          transition: 'all 0.2s ease'
         }}
       >
         <span>🎣 เลื่อนก้าน <strong>Pickup Rod</strong> กวนน้ำวนในอ่างกลม</span>
         <span>•</span>
-        <span>🔮 <strong>คลิกเพื่อสอยลูกบอลปริศนา ลุ้นผู้โชคดี!</strong></span>
+        {isReadyToCrack ? (
+          <span>✨ <strong>แตะลูกบอล หรือกดปุ่มแกะเพื่อเปิดเผยชื่อผู้โชคดี!</strong></span>
+        ) : (
+          <span>🔮 <strong>คลิกเพื่อสอยลูกบอลปริศนา ลุ้นผู้โชคดี!</strong></span>
+        )}
       </div>
 
       {/* Ball Collision Sound Profile Selector */}

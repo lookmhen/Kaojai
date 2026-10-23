@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { LuckyWheel } from '../common/LuckyWheel';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
 import { Gift, Trophy, Sparkles, X, Award } from 'lucide-react';
@@ -9,44 +8,40 @@ export const PlayerLuckyDrawOverlay = ({
   currentPlayerData = null,
   onClose = null
 }) => {
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [winnerIndex, setWinnerIndex] = useState(-1);
-  const [showCelebration, setShowCelebration] = useState(false);
+  const [phase, setPhase] = useState('IDLE'); // 'IDLE' | 'SCOOPING' | 'CRACKING' | 'CELEBRATING'
 
   useEffect(() => {
     if (!spinData) {
-      setShowCelebration(false);
-      setIsSpinning(false);
+      setPhase('IDLE');
       return;
     }
 
-    const { candidateNames = [], winner, durationMs = 4500 } = spinData;
-    const count = candidateNames.length;
+    const { durationMs = 2400 } = spinData;
+    const crackStartTime = Math.min(1100, Math.round(durationMs * 0.45));
 
-    // Find winner index
-    let chosenIdx = 0;
-    if (winner && count > 0) {
-      const idx = candidateNames.findIndex(n => n.toLowerCase() === (winner.name || '').toLowerCase());
-      chosenIdx = idx >= 0 ? idx : 0;
-    }
+    setPhase('SCOOPING');
 
-    setWinnerIndex(chosenIdx);
-    setIsSpinning(true);
-    setShowCelebration(false);
+    const crackTimer = setTimeout(() => {
+      setPhase('CRACKING');
+      sfx.playBallCrack();
+    }, crackStartTime);
 
-    const timer = setTimeout(() => {
-      setIsSpinning(false);
-      setShowCelebration(true);
+    const celebrationTimer = setTimeout(() => {
+      setPhase('CELEBRATING');
       sfx.playFanfare();
       fireConfetti();
     }, durationMs);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(crackTimer);
+      clearTimeout(celebrationTimer);
+    };
   }, [spinData]);
 
   if (!spinData) return null;
 
   const { candidateNames = [], winner, prizeName = 'รางวัลพิเศษ 🎉' } = spinData;
+  const showCelebration = phase === 'CELEBRATING';
   const isMe = currentPlayerData && winner && (
     (currentPlayerData.playerId && currentPlayerData.playerId === winner.id) ||
     (currentPlayerData.name && currentPlayerData.name.toLowerCase() === (winner.name || '').toLowerCase())
@@ -122,22 +117,22 @@ export const PlayerLuckyDrawOverlay = ({
             marginBottom: '10px'
           }}
         >
-          <Gift size={16} /> {spinData?.drawStyle === 'POOL' ? 'LUCKY DRAW LIVE 🌊' : 'LUCKY DRAW LIVE 🎡'}
+          <Gift size={16} /> LUCKY DRAW LIVE 🌊
         </div>
 
         <h3 style={{ margin: '0 0 4px', fontSize: '1.25rem', fontWeight: 900, color: '#1E293B' }}>
-          {isSpinning
-            ? (spinData?.drawStyle === 'POOL' ? 'กำลังตักลูกบอลในอ่างน้ำ... 🌊' : 'กำลังลุ้นผู้โชคดี... 🎲')
-            : 'ผลการจับรางวัล! 🎉'}
+          {phase === 'SCOOPING' && 'กำลังตักลูกบอลในอ่างน้ำ... 🌊'}
+          {phase === 'CRACKING' && '✨ กำลังแกะลูกบอลปริศนา... 🔮'}
+          {phase === 'CELEBRATING' && 'ผลการจับรางวัล! 🎉'}
         </h3>
 
         <div style={{ fontSize: '0.9rem', color: '#EA580C', fontWeight: 800, marginBottom: '16px' }}>
           🎁 {prizeName}
         </div>
 
-        {/* Wheel or Water Pool Scoop View while drawing */}
-        <div style={{ margin: '8px 0', opacity: showCelebration ? 0.35 : 1, transition: 'opacity 0.3s' }}>
-          {spinData?.drawStyle === 'POOL' ? (
+        {/* Water Pool Scoop View & Capsule Split Animation */}
+        <div style={{ margin: '8px 0', width: '100%', opacity: showCelebration ? 0.3 : 1, transition: 'opacity 0.3s' }}>
+          {phase === 'SCOOPING' && (
             <div style={{
               width: '260px',
               height: '240px',
@@ -162,14 +157,102 @@ export const PlayerLuckyDrawOverlay = ({
                 ✨ ขอให้เป็นชื่อคุณ! ✨
               </div>
             </div>
-          ) : (
-            <LuckyWheel
-              candidates={candidateNames}
-              isSpinning={isSpinning}
-              winnerIndex={winnerIndex}
-              duration={spinData?.durationMs || 4500}
-              size={280}
-            />
+          )}
+
+          {phase === 'CRACKING' && (
+            <div style={{
+              width: '260px',
+              height: '240px',
+              margin: '0 auto',
+              borderRadius: '24px',
+              background: 'radial-gradient(circle at 50% 50%, #FEF3C7 0%, #FDE68A 45%, #F59E0B 100%)',
+              border: '4px solid #F59E0B',
+              boxShadow: '0 14px 32px rgba(245, 158, 11, 0.35)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              {/* Rotating Sunburst Halo Background */}
+              <div style={{
+                position: 'absolute',
+                inset: '-40px',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(251, 191, 36, 0.5) 40%, rgba(245, 158, 11, 0) 70%)',
+                animation: 'spin 5s linear infinite'
+              }} />
+
+              {/* Capsule Halves & Revealing Lucky Parchment */}
+              <div style={{ position: 'relative', width: '130px', height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {/* Center Lucky Parchment Slip */}
+                <div style={{
+                  position: 'absolute',
+                  width: '95px',
+                  padding: '8px 6px',
+                  background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%)',
+                  border: '2px solid #D97706',
+                  borderRadius: '10px',
+                  boxShadow: '0 6px 16px rgba(217, 119, 6, 0.35)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  zIndex: 2,
+                  animation: 'scaleIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                }}>
+                  <span style={{ fontSize: '0.68rem', fontWeight: 900, color: '#DC2626', letterSpacing: '0.5px' }}>★ LUCKY ★</span>
+                  <span style={{ fontSize: '1.25rem', margin: '1px 0' }}>🎁</span>
+                  <span style={{ fontSize: '0.66rem', fontWeight: 800, color: '#92400E' }}>ลุ้นชื่อผู้โชคดี...</span>
+                </div>
+
+                {/* Top Hemisphere (Upper Half) */}
+                <div style={{
+                  position: 'absolute',
+                  top: '0px',
+                  left: '50%',
+                  width: '84px',
+                  height: '42px',
+                  background: 'radial-gradient(circle at 50% 20%, #FFA8A8 0%, #FF5E62 60%, #D9383D 100%)',
+                  borderTopLeftRadius: '84px',
+                  borderTopRightRadius: '84px',
+                  border: '2px solid #FFFFFF',
+                  borderBottom: '3px solid #FFF',
+                  boxShadow: '0 -4px 12px rgba(217, 56, 61, 0.35)',
+                  transform: 'translate(-50%, -22px) rotate(-14deg)',
+                  zIndex: 3,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  animation: 'bounce 0.9s infinite alternate'
+                }}>
+                  <span style={{ fontSize: '0.9rem', marginTop: '-3px' }}>✨</span>
+                </div>
+
+                {/* Bottom Hemisphere (Lower Half) */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '0px',
+                  left: '50%',
+                  width: '84px',
+                  height: '42px',
+                  background: 'radial-gradient(circle at 50% 80%, #FFA8A8 0%, #FF5E62 60%, #D9383D 100%)',
+                  borderBottomLeftRadius: '84px',
+                  borderBottomRightRadius: '84px',
+                  border: '2px solid #FFFFFF',
+                  borderTop: '3px solid #FFF',
+                  boxShadow: '0 4px 12px rgba(217, 56, 61, 0.35)',
+                  transform: 'translate(-50%, 22px) rotate(14deg)',
+                  zIndex: 3,
+                  animation: 'bounce 0.9s infinite alternate'
+                }} />
+              </div>
+
+              <div style={{ fontSize: '0.86rem', fontWeight: 900, color: '#92400E', marginTop: '14px', zIndex: 4 }}>
+                ✨ กำลังแกะลูกบอลปริศนา... ✨
+              </div>
+            </div>
           )}
         </div>
 

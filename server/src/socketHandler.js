@@ -712,7 +712,7 @@ module.exports = function setupSocketHandlers(io) {
           winner: winner || null,
           candidateNames: Array.isArray(candidateNames) ? candidateNames : [],
           durationMs: (typeof durationMs === 'number' && durationMs > 0) ? durationMs : 4500,
-          drawStyle: drawStyle === 'POOL' ? 'POOL' : 'WHEEL'
+          drawStyle: 'POOL'
         };
 
         io.to(pin).emit('lucky_draw_spin', safePayload);

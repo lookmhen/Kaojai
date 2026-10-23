@@ -58,15 +58,15 @@
 *   **Seamless Switch:** สลับโหมดโดยผู้เรียนไม่ต้องเข้าห้องใหม่
 
 ### 4.5 Lucky Draw Mode (ระบบสุ่มผู้โชคดี & สอยดาวอ่างน้ำ 2.5D)
-*   **Dual Visual Models (แยกโหมดการแสดงผล 2 รูปแบบอย่างเด็ดขาด):**
+*   **Dedicated 2.5D Water Pool Simulation (`LuckyWaterPool.jsx`):**
     1.  **Water Pool 2.5D (`drawStyle: 'POOL'`):** อ่างน้ำทรงกระบอก 2.5D Isometric พร้อมลูกบอลปริศนา (Mystery Balls) และกระบองตัก **Pickup Rod** จำลองฟิสิกส์คลื่นน้ำ Concentric Ripples, การช้อนลูกบอลขึ้นพ้นผิวน้ำ (Radial Water Splash), หยดน้ำ (Drips) และประกายแสงสีทอง (Golden Aura & Sparkles)
-    2.  **Carnival Lucky Wheel (`drawStyle: 'WHEEL'`):** วงล้อหมุนสุ่มรางวัล 16 ช่องสีสันสดใส ลวดลายไอคอนนำโชค หมุดไฟสีทอง ฟิสิกส์ Deceleration และเข็มกระตุกพร้อมเสียงเอฟเฟกต์
+
 *   **Host vs Player Presentation Model Separation (การแยกโมเดลหน้าจอ Host และ Player):**
     -   **Host Dashboard (`LuckyDrawPage.jsx`):** ทำหน้าที่เป็น Main Arena Stage แสดงผลบนจอใหญ่ ควบคุมการสุ่ม (ไม่แสดง Overlay ทับหน้าจอตัวเองเด็ดขาด)
     -   **Player View (`LuckyDrawPlayerJoin.jsx` / `PlayerLuckyDrawOverlay.jsx`):** 
-        -   เมื่อ Host สุ่มด้วย `drawStyle: 'POOL'` ผู้เล่นจะเห็นแอนิเมชันธีมอ่างน้ำลุ้นรางวัล `🌊 กำลังตักลูกบอลในอ่างน้ำ... ✨`
-        -   เมื่อ Host สุ่มด้วย `drawStyle: 'WHEEL'` ผู้เล่นจะเห็นแอนิเมชันวงล้อหมุน `<LuckyWheel>`
-        -   ทั้ง 2 โหมดแยกจากกันโดยสมบูรณ์ ไม่มีการเรนเดอร์ข้ามหรือทับซ้อนกัน
+        -   เมื่อ Host สุ่ม ผู้เล่นจะเห็นแอนิเมชันธีมอ่างน้ำลุ้นรางวัล `🌊 กำลังตักลูกบอลในอ่างน้ำ... ✨`
+
+
 *   **3 Candidate Sources (แหล่งที่มาของรายชื่อ 3 รูปแบบ):**
     1.  `ROOM`: รายชื่อและ Avatar ผู้เรียนที่กด Join เข้าห้อง Quiz อยู่แล้ว
     2.  `QR`: สแกน QR Code สดในงานเพื่อส่งชื่อเข้าร่วมชิงรางวัลเฉพาะกิจ (Dedicated Lucky Draw Join URL: `/?pin=XXXXXX&luckydraw=1`)
@@ -162,18 +162,18 @@ sequenceDiagram
     participant S as Server (Socket.io)
     participant P as Player (Overlay / Mobile Join)
 
-    H->>H: Select Draw Style ('POOL' or 'WHEEL')
-    alt Water Pool Mode
+
+
         H->>H: Click Mystery Ball -> Pickup Rod Scoops Ball Up
         H->>S: emit('host_spin_lucky_draw', { drawStyle: 'POOL', winner, durationMs: 1500 })
         S-->>P: broadcast('lucky_draw_spin', { drawStyle: 'POOL', winner })
         P->>P: Show Animated Water Pool Suspense Card 🌊
-    else Wheel Mode
-        H->>H: Click Spin Wheel Button
-        H->>S: emit('host_spin_lucky_draw', { drawStyle: 'WHEEL', winner, durationMs: 4500 })
-        S-->>P: broadcast('lucky_draw_spin', { drawStyle: 'WHEEL', winner })
-        P->>P: Show Animated Wheel of Fortune 🎡
-    end
+
+
+
+
+
+
     H->>H: Display Winner Spotlight Modal (isLocked = true)
     P->>P: Reveal Winner Card + Confetti + Fanfare
     H->>H: Dismiss Modal -> Reset scoopedBall = null & Release Pickup Rod
@@ -197,7 +197,7 @@ sequenceDiagram
 | `show_leaderboard` | `{ pin, hostToken }` | วิทยากรเรียกดูอันดับคะแนน |
 | `reconnect_host` | `{ pin, hostToken }` | วิทยากรเชื่อมต่อกลับเข้าห้องเดิมหลังรีเฟรช |
 | `get_active_sessions` | `(ackCallback)` | วิทยากรดึงประวัติห้องที่เปิดค้างไว้จาก SQLite (ไม่รวม Lucky Draw) |
-| `host_spin_lucky_draw` | `{ pin, hostToken, prizeName, winner, candidateNames, durationMs, drawStyle }` | วิทยากรสั่งสุ่มรางวัล (ระบุ `drawStyle: 'POOL' \| 'WHEEL'`) |
+| `host_spin_lucky_draw` | `{ pin, hostToken, prizeName, winner, candidateNames, durationMs, drawStyle }` | วิทยากรสั่งสุ่มรางวัล (`drawStyle: 'POOL'`) |
 | `host_close_lucky_draw` | `{ pin, hostToken }` | วิทยากรปิดเซสชัน Lucky Draw |
 | `host_toggle_luckydraw_lock` | `{ pin, hostToken, isLocked }` | วิทยากรเปิด/ปิดรับรายชื่อผู้ลงทะเบียน Lucky Draw |
 | `get_luckydraw_status` | `{ pin }` | ดึงสถานะล็อกการลงทะเบียนของห้อง Lucky Draw |
@@ -214,7 +214,7 @@ sequenceDiagram
 | `question_result` | `{ questionType, correctOptionId?, correctSequence?, optionCounts?, totalPlayers }` | สรุปผลคำตอบและสถิติช้อยส์ |
 | `show_leaderboard` | `{ leaderboard, status }` | แสดงอันดับคะแนนผู้เรียน |
 | `quiz_ended` | `{ leaderboard, isEnded: true }` | สิ้นสุดเกมและประกาศผล Podium |
-| `lucky_draw_spin` | `{ prizeName, winner, candidateNames, durationMs, drawStyle }` | กระจายผลการสุ่มพร้อมระบุสไตล์ (POOL / WHEEL) |
+| `lucky_draw_spin` | `{ prizeName, winner, candidateNames, durationMs, drawStyle }` | กระจายผลการสุ่ม (`drawStyle: 'POOL'`) |
 | `lucky_draw_closed` | `{ closedAt }` | แจ้งปิดหน้าจอ Lucky Draw ฝั่งผู้เรียน |
 | `luckydraw_lock_updated` | `{ isLocked }` | แจ้งสถานะเปิด/ปิดรับรายชื่อผู้เข้าร่วม Lucky Draw แบบเรียลไทม์ |
 
