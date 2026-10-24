@@ -58,10 +58,12 @@ const QUIZ_RESPONSE_SCHEMA = {
 
 function buildSystemPrompt(questionTypes, difficulty, language = 'th') {
   const typeInstruction = questionTypes === 'CHOICE'
-    ? '- ให้สร้างเฉพาะคำถามประเภท CHOICE เท่านั้น'
+    ? '- ให้สร้างเฉพาะคำถามประเภท CHOICE (ปรนัย 4 ตัวเลือก) เท่านั้น'
+    : questionTypes === 'TRUE_FALSE'
+    ? '- ให้สร้างเฉพาะคำถามประเภท TRUE_FALSE (ถูก/ผิด) เท่านั้น โดยมี options 2 ข้อคือ "ถูก (True)" และ "ผิด (False)" พร้อมกำหนด isCorrect: true เพียง 1 ข้อ'
     : questionTypes === 'SEQUENCE'
     ? '- ให้สร้างเฉพาะคำถามประเภท SEQUENCE (จัดลำดับขั้นตอน) เท่านั้น'
-    : '- ให้สร้างผสมผสานระหว่าง CHOICE และ SEQUENCE อย่างสมดุล';
+    : '- ให้สร้างผสมผสานระหว่าง CHOICE, TRUE_FALSE และ SEQUENCE อย่างสมดุล';
 
   return 'คุณคือ AI Instructional Designer ผู้เชี่ยวชาญการออกแบบข้อสอบ Gamification ของแพลตฟอร์ม "KaoJai (เข้าใจ)"\n' +
     'หน้าที่ของคุณคือออกแบบชุดข้อสอบที่มีคุณภาพสูง ท้าทาย ชวนคิด และส่งคืนโครงสร้าง JSON ตาม Schema ที่กำหนดเท่านั้น\n\n' +

@@ -16,6 +16,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
   const [timeLeft, setTimeLeft] = useState(initialDuration);
   const timerRef = useRef(null);
   const isSequence = question?.questionType === 'SEQUENCE' || Boolean(question?.sequenceItems?.length);
+  const isTrueFalse = question?.questionType === 'TRUE_FALSE' || (question?.options?.length === 2 && (question?.options[0]?.id === 'opt_true' || question?.options[0]?.text?.includes('True') || question?.options[0]?.text?.includes('ถูก')));
   const hasMatchingResult = Boolean(result && question?.id && result.questionId === question.id);
   const activeResult = hasMatchingResult ? result : null;
 
@@ -430,6 +431,38 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
           </div>
         </div>
         )
+      ) : isTrueFalse ? (
+        /* True / False Choice Grid while question is active */
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
+          {question.options?.map((opt, idx) => {
+            const isTrue = opt.id === 'opt_true' || opt.text?.includes('ถูก') || opt.text?.includes('True') || idx === 0;
+            const bg = isTrue
+              ? 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)'
+              : 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)';
+            const symbol = isTrue ? '✓' : '✕';
+
+            return (
+              <div
+                key={opt.id}
+                style={{
+                  background: bg,
+                  borderRadius: '18px',
+                  padding: '28px 24px',
+                  color: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '16px',
+                  boxShadow: '0 6px 18px rgba(0,0,0,0.12)',
+                  border: '2px solid rgba(255,255,255,0.25)'
+                }}
+              >
+                <span style={{ fontSize: '2.5rem', fontWeight: 900 }}>{symbol}</span>
+                <span style={{ fontSize: '1.65rem', fontWeight: 900 }}>{opt.text}</span>
+              </div>
+            );
+          })}
+        </div>
       ) : (
         /* Regular Choice Grid while question is active */
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>

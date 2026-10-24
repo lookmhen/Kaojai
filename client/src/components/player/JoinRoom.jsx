@@ -509,43 +509,56 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
   }
 
   return (
-    <div style={{ maxWidth: '960px', margin: '40px auto', padding: '0 20px' }}>
-      {/* Top Header Bar with Auth Badge & Login Button */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '16px', gap: '10px' }}>
+    <div style={{ position: 'relative', minHeight: '100vh', paddingBottom: '40px' }}>
+      {/* Top Action Bar: Pinned to true top-right of screen */}
+      <div
+        style={{
+          position: 'fixed',
+          top: '16px',
+          right: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          zIndex: 1000
+        }}
+      >
         <LanguageToggle />
         {isAuthenticated ? (
           <div
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '10px',
-              background: '#FFFFFF',
+              gap: '8px',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(8px)',
               border: '1px solid #E2E8F0',
-              padding: '6px 14px',
+              padding: '4px 12px',
               borderRadius: '30px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+              boxShadow: '0 2px 10px rgba(0,0,0,0.06)'
             }}
           >
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '5px',
-                padding: '3px 8px',
-                borderRadius: '12px',
-                fontSize: '0.75rem',
+                gap: '4px',
+                padding: '2px 8px',
+                borderRadius: '10px',
+                fontSize: '0.72rem',
                 fontWeight: 800,
-                background: isAdmin ? '#F0FDF4' : '#EFF6FF',
+                background: isAdmin ? '#DCFCE7' : '#DBEAFE',
                 color: isAdmin ? '#166534' : '#1E40AF',
                 border: isAdmin ? '1px solid #BBF7D0' : '1px solid #BFDBFE'
               }}
             >
               {isAdmin ? <Shield size={12} /> : <GraduationCap size={12} />}
-              {isAdmin ? '🛡️ ผู้ดูแลระบบ (Admin)' : '🎓 อาจารย์ผู้สอน (Teacher)'}
+              {isAdmin ? 'Admin' : 'Teacher'}
             </div>
-            <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-main)' }}>
-              {user?.displayName || user?.username}
-            </span>
+            {(!user?.displayName || user.displayName !== 'ผู้ดูแลระบบ (Admin)') && (
+              <span style={{ fontSize: '0.84rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                {user?.displayName || user?.username}
+              </span>
+            )}
             {isAdmin && (
               <button
                 type="button"
@@ -597,25 +610,27 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
               setIsLoginModalOpen(true);
             }}
             style={{
-              background: '#FFFFFF',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(8px)',
               border: '1.5px solid #CBD5E1',
               color: 'var(--text-main)',
-              padding: '8px 18px',
+              padding: '6px 14px',
               borderRadius: '24px',
-              fontSize: '0.88rem',
+              fontSize: '0.82rem',
               fontWeight: 700,
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              cursor: 'pointer'
             }}
           >
-            <Lock size={15} color="var(--accent-earth-blue)" /> 🔐 {t('loginHost', 'เข้าสู่ระบบผู้สอน/แอดมิน')}
+            <Lock size={14} color="var(--accent-earth-blue)" /> 🔐 {t('loginHost', 'เข้าสู่ระบบผู้สอน/แอดมิน')}
           </button>
         )}
       </div>
+
+      <div style={{ maxWidth: '960px', margin: '40px auto', padding: '0 20px', paddingTop: '20px' }}>
 
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--accent-earth-orange)', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>
@@ -883,6 +898,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
         isOpen={isUserManagementOpen}
         onClose={() => setIsUserManagementOpen(false)}
       />
+      </div>
     </div>
   );
 };

@@ -834,7 +834,10 @@ export const TeacherBackoffice = ({ onBack }) => {
             {/* Questions Form List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               {activeQuiz.questions.map((q, qIdx) => {
-                const isSeq = q.questionType === 'SEQUENCE';
+                const qType = q.questionType || 'CHOICE';
+                const isSeq = qType === 'SEQUENCE';
+                const isTrueFalse = qType === 'TRUE_FALSE';
+                const isChoice = !isSeq && !isTrueFalse;
                 return (
                   <div
                     key={q.id || qIdx}
@@ -851,7 +854,7 @@ export const TeacherBackoffice = ({ onBack }) => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span
                           style={{
-                            background: isSeq ? 'var(--accent-earth-orange)' : 'var(--accent-earth-blue)',
+                            background: isSeq ? 'var(--accent-earth-orange)' : isTrueFalse ? '#166534' : 'var(--accent-earth-blue)',
                             color: '#FFFFFF',
                             fontWeight: 800,
                             fontSize: '0.82rem',
@@ -864,13 +867,13 @@ export const TeacherBackoffice = ({ onBack }) => {
                         </span>
 
                         {/* Segmented Control */}
-                        <div style={{ display: 'inline-flex', background: '#E2E8F0', borderRadius: '8px', padding: '2px' }}>
+                        <div style={{ display: 'inline-flex', background: '#E2E8F0', borderRadius: '8px', padding: '2px', gap: '2px' }}>
                           <button
                             type="button"
                             onClick={() => {
                               const updated = [...activeQuiz.questions];
                               updated[qIdx].questionType = 'CHOICE';
-                              if (!updated[qIdx].options || updated[qIdx].options.length === 0) {
+                              if (!updated[qIdx].options || updated[qIdx].options.length !== 4) {
                                 updated[qIdx].options = [
                                   { id: 'opt1', text: 'ตัวเลือก A', isCorrect: true },
                                   { id: 'opt2', text: 'ตัวเลือก B', isCorrect: false },
@@ -884,15 +887,44 @@ export const TeacherBackoffice = ({ onBack }) => {
                               padding: '4px 10px',
                               borderRadius: '6px',
                               border: 'none',
-                              background: !isSeq ? '#FFFFFF' : 'transparent',
-                              color: !isSeq ? 'var(--text-main)' : 'var(--text-muted)',
-                              boxShadow: !isSeq ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                              background: isChoice ? '#FFFFFF' : 'transparent',
+                              color: isChoice ? 'var(--accent-earth-blue)' : 'var(--text-muted)',
+                              boxShadow: isChoice ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                               fontSize: '0.78rem',
                               fontWeight: 700,
                               cursor: 'pointer'
                             }}
                           >
                             🔘 ปรนัย (Choice)
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = [...activeQuiz.questions];
+                              updated[qIdx].questionType = 'TRUE_FALSE';
+                              updated[qIdx].options = [
+                                { id: 'opt_true', text: 'ถูก (True)', isCorrect: true },
+                                { id: 'opt_false', text: 'ผิด (False)', isCorrect: false }
+                              ];
+                              setActiveQuiz({ ...activeQuiz, questions: updated });
+                            }}
+                            style={{
+                              padding: '4px 10px',
+                              borderRadius: '6px',
+                              border: 'none',
+                              background: isTrueFalse ? '#FFFFFF' : 'transparent',
+                              color: isTrueFalse ? '#166534' : 'var(--text-muted)',
+                              boxShadow: isTrueFalse ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                              fontSize: '0.78rem',
+                              fontWeight: 700,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <CheckCircle2 size={13} /> ถูก/ผิด (True/False)
                           </button>
 
                           <button
@@ -1279,6 +1311,80 @@ export const TeacherBackoffice = ({ onBack }) => {
                               </div>
                             </div>
                           ))}
+                        </div>
+                      </div>
+                    ) : isTrueFalse ? (
+                      /* TRUE / FALSE OPTIONS (2 OPTIONS: TRUE vs FALSE) */
+                      <div style={{ marginTop: '10px', background: '#FFFFFF', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                        <label style={{ fontSize: '0.85rem', fontWeight: 800, display: 'block', marginBottom: '10px', color: 'var(--text-main)' }}>
+                          เลือกคำตอบที่ถูกต้อง (คลิกที่การ์ดเพื่อตั้งคำตอบเฉลย):
+                        </label>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+                          {(q.options || [
+                            { id: 'opt_true', text: 'ถูก (True)', isCorrect: true },
+                            { id: 'opt_false', text: 'ผิด (False)', isCorrect: false }
+                          ]).map((opt, optIdx) => {
+                            const isTrue = opt.id === 'opt_true' || opt.text?.includes('ถูก') || opt.text?.includes('True') || optIdx === 0;
+                            const isCorrect = Boolean(opt.isCorrect);
+
+                            return (
+                              <button
+                                key={opt.id || optIdx}
+                                type="button"
+                                onClick={() => {
+                                  const updated = [...activeQuiz.questions];
+                                  const curOpts = (updated[qIdx].options || []).map((o, idx) => ({
+                                    ...o,
+                                    isCorrect: idx === optIdx
+                                  }));
+                                  updated[qIdx].options = curOpts;
+                                  setActiveQuiz({ ...activeQuiz, questions: updated });
+                                }}
+                                style={{
+                                  padding: '16px 20px',
+                                  borderRadius: '12px',
+                                  border: isCorrect
+                                    ? (isTrue ? '2.5px solid #2563EB' : '2.5px solid #DC2626')
+                                    : '1.5px solid #CBD5E1',
+                                  background: isCorrect
+                                    ? (isTrue ? '#EFF6FF' : '#FEF2F2')
+                                    : '#F8FAFC',
+                                  color: isCorrect
+                                    ? (isTrue ? '#1D4ED8' : '#B91C1C')
+                                    : '#64748B',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  cursor: 'pointer',
+                                  boxShadow: isCorrect ? '0 4px 12px rgba(0,0,0,0.06)' : 'none',
+                                  transition: 'all 0.15s ease'
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <span style={{ fontSize: '1.4rem', fontWeight: 900 }}>{isTrue ? '✓' : '✕'}</span>
+                                  <span style={{ fontSize: '1.05rem', fontWeight: 800 }}>
+                                    {isTrue ? 'ถูก (True)' : 'ผิด (False)'}
+                                  </span>
+                                </div>
+                                {isCorrect ? (
+                                  <span style={{
+                                    background: isTrue ? '#2563EB' : '#DC2626',
+                                    color: '#FFFFFF',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 800,
+                                    padding: '3px 10px',
+                                    borderRadius: '20px'
+                                  }}>
+                                    ✓ คำตอบที่ถูกต้อง
+                                  </span>
+                                ) : (
+                                  <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 700 }}>
+                                    แตะเพื่อเลือกข้อนี้
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     ) : (

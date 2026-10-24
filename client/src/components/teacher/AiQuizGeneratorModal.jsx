@@ -264,11 +264,12 @@ export const AiQuizGeneratorModal = ({ isOpen, onClose, onQuizGenerated }) => {
                 <label style={{ display: 'block', fontWeight: 700, fontSize: '0.9rem', color: '#1E293B', marginBottom: '8px' }}>
                   🎲 รูปแบบของคำถาม
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
                   {[
-                    { id: 'MIXED', label: '🔀 ผสมผสาน (Choice + Sequence)' },
-                    { id: 'CHOICE', label: '🔘 ปรนัย 4 ช้อยส์ เท่านั้น' },
-                    { id: 'SEQUENCE', label: '🔢 ลำดับขั้นตอน (Sequence) เท่านั้น' }
+                    { id: 'MIXED', label: '🔀 ผสมผสาน' },
+                    { id: 'CHOICE', label: '🔘 ปรนัย (4 ช้อยส์)' },
+                    { id: 'TRUE_FALSE', label: '✓/✕ ถูก/ผิด (True/False)' },
+                    { id: 'SEQUENCE', label: '🔢 ลำดับขั้นตอน' }
                   ].map(t => (
                     <button
                       key={t.id}
@@ -403,14 +404,14 @@ export const AiQuizGeneratorModal = ({ isOpen, onClose, onQuizGenerated }) => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{
-                          background: q.questionType === 'SEQUENCE' ? '#8B5CF6' : '#2563EB',
+                          background: q.questionType === 'SEQUENCE' ? '#8B5CF6' : q.questionType === 'TRUE_FALSE' ? '#166534' : '#2563EB',
                           color: '#FFFFFF',
                           fontSize: '0.72rem',
                           fontWeight: 800,
                           padding: '2px 8px',
                           borderRadius: '6px'
                         }}>
-                          {q.questionType === 'SEQUENCE' ? '🔢 SEQUENCE' : '🔘 CHOICE'}
+                          {q.questionType === 'SEQUENCE' ? '🔢 SEQUENCE' : q.questionType === 'TRUE_FALSE' ? '✓/✕ TRUE/FALSE' : '🔘 CHOICE'}
                         </span>
                         <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#1E293B' }}>
                           ข้อที่ {idx + 1}: {q.questionText}

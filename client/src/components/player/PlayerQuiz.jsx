@@ -27,6 +27,7 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
 
   const hasMatchingResult = Boolean(result && question?.id && result.questionId === question.id);
   const isPretest = quizMode === 'PRETEST' || (hasMatchingResult && result?.quizMode === 'PRETEST') || feedback?.isPretest;
+  const isTrueFalse = question?.questionType === 'TRUE_FALSE' || (question?.options?.length === 2 && (question?.options[0]?.id === 'opt_true' || question?.options[0]?.text?.includes('True') || question?.options[0]?.text?.includes('ถูก')));
   const isPretestRef = useRef(isPretest);
 
   useEffect(() => {
@@ -432,6 +433,48 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
               </div>
             </div>
           )}
+        </div>
+      ) : isTrueFalse ? (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          {question.options?.map((opt, idx) => {
+            const isTrue = opt.id === 'opt_true' || opt.text?.includes('ถูก') || opt.text?.includes('True') || idx === 0;
+            const bg = isTrue
+              ? 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)'
+              : 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)';
+            const symbol = isTrue ? '✓' : '✕';
+            const isChosen = selectedOptionId === opt.id;
+
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => handleChooseOption(opt.id)}
+                disabled={selectedOptionId !== null}
+                style={{
+                  background: bg,
+                  borderRadius: '16px',
+                  padding: '22px 14px',
+                  color: '#FFFFFF',
+                  fontSize: '1.25rem',
+                  fontWeight: 900,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.1)',
+                  opacity: selectedOptionId && !isChosen ? 0.35 : 1,
+                  transform: isChosen ? 'scale(1.04)' : 'scale(1)',
+                  minHeight: '120px',
+                  border: isChosen ? '3px solid #FFFFFF' : 'none',
+                  cursor: selectedOptionId ? 'default' : 'pointer'
+                }}
+              >
+                <span style={{ fontSize: '2.2rem', fontWeight: 900 }}>{symbol}</span>
+                <span>{opt.text}</span>
+              </button>
+            );
+          })}
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
