@@ -1,3 +1,4 @@
+const db = require('./db');
 const roomManager = require('./roomManager');
 
 /**
@@ -771,6 +772,42 @@ module.exports = function setupSocketHandlers(io) {
           ackCallback({ success: false, message: err.message });
         }
         socket.emit('error_message', { message: err.message });
+      }
+    });
+
+    
+    socket.on('host_remove_player', ({ pin, hostToken, playerId }, ackCallback) => {
+      try {
+        verifyHost(pin, hostToken);
+        const room = roomManager.getRoom(pin);
+        if (!room) throw new Error('Room not found');
+        const targetPlayer = room.players.get(playerId);
+        const targetSocketId = targetPlayer?.socketId;
+
+        const result = roomManager.removePlayer(pin, playerId);
+        if (targetSocketId) {
+          io.to(targetSocketId).emit('player_kicked', { message: 'คุณถูกนำออกจากห้องกิจกรรมโดยวิทยากร' });
+          const targetSocket = io.sockets.sockets.get(targetSocketId);
+          if (targetSocket && typeof targetSocket.leave === 'function') {
+            targetSocket.leave(pin);
+          }
+        }
+
+        if (result && result.room) {
+          const playerList = roomManager.getPlayerList(pin);
+          const counts = roomManager.getPlayerCounts(pin);
+          io.to(pin).emit('room_updated', { players: playerList, counts });
+          io.to(pin).emit('answered_count_update', { answeredCount: counts.answeredCount, totalPlayers: counts.totalPlayers });
+        }
+
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: true });
+        }
+      } catch (err) {
+        console.error('[Socket Error] host_remove_player:', err);
+        if (typeof ackCallback === 'function') {
+          ackCallback({ success: false, message: err.message });
+        }
       }
     });
 

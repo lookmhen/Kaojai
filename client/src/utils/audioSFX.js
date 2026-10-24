@@ -1,9 +1,9 @@
 export const BALL_SOUND_PROFILES = {
-  PLASTIC: { id: 'PLASTIC', name: '🏓 พลาสติก / ปิงปอง', desc: 'เสียงเคาะลูกพลาสติกกลวง กระชับ คมชัด' },
-  MARBLE:  { id: 'MARBLE',  name: '💎 ลูกแก้วคริสตัล', desc: 'เสียงกิ๊งๆ ใสกังวาน ละมุนหู' },
-  WOOD:    { id: 'WOOD',    name: '🪵 ลูกปัดไม้', desc: 'เสียงต๊อกๆ ป๊อกๆ สไตล์ธรรมชาติ Earth Tone' },
-  BUBBLE:  { id: 'BUBBLE',  name: '🫧 บับเบิ้ลน้ำ', desc: 'เสียงฟองน้ำแตก ปุ๊ๆ จุ๋มๆ เข้ากับอ่างน้ำ' },
-  SOFT:    { id: 'SOFT',    name: '🪀 บอลยางนุ่ม', desc: 'เสียงตึ้บๆ ทุ้มนุ่มนวล สบายหู' }
+  PLASTIC: { id: 'PLASTIC', name: 'พลาสติก / ปิงปอง', desc: 'เสียงเคาะลูกพลาสติกกลวง กระชับ คมชัด' },
+  MARBLE:  { id: 'MARBLE',  name: 'ลูกแก้วคริสตัล', desc: 'เสียงกิ๊งๆ ใสกังวาน ละมุนหู' },
+  WOOD:    { id: 'WOOD',    name: 'ลูกปัดไม้', desc: 'เสียงต๊อกๆ ป๊อกๆ สไตล์ธรรมชาติ Earth Tone' },
+  BUBBLE:  { id: 'BUBBLE',  name: 'บับเบิ้ลน้ำ', desc: 'เสียงฟองน้ำแตก ปุ๊ๆ จุ๋มๆ เข้ากับอ่างน้ำ' },
+  SOFT:    { id: 'SOFT',    name: 'บอลยางนุ่ม', desc: 'เสียงตึ้บๆ ทุ้มนุ่มนวล สบายหู' }
 };
 
 class SoundEffects {
@@ -15,6 +15,7 @@ class SoundEffects {
       : 'PLASTIC';
     this.listeners = new Set();
     this._hasUserGesture = false;
+    this._tensionTimer = null;
 
     if (typeof window !== 'undefined') {
       const unlockAudio = () => {
@@ -627,6 +628,73 @@ class SoundEffects {
         o.stop(t + 0.25);
       });
     } catch (e) {}
+  }
+
+  startTensionLoop() {
+    if (this.muted) return;
+    this.stopTensionLoop();
+    try {
+      this.init();
+      if (!this.ctx) return;
+
+      let beat = 0;
+      const bpm = 126;
+      const intervalMs = Math.round((60 / bpm) * 500); // 8th note heartbeat pulse (~238ms)
+
+      this._tensionTimer = setInterval(() => {
+        if (this.muted || !this.ctx || this.ctx.state !== 'running') return;
+        const now = this.ctx.currentTime;
+        const isDownbeat = (beat % 4 === 0);
+        const isOffbeat = (beat % 2 === 1);
+
+        // Low bass suspense pulse
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const filter = this.ctx.createBiquadFilter();
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(isDownbeat ? 240 : 180, now);
+
+        osc.type = 'triangle';
+        const rootFreq = isDownbeat ? 65.4 : 55.0; // C2 / A1
+        osc.frequency.setValueAtTime(rootFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(32.7, now + 0.18);
+
+        const volume = isDownbeat ? 0.08 : (isOffbeat ? 0.03 : 0.05);
+        gain.gain.setValueAtTime(volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.19);
+
+        // Subtle mechanical tick on offbeat
+        if (isOffbeat) {
+          const tickOsc = this.ctx.createOscillator();
+          const tickGain = this.ctx.createGain();
+          tickOsc.type = 'sine';
+          tickOsc.frequency.setValueAtTime(1400, now);
+          tickGain.gain.setValueAtTime(0.02, now);
+          tickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+          tickOsc.connect(tickGain);
+          tickGain.connect(this.ctx.destination);
+          tickOsc.start(now);
+          tickOsc.stop(now + 0.035);
+        }
+
+        beat = (beat + 1) % 16;
+      }, intervalMs);
+    } catch (e) {}
+  }
+
+  stopTensionLoop() {
+    if (this._tensionTimer) {
+      clearInterval(this._tensionTimer);
+      this._tensionTimer = null;
+    }
   }
 }
 

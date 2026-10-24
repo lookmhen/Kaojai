@@ -10,12 +10,6 @@ import {
   Sliders, Award, RefreshCw, ChevronRight, Maximize2, Lock, Unlock
 } from 'lucide-react';
 
-const SAMPLE_NAMES = [
-  'สมชาย ใจดี', 'สมศรี มีทรัพย์', 'วิชัย เจริญพร', 'สุดาพร รักเรียน',
-  'กิตติศักดิ์ พัฒนา', 'ณัฐวุฒิ ยอดเยี่ยม', 'ปรียานุช รุ่งเรือง', 'อนันต์ บุญนำ',
-  'ชลธิชา สดใส', 'ธนพล มั่งมี'
-];
-
 export const LuckyDrawPage = ({
   pin = '',
   hostToken = '',
@@ -49,6 +43,7 @@ export const LuckyDrawPage = ({
   const [excludedIds, setExcludedIds] = useState(new Set());
 
   // Manual list state
+
   const [manualText, setManualText] = useState(() => {
     try {
       return localStorage.getItem('kaojai_luckydraw_manual') || '';
@@ -305,11 +300,6 @@ export const LuckyDrawPage = ({
       }
       return next;
     });
-  };
-
-  const handleAddSampleNames = () => {
-    setManualText(SAMPLE_NAMES.join('\n'));
-    setExcludedIds(new Set());
   };
 
   const handleDownloadTemplate = () => {
@@ -691,7 +681,7 @@ export const LuckyDrawPage = ({
                         📱 สแกน QR เพื่อลงทะเบียนลุ้นรางวัล Lucky Draw!
                       </div>
                       <p style={{ fontSize: '0.82rem', color: '#64748B', margin: '0 0 12px' }}>
-                        เปิดจอใหญ่ให้คนในงานสแกนด้วยกล้องมือถือ พิมพ์ชื่อแล้วชื่อจะเข้ามาในอ่าง/วงล้อทันที
+                        เปิดจอใหญ่ให้คนในงานสแกนด้วยกล้องมือถือ พิมพ์ชื่อแล้วชื่อจะเข้ามาในอ่างลุ้นรางวัลทันที
                       </p>
 
                       {/* QR Display Card */}
@@ -895,7 +885,7 @@ export const LuckyDrawPage = ({
                                 <button
                                   type="button"
                                   onClick={() => handleToggleExcludeCandidate(p.playerId)}
-                                  title={isExcluded ? 'นำกลับเข้าวงล้อ' : 'คัดชื่อนี้ออก'}
+                                  title={isExcluded ? 'นำกลับเข้าอ่างลุ้นรางวัล' : 'คัดชื่อนี้ออกจากอ่าง'}
                                   style={{
                                     background: 'transparent',
                                     border: 'none',
@@ -924,7 +914,7 @@ export const LuckyDrawPage = ({
                         รายชื่อผู้เล่นที่ Join ({players?.length || 0} คน)
                       </span>
                       <span style={{ fontSize: '0.82rem', color: '#64748B' }}>
-                        อยู่ในวงล้อ/อ่าง: <strong style={{ color: '#EA580C' }}>{candidatePool.length}</strong> คน
+                        อยู่ในอ่างลุ้นรางวัล: <strong style={{ color: '#EA580C' }}>{candidatePool.length}</strong> คน
                       </span>
                     </div>
 
@@ -977,7 +967,7 @@ export const LuckyDrawPage = ({
                               <button
                                 type="button"
                                 onClick={() => handleToggleExcludeCandidate(p.playerId)}
-                                title={isExcluded ? 'นำกลับเข้าวงล้อ' : 'คัดชื่อนี้ออก'}
+                                title={isExcluded ? 'นำกลับเข้าอ่างลุ้นรางวัล' : 'คัดชื่อนี้ออกจากอ่าง'}
                                 style={{
                                   background: 'transparent',
                                   border: 'none',
@@ -1005,22 +995,6 @@ export const LuckyDrawPage = ({
                         รายชื่อผู้ร่วมกิจกรรม ({candidatePool.length} คน):
                       </label>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <button
-                          type="button"
-                          onClick={handleAddSampleNames}
-                          style={{
-                            background: '#EFF6FF',
-                            border: '1px solid #BFDBFE',
-                            color: '#1D4ED8',
-                            padding: '4px 10px',
-                            borderRadius: '8px',
-                            fontSize: '0.78rem',
-                            fontWeight: 700,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          สุ่มตัวอย่าง
-                        </button>
                         <button
                           type="button"
                           onClick={() => {
@@ -1250,7 +1224,7 @@ export const LuckyDrawPage = ({
                       <button
                         type="button"
                         onClick={() => handleReAddWinner(idx)}
-                        title="คืนสิทธิ์เข้าวงล้อ"
+                        title="คืนสิทธิ์เข้าอ่างลุ้นรางวัล"
                         style={{
                           background: 'transparent',
                           border: 'none',

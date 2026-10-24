@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { AdminLoginModal } from '../auth/AdminLoginModal';
 import { UserManagementModal } from '../teacher/UserManagementModal';
 import { AvatarPicker, getRandomAvatar } from './AvatarPicker';
+import { LanguageToggle } from '../common/LanguageToggle';
 import { LogIn, Crown, BookOpen, Gamepad2, MonitorPlay, ArrowLeft, Rocket, Sparkles, Tv, Users, Gift, Lock, LogOut, Shield, GraduationCap } from 'lucide-react';
 
 export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacherBackoffice, onOpenLuckyDraw }) => {
@@ -169,7 +170,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
   const getRedirectLabel = () => {
     if (pendingAction === 'HOST') return 'สร้างห้องกิจกรรมใหม่ (Host)';
     if (pendingAction === 'BACKOFFICE') return 'คลังคำถาม (Teacher Backoffice)';
-    if (pendingAction === 'LUCKY_DRAW') return 'วงล้อ Lucky Draw';
+    if (pendingAction === 'LUCKY_DRAW') return 'Lucky Draw';
     if (pendingAction?.type === 'RESUME') return `เปิดห้องกิจกรรมต่อ (PIN: ${pendingAction.pin})`;
     return '';
   };
@@ -228,7 +229,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
   if (screen === 'PLAYER_FORM') {
     return (
       <div style={{ maxWidth: '520px', margin: '40px auto', padding: '0 20px' }}>
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <button
             type="button"
             onClick={() => setScreen('MODE_SELECT')}
@@ -248,6 +249,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
           >
             <ArrowLeft size={18} color="var(--accent-earth-blue)" /> กลับสู่หน้าเลือกบทบาท
           </button>
+          <LanguageToggle />
         </div>
 
         <div className="glass-card animate-pop" style={{ padding: '32px 24px', borderTop: '5px solid #138808' }}>
@@ -507,7 +509,8 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
   return (
     <div style={{ maxWidth: '960px', margin: '40px auto', padding: '0 20px' }}>
       {/* Top Header Bar with Auth Badge & Login Button */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '16px', gap: '10px' }}>
+        <LanguageToggle />
         {isAuthenticated ? (
           <div
             style={{
@@ -777,7 +780,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                   boxShadow: '0 2px 6px rgba(234, 88, 12, 0.1)'
                 }}
               >
-                <Gift size={18} color="#EA580C" /> วงล้อ Lucky Draw
+                <Gift size={18} color="#EA580C" /> Lucky Draw
               </button>
             </div>
           </div>

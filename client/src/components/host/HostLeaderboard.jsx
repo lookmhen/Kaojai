@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
-import { Trophy, ArrowRight, Flag, RotateCcw, FileSpreadsheet, FileText, LogOut, TrendingUp, Award, Download, Gift } from 'lucide-react';
+import { Trophy, ArrowRight, Users, Flag, RotateCcw, FileSpreadsheet, FileText, LogOut, TrendingUp, Award, Download, Gift } from 'lucide-react';
 import { exportGameReportExcel, exportGameReportPDF } from '../../utils/exportReport';
 import { SportsPodium } from './SportsPodium';
+import { TeamPodium } from './TeamPodium';
 
 export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, pretestData, isEnded, onNextQuestion, onResetToLobby, onLeave, onOpenLuckyDraw }) => {
   const [animatedScores, setAnimatedScores] = useState({});
-  const [viewMode, setViewMode] = useState('PODIUM');
+  const teamsEnabled = Boolean(quizAnalytics?.teamsEnabled);
+  const teamLeaderboard = quizAnalytics?.teamLeaderboard || [];
+  const hasTeams = teamsEnabled && teamLeaderboard.length > 0;
+  const [viewMode, setViewMode] = useState(isEnded ? 'PODIUM' : 'TRACK');
 
   useEffect(() => {
     fireConfetti();
@@ -43,50 +47,77 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
           {isEnded ? 'สรุปอันดับผู้ชนะการแข่งขันสิ้นสุดเกม! 🎉' : 'สรุปการอันดับและการเปลี่ยนแปลงคะแนนรอบนี้ 🏎️💨'}
         </h1>
 
-        {/* View Switcher on Final Screen */}
-        {isEnded && (
-          <div style={{ display: 'inline-flex', background: '#F1F5F9', borderRadius: '30px', padding: '4px', border: '1px solid #CBD5E1', marginTop: '16px' }}>
-            <button
-              type="button"
-              onClick={() => setViewMode('PODIUM')}
-              style={{
-                padding: '8px 20px',
-                borderRadius: '24px',
-                background: viewMode === 'PODIUM' ? 'var(--accent-earth-orange, #E65100)' : 'transparent',
-                color: viewMode === 'PODIUM' ? '#FFFFFF' : 'var(--text-main)',
-                fontWeight: 800,
-                fontSize: '0.9rem',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: viewMode === 'PODIUM' ? '0 2px 8px rgba(230, 81, 0, 0.3)' : 'none',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <Trophy size={16} /> แท่นรับรางวัล Podium
-            </button>
+        {/* View Switcher */}
+        {(isEnded || hasTeams) && (
+          <div style={{ display: 'inline-flex', flexWrap: 'wrap', justifyContent: 'center', background: '#F1F5F9', borderRadius: '30px', padding: '4px', border: '1px solid #CBD5E1', marginTop: '16px', gap: '4px' }}>
+            {isEnded && (
+              <button
+                type="button"
+                onClick={() => setViewMode('PODIUM')}
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: '24px',
+                  background: viewMode === 'PODIUM' ? 'var(--accent-earth-orange, #E65100)' : 'transparent',
+                  color: viewMode === 'PODIUM' ? '#FFFFFF' : 'var(--text-main)',
+                  fontWeight: 800,
+                  fontSize: '0.88rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: viewMode === 'PODIUM' ? '0 2px 8px rgba(230, 81, 0, 0.3)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Trophy size={15} /> แท่นรับรางวัลเดี่ยว
+              </button>
+            )}
+
+            {hasTeams && (
+              <button
+                type="button"
+                onClick={() => setViewMode('TEAMS')}
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: '24px',
+                  background: viewMode === 'TEAMS' ? '#4F46E5' : 'transparent',
+                  color: viewMode === 'TEAMS' ? '#FFFFFF' : 'var(--text-main)',
+                  fontWeight: 800,
+                  fontSize: '0.88rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: viewMode === 'TEAMS' ? '0 2px 8px rgba(79, 70, 229, 0.3)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Users size={15} /> 👥 คะแนนทีม Team Battle
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => setViewMode('TRACK')}
               style={{
-                padding: '8px 20px',
+                padding: '8px 18px',
                 borderRadius: '24px',
                 background: viewMode === 'TRACK' ? 'var(--accent-earth-blue, #1E3A8A)' : 'transparent',
                 color: viewMode === 'TRACK' ? '#FFFFFF' : 'var(--text-main)',
                 fontWeight: 800,
-                fontSize: '0.9rem',
+                fontSize: '0.88rem',
                 border: 'none',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '8px',
+                gap: '6px',
                 boxShadow: viewMode === 'TRACK' ? '0 2px 8px rgba(30, 58, 138, 0.3)' : 'none',
                 transition: 'all 0.2s ease'
               }}
             >
-              <Flag size={16} /> แทร็กคะแนนรวม Racing
+              <Flag size={15} /> แทร็กคะแนนรายบุคคล Racing
             </button>
           </div>
         )}
@@ -145,7 +176,13 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
       )}
 
       {/* Racing Track Rows (Mid-game OR toggled in ended mode) */}
-      {(!isEnded || viewMode === 'TRACK') && (
+      {/* Team Battle Podium View */}
+      {viewMode === 'TEAMS' && hasTeams && (
+        <TeamPodium teamLeaderboard={teamLeaderboard} />
+      )}
+
+      {/* Racing Track Rows (Mid-game OR toggled in ended mode) */}
+      {((!isEnded && viewMode !== 'TEAMS') || (isEnded && viewMode === 'TRACK')) && (
         <div className="glass-card" style={{ padding: '24px', marginBottom: '28px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {leaderboard.map((player, idx) => {

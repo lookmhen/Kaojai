@@ -280,7 +280,7 @@ export const LuckyDrawPlayerJoin = ({ initialPin = '' }) => {
               </div>
 
               <p style={{ fontSize: '0.82rem', color: '#64748B', margin: 0, lineHeight: 1.5 }}>
-                🔮 ชื่อของคุณอยู่ในอ่างสอยดาว / วงล้อเรียบร้อยแล้ว<br />
+                🔮 ชื่อของคุณอยู่ในอ่างลุ้นรางวัลเรียบร้อยแล้ว<br />
                 รอลุ้นผลรางวัลบนหน้าจอหลักได้เลย! ✨
               </p>
             </div>

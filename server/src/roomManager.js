@@ -1085,7 +1085,10 @@ class RoomManager {
       pulseHistory: room.pulseHistory || [],
       quizMode: room.quizMode || 'NORMAL',
       pretestData: room.pretestData || null,
-      learningGain
+      learningGain,
+      teamsEnabled: room.teamsEnabled || false,
+      teams: this.getTeamList(pin),
+      teamLeaderboard: this.getTeamLeaderboard(pin)
     };
   }
 

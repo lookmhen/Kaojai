@@ -30,9 +30,12 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
       timerRef.current = null;
     }
 
+    sfx.startTensionLoop();
+
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
+          sfx.stopTensionLoop();
           if (timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
@@ -47,6 +50,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
     }, 1000);
 
     return () => {
+      sfx.stopTensionLoop();
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -56,6 +60,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
 
   useEffect(() => {
     if (hasMatchingResult) {
+      sfx.stopTensionLoop();
       setTimeLeft(0);
       if (timerRef.current) {
         clearInterval(timerRef.current);

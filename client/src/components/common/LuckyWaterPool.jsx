@@ -1,5 +1,14 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { sfx, BALL_SOUND_PROFILES } from '../../utils/audioSFX';
+import { Volume2, CircleDot, Gem, TreePine, Droplets, Disc } from 'lucide-react';
+
+const SOUND_ICONS = {
+  PLASTIC: CircleDot,
+  MARBLE: Gem,
+  WOOD: TreePine,
+  BUBBLE: Droplets,
+  SOFT: Disc
+};
 
 const BALL_PALETTES = [
   { main: '#FF5E62', highlight: '#FFA8A8', rim: '#D9383D' },
@@ -1153,8 +1162,8 @@ export const LuckyWaterPool = ({
     // 2. LAYER B: LUCKY PARCHMENT SCROLL / SLIP (Revealing from center)
     if (p > 0.12) {
       const slipP = (p - 0.12) / 0.88;
-      const slipW = r * 1.35;
-      const slipH = r * 1.55 * slipP;
+      const slipW = r * 0.95;
+      const slipH = r * 1.15 * slipP;
 
       ctx.save();
       // Parchment drop shadow
@@ -1190,13 +1199,13 @@ export const LuckyWaterPool = ({
         const sealScale = Math.min(1, (slipP - 0.42) / 0.35);
         ctx.save();
         ctx.scale(sealScale, sealScale);
-        ctx.font = `bold ${Math.round(14 * scale)}px "Prompt", sans-serif`;
+        ctx.font = `bold ${Math.round(11 * scale)}px "Prompt", sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#DC2626';
         ctx.fillText('★ LUCKY ★', 0, -slipH * 0.18);
 
-        ctx.font = `${Math.round(18 * scale)}px sans-serif`;
+        ctx.font = `${Math.round(14 * scale)}px sans-serif`;
         ctx.fillText('🎁', 0, slipH * 0.16);
         ctx.restore();
       }
@@ -1486,7 +1495,8 @@ export const LuckyWaterPool = ({
         <div
           style={{
             position: 'absolute',
-            top: '72px',
+            top: 'unset',
+            bottom: '165px',
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 10,
@@ -1588,7 +1598,7 @@ export const LuckyWaterPool = ({
           marginTop: '10px',
           display: 'flex',
           alignItems: 'center',
-          gap: '6px',
+          gap: '8px',
           background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(8px)',
           border: '1px solid #E2E8F0',
@@ -1600,11 +1610,13 @@ export const LuckyWaterPool = ({
           maxWidth: '100%'
         }}
       >
-        <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748B', marginRight: '4px' }}>
-          🔊 เสียงลูกบอลชนกัน:
+        <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#334155', display: 'inline-flex', alignItems: 'center', gap: '5px', marginRight: '4px' }}>
+          <Volume2 size={16} color="#0284C7" />
+          <span>เสียงลูกบอล:</span>
         </span>
         {Object.values(BALL_SOUND_PROFILES).map((prof) => {
           const isSelected = currentSoundType === prof.id;
+          const IconComp = SOUND_ICONS[prof.id] || CircleDot;
           return (
             <button
               key={prof.id}
@@ -1612,21 +1624,22 @@ export const LuckyWaterPool = ({
               onClick={() => handleSelectSound(prof.id)}
               title={`${prof.name} — ${prof.desc} (คลิกเพื่อทดลองฟังเสียง)`}
               style={{
-                padding: '4px 10px',
+                padding: '5px 12px',
                 borderRadius: '16px',
                 border: isSelected ? '1.5px solid #0284C7' : '1px solid #CBD5E1',
                 background: isSelected ? '#E0F2FE' : '#FFFFFF',
                 color: isSelected ? '#0369A1' : '#475569',
-                fontSize: '0.78rem',
+                fontSize: '0.8rem',
                 fontWeight: isSelected ? 800 : 600,
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '6px',
                 transition: 'all 0.15s ease',
                 boxShadow: isSelected ? '0 1px 4px rgba(2, 132, 199, 0.2)' : 'none'
               }}
             >
+              <IconComp size={14} color={isSelected ? '#0284C7' : '#64748B'} />
               <span>{prof.name}</span>
             </button>
           );

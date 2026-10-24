@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Plus, Trash2, Save, ArrowLeft, Image as ImageIcon, Clock, CheckCircle2, Upload, X, Copy, ListOrdered, ArrowUp, ArrowDown, Download, FileUp, Sparkles, Search, Check, Layers, Users, LogOut, Shield, GraduationCap } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, Image as ImageIcon, Clock, CheckCircle2, Upload, X, Copy, ListOrdered, ArrowUp, ArrowDown, Download, FileUp, Sparkles, Search, Check, Layers, Users, LogOut, Shield, GraduationCap, History, Database } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { AiQuizGeneratorModal } from './AiQuizGeneratorModal';
 import { UserManagementModal } from './UserManagementModal';
+import { SessionHistoryModal } from './SessionHistoryModal';
+import { DatabaseBackupModal } from './DatabaseBackupModal';
 
 export const TeacherBackoffice = ({ onBack }) => {
   const { user, isAuthenticated, isAdmin, isTeacher, logout, authFetch } = useAuth();
@@ -13,6 +15,8 @@ export const TeacherBackoffice = ({ onBack }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isDbBackupModalOpen, setIsDbBackupModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const fileInputRef = useRef(null);
 
@@ -458,6 +462,28 @@ export const TeacherBackoffice = ({ onBack }) => {
           </button>
 
           {/* Admin-Only: User Management */}
+          <button
+            type="button"
+            onClick={() => setIsHistoryModalOpen(true)}
+            title="ดูประวัติเซสชันการอบรมที่ผ่านมา พร้อมดาวน์โหลดรายงาน Excel/PDF"
+            style={{
+              background: '#F0F9FF',
+              border: '1.5px solid #BAE6FD',
+              color: '#0369A1',
+              padding: '8px 14px',
+              borderRadius: '10px',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(3, 105, 161, 0.08)'
+            }}
+          >
+            <History size={15} /> 📜 ประวัติเซสชัน
+          </button>
+
           {isAdmin && (
             <button
               type="button"
@@ -479,6 +505,30 @@ export const TeacherBackoffice = ({ onBack }) => {
               }}
             >
               <Users size={16} /> 👥 จัดการผู้ใช้งาน
+            </button>
+          )}
+
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setIsDbBackupModalOpen(true)}
+              title="สำรองและกู้คืนฐานข้อมูล SQLite (Admin Only)"
+              style={{
+                background: '#FEF3C7',
+                border: '1.5px solid #FCD34D',
+                color: '#92400E',
+                padding: '8px 14px',
+                borderRadius: '10px',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(146, 64, 14, 0.08)'
+              }}
+            >
+              <Database size={15} /> 💾 สำรองฐานข้อมูล
             </button>
           )}
 
@@ -541,6 +591,16 @@ export const TeacherBackoffice = ({ onBack }) => {
       <UserManagementModal
         isOpen={isUserManagementOpen}
         onClose={() => setIsUserManagementOpen(false)}
+      />
+
+      <SessionHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+      />
+
+      <DatabaseBackupModal
+        isOpen={isDbBackupModalOpen}
+        onClose={() => setIsDbBackupModalOpen(false)}
       />
 
       {notification && (

@@ -21,12 +21,22 @@ if %ERRORLEVEL% neq 0 (
 
 set "APP_DIR=%~dp0"
 
-echo [2/3] Launching Backend Server (Port: 4000)...
+echo [2/4] Checking and installing dependencies if needed...
+if not exist "%APP_DIR%server\node_modules" (
+    echo [INFO] Installing server dependencies...
+    cd /d "%APP_DIR%server" && call npm install
+)
+if not exist "%APP_DIR%client\node_modules" (
+    echo [INFO] Installing client dependencies...
+    cd /d "%APP_DIR%client" && call npm install
+)
+
+echo [3/4] Launching Backend Server (Port: 4000)...
 start "KaoJai - Backend Server" cmd /k "cd /d "%APP_DIR%server" && npm start"
 
 ping 127.0.0.1 -n 3 >nul
 
-echo [3/3] Launching Frontend Client (Port: 3000)...
+echo [4/4] Launching Frontend Client (Port: 3000)...
 start "KaoJai - Frontend Client" cmd /k "cd /d "%APP_DIR%client" && npm run dev"
 
 ping 127.0.0.1 -n 3 >nul

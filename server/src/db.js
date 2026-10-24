@@ -136,6 +136,21 @@ function initSchema() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_users_username ON users (username);
+
+    CREATE TABLE IF NOT EXISTS session_history (
+      id TEXT PRIMARY KEY,
+      pin TEXT NOT NULL,
+      title TEXT,
+      mode TEXT,
+      quizMode TEXT,
+      totalPlayers INTEGER DEFAULT 0,
+      averageScore INTEGER DEFAULT 0,
+      overallAccuracyPct REAL DEFAULT 0,
+      analyticsJson TEXT,
+      finishedAt INTEGER
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_session_history_finished ON session_history (finishedAt);
   `);
 
   // Auto-seed default ADMIN and TEACHER if users table is empty
@@ -168,7 +183,7 @@ function saveRoom(room) {
     if (!d) return { success: false, error: 'Database unavailable' };
     const now = Date.now();
     const createdAt = Number(room.createdAt) || now;
-    const updatedAt = now;
+    const updatedAt = Number(room.updatedAt) || now;
 
     // Serialize teams safely (Map, Array, or Object)
     let teamsJson = null;
@@ -928,6 +943,125 @@ if (require.main === module) {
   runSelfTest();
 }
 
+
+/**
+ * Save session analytics to history archive
+ */
+function saveSessionHistory(pin, analytics) {
+  if (!DatabaseSync || !analytics) return null;
+  const d = getDb();
+  if (!d) return null;
+
+  try {
+    const id = `sess_${pin}_${Date.now()}`;
+    const finishedAt = Date.now();
+    const title = analytics.quizTitle || 'แบบทดสอบ KaoJai';
+    const mode = analytics.mode || 'QUIZ';
+    const quizMode = analytics.quizMode || 'NORMAL';
+    const totalPlayers = analytics.totalPlayers || 0;
+    const averageScore = analytics.averageScore || 0;
+    const overallAccuracyPct = analytics.overallAccuracyPct || 0;
+    const analyticsJson = JSON.stringify(analytics);
+
+    const stmt = d.prepare(`
+      INSERT INTO session_history (id, pin, title, mode, quizMode, totalPlayers, averageScore, overallAccuracyPct, analyticsJson, finishedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    stmt.run(id, pin, title, mode, quizMode, totalPlayers, averageScore, overallAccuracyPct, analyticsJson, finishedAt);
+    return id;
+  } catch (err) {
+    console.error('[DB Error] saveSessionHistory:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Get list of past session history (without full analytics JSON for fast listing)
+ */
+function getSessionHistoryList(limit = 50) {
+  if (!DatabaseSync) return [];
+  const d = getDb();
+  if (!d) return [];
+
+  try {
+    const rows = d.prepare(`
+      SELECT id, pin, title, mode, quizMode, totalPlayers, averageScore, overallAccuracyPct, finishedAt
+      FROM session_history
+      ORDER BY finishedAt DESC
+      LIMIT ?
+    `).all(limit);
+    return rows;
+  } catch (err) {
+    console.error('[DB Error] getSessionHistoryList:', err.message);
+    return [];
+  }
+}
+
+/**
+ * Get single session history with full analytics
+ */
+function getSessionHistoryById(id) {
+  if (!DatabaseSync) return null;
+  const d = getDb();
+  if (!d) return null;
+
+  try {
+    const row = d.prepare('SELECT * FROM session_history WHERE id = ?').get(id);
+    if (!row) return null;
+    return {
+      ...row,
+      analytics: row.analyticsJson ? JSON.parse(row.analyticsJson) : null
+    };
+  } catch (err) {
+    console.error('[DB Error] getSessionHistoryById:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Delete a session history entry
+ */
+function deleteSessionHistory(id) {
+  if (!DatabaseSync) return false;
+  const d = getDb();
+  if (!d) return false;
+
+  try {
+    const stmt = d.prepare('DELETE FROM session_history WHERE id = ?');
+    const res = stmt.run(id);
+    return res.changes > 0;
+  } catch (err) {
+    console.error('[DB Error] deleteSessionHistory:', err.message);
+    return false;
+  }
+}
+
+/**
+ * Clean up old rooms not updated for olderThanDays days
+ */
+function cleanupOldRooms(olderThanDays = 14) {
+  if (!DatabaseSync) return 0;
+  const d = getDb();
+  if (!d) return 0;
+
+  try {
+    const cutoff = Date.now() - (olderThanDays * 24 * 60 * 60 * 1000);
+    const stmt = d.prepare('DELETE FROM rooms WHERE updatedAt < ?');
+    const res = stmt.run(cutoff);
+    return res.changes || 0;
+  } catch (err) {
+    console.error('[DB Error] cleanupOldRooms:', err.message);
+    return 0;
+  }
+}
+
+/**
+ * Get active SQLite file path
+ */
+function getDbPath() {
+  return activeDbPath || DB_PATH;
+}
+
 module.exports = {
   DB_PATH,
   DATA_DIR,
@@ -954,6 +1088,12 @@ module.exports = {
   updateUserPassword,
   updateUserRole,
   getAllUsers,
+  saveSessionHistory,
+  getSessionHistoryList,
+  getSessionHistoryById,
+  deleteSessionHistory,
+  cleanupOldRooms,
+  getDbPath,
   deleteUser,
   runSelfTest
 };

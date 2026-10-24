@@ -9,7 +9,8 @@ const os = require('os');
 const setupSocketHandlers = require('./socketHandler');
 const { getAllQuizzes, saveQuiz, deleteQuiz, duplicateQuiz, importQuizzes } = require('./quizData');
 const { generateAiQuiz } = require('./aiService');
-const { authRouter, authenticateToken, optionalAuthenticateToken } = require('./auth');
+const { authRouter, authenticateToken, optionalAuthenticateToken, requireRole } = require('./auth');
+const db = require('./db');
 
 function createRateLimiter({ windowMs = 60000, max = 15, message = 'คำขอมากเกินไป กรุณารอสักครู่' }) {
   const hits = new Map();
@@ -276,6 +277,94 @@ app.use('/uploads', (req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   next();
 }, express.static(uploadsDir));
+
+
+// ─── Session History Endpoints (Protected: TEACHER or ADMIN) ───
+app.get('/api/history', authenticateToken, (req, res) => {
+  try {
+    const list = db.getSessionHistoryList(50);
+    res.json({ success: true, history: list });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.get('/api/history/:id', authenticateToken, (req, res) => {
+  try {
+    const session = db.getSessionHistoryById(req.params.id);
+    if (!session) {
+      return res.status(404).json({ success: false, message: 'ไม่พบประวัติเซสชันนี้' });
+    }
+    res.json({ success: true, session });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.delete('/api/history/:id', authenticateToken, requireRole('TEACHER'), (req, res) => {
+  try {
+    const deleted = db.deleteSessionHistory(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'ไม่พบประวัติเซสชันที่ต้องการลบ' });
+    }
+    res.json({ success: true, message: 'ลบประวัติเซสชันสำเร็จ' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ─── Admin Database Backup & Restore Endpoints (ADMIN only) ───
+app.get('/api/admin/backup', authenticateToken, requireRole('ADMIN'), (req, res) => {
+  try {
+    const dbPath = db.getDbPath();
+    if (!fs.existsSync(dbPath) || dbPath === ':memory:') {
+      return res.status(404).json({ success: false, message: 'ไม่พบไฟล์ฐานข้อมูลสำหรับสำรอง' });
+    }
+    const backupFileName = `kaojai_backup_${new Date().toISOString().slice(0, 10)}.sqlite`;
+    res.download(dbPath, backupFileName);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.post('/api/admin/restore', authenticateToken, requireRole('ADMIN'), (req, res) => {
+  try {
+    const { sqliteBase64 } = req.body;
+    if (!sqliteBase64 || typeof sqliteBase64 !== 'string') {
+      return res.status(400).json({ success: false, message: 'กรุณาส่งข้อมูลไฟล์สำรอง SQLite' });
+    }
+    const dbBuffer = Buffer.from(sqliteBase64, 'base64');
+    const sqliteHeader = dbBuffer.slice(0, 16).toString('utf8');
+    if (!sqliteHeader.startsWith('SQLite format 3')) {
+      return res.status(400).json({ success: false, message: 'ไฟล์ไม่ใช่ฐานข้อมูล SQLite ที่ถูกต้อง' });
+    }
+    const dbPath = db.getDbPath();
+    if (dbPath === ':memory:') {
+      return res.status(400).json({ success: false, message: 'ฐานข้อมูลอยู่ในโหมด Memory ไม่สามารถเขียนทับไฟล์ได้' });
+    }
+    db.closeDb();
+    fs.writeFileSync(dbPath, dbBuffer);
+    db.initDb(dbPath);
+    res.json({ success: true, message: 'กู้คืนฐานข้อมูลสำเร็จเรียบร้อยแล้ว' });
+  } catch (err) {
+    console.error('[Restore Error]:', err);
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการกู้คืนฐานข้อมูล: ' + err.message });
+  }
+});
+
+// ─── Automated Inactive Room Cleanup Cron (every 6 hours) ───
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(() => {
+    try {
+      const cleaned = db.cleanupOldRooms(14);
+      if (cleaned > 0) {
+        console.log(`[Auto Cleanup] Cleaned up ${cleaned} inactive room(s) older than 14 days`);
+      }
+    } catch (e) {
+      console.error('[Auto Cleanup Error]:', e.message);
+    }
+  }, 6 * 60 * 60 * 1000).unref();
+}
 
 // Image Upload Endpoint with Strict MIME Whitelist, Magic Bytes Verification and 5MB Limit
 app.post('/api/upload', uploadLimiter, authenticateToken, (req, res) => {

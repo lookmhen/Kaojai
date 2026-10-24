@@ -392,6 +392,19 @@ export function AppContent() {
       setPretestData(null);
     };
 
+    const onPlayerKicked = (data) => {
+      showNotificationError(data?.message || 'คุณถูกนำออกจากห้องกิจกรรมโดยวิทยากร', 5000);
+      clearSession();
+      if (window.history.replaceState) {
+        const cleanUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+        window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+      }
+      setViewMode('PLAYER_JOIN');
+      setPin('');
+      setStatus('LOBBY');
+      setPlayerData(null);
+    };
+
     const onRoomClosed = (data) => {
       showNotificationError(data.message || 'วิทยากรได้ปิดห้องหรือออกจากห้องแล้ว', 5000);
       clearSession();
@@ -453,6 +466,7 @@ export function AppContent() {
     socket.on('sequence_intro', onSequenceIntro);
     socket.on('room_reset_to_lobby', onRoomResetToLobby);
     socket.on('room_closed', onRoomClosed);
+    socket.on('player_kicked', onPlayerKicked);
     socket.on('lucky_draw_spin', onLuckyDrawSpin);
     socket.on('lucky_draw_closed', onLuckyDrawClosed);
 
@@ -499,6 +513,7 @@ export function AppContent() {
       socket.off('teams_updated', onTeamsUpdated);
       socket.off('room_reset_to_lobby', onRoomResetToLobby);
       socket.off('room_closed', onRoomClosed);
+      socket.off('player_kicked', onPlayerKicked);
       socket.off('lucky_draw_spin', onLuckyDrawSpin);
       socket.off('lucky_draw_closed', onLuckyDrawClosed);
     };
@@ -806,6 +821,7 @@ export function AppContent() {
               selectedQuizId={selectedQuizId}
               onSelectQuiz={handleSelectQuiz}
               onClearPretest={handleClearPretest}
+              onRemovePlayer={handleRemovePlayer}
             />
           ) : status === 'LEADERBOARD' || status === 'ENDED' ? (
             <HostLeaderboard

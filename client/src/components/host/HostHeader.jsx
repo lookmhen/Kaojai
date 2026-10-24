@@ -2,6 +2,7 @@ import React from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { Users, Play, Activity, LogOut, Gift } from 'lucide-react';
 import { SoundToggle } from '../common/SoundToggle';
+import { LanguageToggle } from '../common/LanguageToggle';
 
 export const HostHeader = ({ pin, mode, counts, onSwitchMode, onLeave, onOpenLuckyDraw }) => {
   return (
@@ -103,11 +104,13 @@ export const HostHeader = ({ pin, mode, counts, onSwitchMode, onLeave, onOpenLuc
               boxShadow: '0 2px 6px rgba(234, 88, 12, 0.15)',
               transition: 'all 0.2s'
             }}
-            title="เปิดวงล้อสุ่ม Lucky Draw"
+            title="เปิด Lucky Draw"
           >
             <Gift size={16} color="#EA580C" /> Lucky Draw
           </button>
         )}
+
+        <LanguageToggle />
 
         <SoundToggle />
 

@@ -13,7 +13,8 @@ export const HostLobby = ({
   pretestData = null,
   selectedQuizId: propSelectedQuizId = '',
   onSelectQuiz = null,
-  onClearPretest = null
+  onClearPretest = null,
+  onRemovePlayer = null
 }) => {
   const [quizzes, setQuizzes] = useState([]);
   const [selectedQuizId, setSelectedQuizId] = useState(propSelectedQuizId || pretestData?.quizId || '');
@@ -514,9 +515,42 @@ export const HostLobby = ({
                   borderTop: team ? `4px solid ${team.color}` : '1px solid #E2E8F0',
                   background: '#FFFFFF',
                   cursor: teamsEnabled ? 'grab' : 'default',
-                  userSelect: 'none'
+                  userSelect: 'none',
+                  position: 'relative'
                 }}
               >
+                {onRemovePlayer && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(`ต้องการนำผู้เล่น "${p.name}" ออกจากห้องใช่หรือไม่?`)) {
+                        onRemovePlayer(p.playerId);
+                      }
+                    }}
+                    title={`เตะ ${p.name} ออกจากห้อง`}
+                    style={{
+                      position: 'absolute',
+                      top: '6px',
+                      right: '6px',
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      background: '#FEE2E2',
+                      color: '#DC2626',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.75rem',
+                      fontWeight: 900,
+                      padding: 0
+                    }}
+                  >
+                    <X size={12} />
+                  </button>
+                )}
                 <img
                   src={`/avatars/${p.avatar || '0291dcc0ce.svg'}`}
                   alt={p.name}
