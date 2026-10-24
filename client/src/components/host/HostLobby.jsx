@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { generateQRCodeSVG } from '../../utils/qrcode';
-import { Play, Users, BookOpen, QrCode, Shuffle, Plus, Trash2, UsersRound, ToggleLeft, ToggleRight, X, UserMinus, Hand, ClipboardList, TrendingUp, CheckCircle2 } from 'lucide-react';
+import { Play, Users, BookOpen, QrCode, Shuffle, Plus, Trash2, UsersRound, ToggleLeft, ToggleRight, X, UserMinus, Hand, ClipboardList, TrendingUp, CheckCircle2, Copy, Check, Link2, Music } from 'lucide-react';
 import { useI18n } from '../../context/I18nContext';
+import { sfx } from '../../utils/audioSFX';
 
 const TEAM_COLOR_PRESETS = [
   '#E11D48', '#2563EB', '#D97706', '#059669', '#7C3AED', '#0891B2'
@@ -26,6 +27,57 @@ export const HostLobby = ({
   const [dragOverTeamId, setDragOverTeamId] = useState(null);
   const [isDragOverUnassign, setIsDragOverUnassign] = useState(false);
   const [serverHost, setServerHost] = useState(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [isBgmPlaying, setIsBgmPlaying] = useState(() => sfx.isLobbyBGMPlaying());
+
+  const handleToggleBgm = () => {
+    const playing = sfx.toggleLobbyBGM();
+    setIsBgmPlaying(playing);
+  };
+
+  useEffect(() => {
+    return () => {
+      sfx.stopLobbyBGM();
+    };
+  }, []);
+
+  const handleCopyLink = async () => {
+    if (!joinUrl) return;
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(joinUrl);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = joinUrl;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2200);
+    } catch (err) {
+      console.warn('Clipboard write failed, attempting fallback:', err);
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = joinUrl;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 2200);
+      } catch (e) {
+        console.error('Fallback copy error:', e);
+      }
+    }
+  };
 
   useEffect(() => {
     if (propSelectedQuizId && propSelectedQuizId !== selectedQuizId) {
@@ -94,24 +146,146 @@ export const HostLobby = ({
       <div className="glass-card" style={{ textAlign: 'center', marginBottom: '32px', padding: '32px 24px' }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '40px', flexWrap: 'wrap' }}>
           {/* QR Code */}
-          <div style={{ background: '#FFFFFF', padding: '12px', borderRadius: '16px', border: '1px solid #CBD5E1', boxShadow: '0 4px 12px rgba(15,23,42,0.05)', textAlign: 'center' }}>
+          <div style={{
+            background: '#FFFFFF',
+            padding: '16px',
+            borderRadius: '16px',
+            border: '1px solid #CBD5E1',
+            boxShadow: '0 4px 12px rgba(15,23,42,0.05)',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            minWidth: '220px',
+            maxWidth: '260px'
+          }}>
             <img src={qrCodeImgSrc} alt="QR Code Join Room" style={{ width: '160px', height: '160px', borderRadius: '8px', display: 'block' }} />
-            <div style={{ color: 'var(--text-main)', fontSize: '0.8rem', fontWeight: 700, marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-              <QrCode size={14} color="var(--accent-earth-blue)" /> สแกนเข้าห้องได้เลย
+            <div style={{ color: 'var(--text-main)', fontSize: '0.82rem', fontWeight: 700, marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+              <QrCode size={14} color="var(--accent-earth-blue)" /> {t('scanToJoin') || 'สแกนเข้าห้องได้เลย'}
+            </div>
+
+            {/* Direct Link & Copy Action under QR Code */}
+            <div style={{ width: '100%', marginTop: '10px' }}>
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                title={joinUrl}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '8px',
+                  padding: '7px 10px',
+                  background: copiedLink ? '#DCFCE7' : '#F8FAFC',
+                  border: `1.5px solid ${copiedLink ? '#86EFAC' : '#CBD5E1'}`,
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  transition: 'all 0.18s ease',
+                  textAlign: 'left',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontSize: '0.7rem',
+                    color: copiedLink ? '#15803D' : '#64748B',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <Link2 size={12} color={copiedLink ? '#15803D' : 'var(--accent-earth-blue)'} />
+                    <span>{copiedLink ? (t('linkCopied') || 'คัดลอกลิงก์แล้ว!') : (t('copyLink') || 'คัดลอกลิงก์')}</span>
+                  </div>
+                  <div style={{
+                    fontSize: '0.74rem',
+                    color: copiedLink ? '#15803D' : 'var(--accent-earth-blue)',
+                    fontWeight: 700,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    marginTop: '2px'
+                  }}>
+                    {joinUrl}
+                  </div>
+                </div>
+                <div style={{
+                  padding: '4px 6px',
+                  borderRadius: '6px',
+                  background: copiedLink ? '#16A34A' : '#E2E8F0',
+                  color: copiedLink ? '#FFFFFF' : '#475569',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  {copiedLink ? <Check size={13} strokeWidth={2.5} /> : <Copy size={13} />}
+                </div>
+              </button>
             </div>
           </div>
 
           {/* PIN */}
           <div style={{ textAlign: 'left' }}>
             <h2 style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-muted)', fontWeight: 700 }}>
-              หรือเข้าเว็บกรอก GAME PIN:
+              {t('enterPinDesc') || 'หรือเข้าเว็บกรอก GAME PIN:'}
             </h2>
-            <div style={{ fontSize: '4.8rem', fontWeight: 900, color: 'var(--accent-earth-orange)', letterSpacing: '8px', lineHeight: 1 }}>
+            <div style={{ fontSize: 'clamp(2.8rem, 8vw, 4.8rem)', fontWeight: 900, color: 'var(--accent-earth-orange)', letterSpacing: 'clamp(3px, 1.5vw, 8px)', lineHeight: 1.1, wordBreak: 'break-all' }}>
               {pin}
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '8px' }}>
-              URL: <span style={{ color: 'var(--accent-earth-blue)', fontWeight: 800, textDecoration: 'underline' }}>{effectiveHost}</span>
-            </p>
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span>URL:</span>
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                title={joinUrl}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  borderRadius: '8px',
+                  background: copiedLink ? '#DCFCE7' : '#EFF6FF',
+                  border: `1px solid ${copiedLink ? '#86EFAC' : '#BFDBFE'}`,
+                  color: copiedLink ? '#15803D' : 'var(--accent-earth-blue)',
+                  fontWeight: 800,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Link2 size={13} />
+                <span style={{ textDecoration: 'underline' }}>{effectiveHost}</span>
+                {copiedLink ? <Check size={13} color="#15803D" /> : <Copy size={13} />}
+              </button>
+            </div>
+
+            {/* Lobby BGM Toggle */}
+            <div style={{ marginTop: '12px' }}>
+              <button
+                type="button"
+                onClick={handleToggleBgm}
+                title="เปิด/ปิดดนตรีคลอระหว่างรอผู้เรียนเข้าร่วมห้อง"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '5px 12px',
+                  borderRadius: '20px',
+                  background: isBgmPlaying ? '#EFF6FF' : '#F1F5F9',
+                  border: `1.5px solid ${isBgmPlaying ? '#93C5FD' : '#CBD5E1'}`,
+                  color: isBgmPlaying ? '#1D4ED8' : '#64748B',
+                  fontWeight: 800,
+                  fontSize: '0.82rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Music size={14} color={isBgmPlaying ? '#1D4ED8' : '#64748B'} />
+                <span>{isBgmPlaying ? '🎵 ดนตรีห้องรอ: กำลังเล่น' : '🔇 ดนตรีห้องรอ: ปิดอยู่ (คลิกเพื่อเปิด)'}</span>
+              </button>
+            </div>
           </div>
         </div>
 

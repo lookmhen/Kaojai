@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
-import { Trophy, ArrowRight, Users, Flag, RotateCcw, FileSpreadsheet, FileText, LogOut, TrendingUp, Award, Download, Gift } from 'lucide-react';
+import { Trophy, ArrowRight, Users, Flag, RotateCcw, FileSpreadsheet, FileText, LogOut, TrendingUp, Award, Download, Gift, Swords } from 'lucide-react';
 import { exportGameReportExcel, exportGameReportPDF } from '../../utils/exportReport';
 import { SportsPodium } from './SportsPodium';
 import { TeamPodium } from './TeamPodium';
+import { TugOfWarView } from './TugOfWarView';
 import { useI18n } from '../../context/I18nContext';
 
 export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, pretestData, isEnded, onNextQuestion, onResetToLobby, onLeave, onOpenLuckyDraw }) => {
@@ -14,6 +15,7 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
   const teamLeaderboard = quizAnalytics?.teamLeaderboard || [];
   const hasTeams = teamsEnabled && teamLeaderboard.length > 0;
   const [viewMode, setViewMode] = useState(isEnded ? 'PODIUM' : 'TRACK');
+  const [teamViewStyle, setTeamViewStyle] = useState('PODIUM');
 
   useEffect(() => {
     fireConfetti();
@@ -178,9 +180,62 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
       )}
 
       {/* Racing Track Rows (Mid-game OR toggled in ended mode) */}
-      {/* Team Battle Podium View */}
+      {/* Team Battle View (Podium or Tug-of-War) */}
       {viewMode === 'TEAMS' && hasTeams && (
-        <TeamPodium teamLeaderboard={teamLeaderboard} />
+        <div style={{ marginBottom: '28px' }}>
+          {/* Sub-view toggle between Podium and Tug-of-War */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+            <div style={{ display: 'inline-flex', background: '#FFFFFF', padding: '4px', borderRadius: '30px', border: '1.5px solid #CBD5E1', boxShadow: '0 2px 10px rgba(0,0,0,0.04)', gap: '4px' }}>
+              <button
+                type="button"
+                onClick={() => setTeamViewStyle('PODIUM')}
+                style={{
+                  padding: '7px 18px',
+                  borderRadius: '24px',
+                  background: teamViewStyle === 'PODIUM' ? '#4F46E5' : 'transparent',
+                  color: teamViewStyle === 'PODIUM' ? '#FFFFFF' : '#475569',
+                  fontWeight: 800,
+                  fontSize: '0.86rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Trophy size={15} /> แท่นรับรางวัลทีม (Team Podium)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTeamViewStyle('TUG_OF_WAR')}
+                style={{
+                  padding: '7px 18px',
+                  borderRadius: '24px',
+                  background: teamViewStyle === 'TUG_OF_WAR' ? '#EA580C' : 'transparent',
+                  color: teamViewStyle === 'TUG_OF_WAR' ? '#FFFFFF' : '#475569',
+                  fontWeight: 800,
+                  fontSize: '0.86rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Swords size={15} /> 🪢 สงครามชักเย่อ (Tug-of-War)
+              </button>
+            </div>
+          </div>
+
+          {teamViewStyle === 'PODIUM' ? (
+            <TeamPodium teamLeaderboard={teamLeaderboard} />
+          ) : (
+            <TugOfWarView teamLeaderboard={teamLeaderboard} />
+          )}
+        </div>
       )}
 
       {/* Racing Track Rows (Mid-game OR toggled in ended mode) */}

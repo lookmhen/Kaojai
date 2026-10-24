@@ -1570,9 +1570,13 @@ export const LuckyWaterPool = ({
       <div
         style={{
           marginTop: '12px',
-          display: 'inline-flex',
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
           alignItems: 'center',
           gap: '8px',
+          maxWidth: '100%',
+          textAlign: 'center',
           background: isReadyToCrack ? '#FEF3C7' : '#F0F9FF',
           border: isReadyToCrack ? '1px solid #FDE68A' : '1px solid #BAE6FD',
           color: isReadyToCrack ? '#92400E' : '#0369A1',
@@ -1580,7 +1584,8 @@ export const LuckyWaterPool = ({
           borderRadius: '24px',
           fontSize: '0.86rem',
           fontWeight: 700,
-          transition: 'all 0.2s ease'
+          transition: 'all 0.2s ease',
+          boxSizing: 'border-box'
         }}
       >
         <span>🎣 เลื่อนก้าน <strong>Pickup Rod</strong> กวนน้ำวนในอ่างกลม</span>

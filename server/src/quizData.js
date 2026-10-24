@@ -46,6 +46,17 @@ const INITIAL_SEED_QUIZZES = [
           { id: "seq4", text: "ทดสอบความเสถียรและความพร้อมใช้งาน (Verify)" },
           { id: "seq5", text: "สรุปรายงานและบันทึกบทเรียน Post-Mortem (Document)" }
         ]
+      },
+      {
+        id: "q4",
+        questionType: "TRUE_FALSE",
+        questionText: "การเปิดใช้งาน Multi-Factor Authentication (MFA) ช่วยเพิ่มความปลอดภัยให้กับบัญชีผู้ใช้ได้จริง",
+        timeLimitSeconds: 15,
+        imageUrl: "",
+        options: [
+          { id: "opt_true", text: "ถูก (True)", isCorrect: true },
+          { id: "opt_false", text: "ผิด (False)", isCorrect: false }
+        ]
       }
     ]
   },
@@ -65,6 +76,17 @@ const INITIAL_SEED_QUIZZES = [
           { id: "opt2", text: "High Tech Multi Language", isCorrect: false },
           { id: "opt3", text: "Hyper Transfer Main Link", isCorrect: false },
           { id: "opt4", text: "Home Tool Management Line", isCorrect: false }
+        ]
+      },
+      {
+        id: "q2",
+        questionType: "TRUE_FALSE",
+        questionText: "ภาษา JavaScript และ Java เป็นภาษาคอมพิวเตอร์เดียวกันและพัฒนาโดยทีมงานเดียวกัน",
+        timeLimitSeconds: 15,
+        imageUrl: "",
+        options: [
+          { id: "opt_true", text: "ถูก (True)", isCorrect: false },
+          { id: "opt_false", text: "ผิด (False)", isCorrect: true }
         ]
       }
     ]

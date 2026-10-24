@@ -16,6 +16,10 @@ class SoundEffects {
     this.listeners = new Set();
     this._hasUserGesture = false;
     this._tensionTimer = null;
+    this._bgmTimer = null;
+    this._isBgmPlaying = false;
+    this._luckyBgmTimer = null;
+    this._isLuckyBgmPlaying = false;
 
     if (typeof window !== 'undefined') {
       const unlockAudio = () => {
@@ -75,6 +79,11 @@ class SoundEffects {
 
   toggleMute() {
     this.muted = !this.muted;
+    if (this.muted) {
+      this.stopLobbyBGM();
+      this.stopLuckyDrawBGM();
+      this.stopTensionLoop();
+    }
     if (typeof window !== 'undefined') {
       localStorage.setItem('kaojai_sfx_muted', String(this.muted));
     }
@@ -695,6 +704,304 @@ class SoundEffects {
       clearInterval(this._tensionTimer);
       this._tensionTimer = null;
     }
+  }
+
+  startLobbyBGM() {
+    if (this.muted) return;
+    this.stopLobbyBGM();
+    try {
+      this.init();
+      if (!this.ctx) return;
+
+      this._isBgmPlaying = true;
+      let step = 0;
+      let measure = 0;
+      const bpm = 110;
+      const stepDuration = (60 / bpm) / 4; // 16th note ~136ms
+      const intervalMs = Math.round(stepDuration * 1000);
+
+      // 4-Bar Chord Progression (C - Am - F - G)
+      const chords = [
+        { name: 'C',  bass: 65.41, notes: [261.63, 329.63, 392.00, 493.88, 523.25] },
+        { name: 'Am', bass: 55.00, notes: [220.00, 261.63, 329.63, 392.00, 440.00] },
+        { name: 'F',  bass: 43.65, notes: [174.61, 220.00, 261.63, 329.63, 349.23] },
+        { name: 'G',  bass: 48.99, notes: [196.00, 246.94, 293.66, 349.23, 392.00] }
+      ];
+
+      // Melodic rhythm triggers across 16 steps
+      const rhythmPattern = {
+        0: 0,
+        3: 1,
+        6: 2,
+        8: 4,
+        10: 3,
+        12: 2,
+        14: 1
+      };
+
+      this._bgmTimer = setInterval(() => {
+        if (this.muted || !this._isBgmPlaying || !this.ctx || this.ctx.state !== 'running') return;
+        const now = this.ctx.currentTime;
+        const currentChord = chords[measure % 4];
+
+        // 1. Soft Sub Bass on Beat 0 and Beat 8
+        if (step === 0 || step === 8) {
+          const bassOsc = this.ctx.createOscillator();
+          const bassGain = this.ctx.createGain();
+          const bassFilter = this.ctx.createBiquadFilter();
+
+          bassFilter.type = 'lowpass';
+          bassFilter.frequency.setValueAtTime(160, now);
+
+          bassOsc.type = 'sine';
+          bassOsc.frequency.setValueAtTime(currentChord.bass, now);
+
+          const bassVol = step === 0 ? 0.065 : 0.04;
+          bassGain.gain.setValueAtTime(bassVol, now);
+          bassGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+          bassOsc.connect(bassFilter);
+          bassFilter.connect(bassGain);
+          bassGain.connect(this.ctx.destination);
+
+          bassOsc.start(now);
+          bassOsc.stop(now + 0.36);
+        }
+
+        // 2. Playful Kalimba / Pluck Melodic Note
+        if (rhythmPattern[step] !== undefined) {
+          const noteIdx = rhythmPattern[step];
+          const freq = currentChord.notes[noteIdx % currentChord.notes.length];
+
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now);
+
+          const noteVol = step === 0 ? 0.045 : 0.03;
+          gain.gain.setValueAtTime(noteVol, now);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now);
+          osc.stop(now + 0.19);
+        }
+
+        // 3. Gentle Shaker Groove on Offbeats
+        if (step % 2 === 1) {
+          const noiseBuffer = this.ctx.createBuffer(1, Math.round(this.ctx.sampleRate * 0.025), this.ctx.sampleRate);
+          const output = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < noiseBuffer.length; i++) {
+            output[i] = Math.random() * 2 - 1;
+          }
+
+          const whiteNoise = this.ctx.createBufferSource();
+          whiteNoise.buffer = noiseBuffer;
+
+          const filter = this.ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(7000, now);
+          filter.Q.setValueAtTime(3, now);
+
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(0.012, now);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.024);
+
+          whiteNoise.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          whiteNoise.start(now);
+          whiteNoise.stop(now + 0.025);
+        }
+
+        step++;
+        if (step >= 16) {
+          step = 0;
+          measure = (measure + 1) % 4;
+        }
+      }, intervalMs);
+    } catch (e) {
+      console.warn('Lobby BGM start error:', e);
+    }
+  }
+
+  stopLobbyBGM() {
+    this._isBgmPlaying = false;
+    if (this._bgmTimer) {
+      clearInterval(this._bgmTimer);
+      this._bgmTimer = null;
+    }
+  }
+
+  toggleLobbyBGM() {
+    if (this._isBgmPlaying) {
+      this.stopLobbyBGM();
+      return false;
+    } else {
+      this.startLobbyBGM();
+      return true;
+    }
+  }
+
+  isLobbyBGMPlaying() {
+    return Boolean(this._isBgmPlaying && !this.muted);
+  }
+
+  startLuckyDrawBGM() {
+    if (this.muted) return;
+    this.stopLuckyDrawBGM();
+    try {
+      this.init();
+      if (!this.ctx) return;
+
+      this._isLuckyBgmPlaying = true;
+      let step = 0;
+      let measure = 0;
+      const bpm = 118;
+      const stepDuration = (60 / bpm) / 4; // 16th note ~127ms
+      const intervalMs = Math.round(stepDuration * 1000);
+
+      // Festive Lucky Game-Show Progression (G - Em - C - D)
+      const chords = [
+        { name: 'G',  bass: 48.99, notes: [392.00, 493.88, 587.33, 783.99, 987.77] },
+        { name: 'Em', bass: 41.20, notes: [329.63, 392.00, 493.88, 659.25, 783.99] },
+        { name: 'C',  bass: 65.41, notes: [261.63, 329.63, 392.00, 523.25, 659.25] },
+        { name: 'D',  bass: 73.42, notes: [293.66, 369.99, 440.00, 587.33, 739.99] }
+      ];
+
+      // Playful sparkling arpeggio pattern
+      const arpPattern = {
+        0: 0,
+        2: 2,
+        4: 1,
+        6: 3,
+        8: 4,
+        10: 2,
+        12: 3,
+        14: 1
+      };
+
+      this._luckyBgmTimer = setInterval(() => {
+        if (this.muted || !this._isLuckyBgmPlaying || !this.ctx || this.ctx.state !== 'running') return;
+        const now = this.ctx.currentTime;
+        const currentChord = chords[measure % 4];
+
+        // 1. Bouncy Sub Bass on Beats 0, 6, 8
+        if (step === 0 || step === 6 || step === 8) {
+          const bassOsc = this.ctx.createOscillator();
+          const bassGain = this.ctx.createGain();
+          const bassFilter = this.ctx.createBiquadFilter();
+
+          bassFilter.type = 'lowpass';
+          bassFilter.frequency.setValueAtTime(200, now);
+
+          bassOsc.type = 'sine';
+          bassOsc.frequency.setValueAtTime(currentChord.bass, now);
+
+          const bassVol = step === 0 ? 0.055 : 0.035;
+          bassGain.gain.setValueAtTime(bassVol, now);
+          bassGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+
+          bassOsc.connect(bassFilter);
+          bassFilter.connect(bassGain);
+          bassGain.connect(this.ctx.destination);
+
+          bassOsc.start(now);
+          bassOsc.stop(now + 0.29);
+        }
+
+        // 2. Music Box / Celesta Pluck Note (Chime vibe)
+        if (arpPattern[step] !== undefined) {
+          const noteIdx = arpPattern[step];
+          const freq = currentChord.notes[noteIdx % currentChord.notes.length];
+
+          const osc = this.ctx.createOscillator();
+          const oscOvertone = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now);
+
+          oscOvertone.type = 'triangle';
+          oscOvertone.frequency.setValueAtTime(freq * 2, now);
+
+          const noteVol = step === 0 || step === 8 ? 0.035 : 0.022;
+          gain.gain.setValueAtTime(noteVol, now);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+
+          osc.connect(gain);
+          oscOvertone.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now);
+          oscOvertone.start(now);
+          osc.stop(now + 0.17);
+          oscOvertone.stop(now + 0.17);
+        }
+
+        // 3. Crisp Carnival Shaker on every 2nd step
+        if (step % 2 === 1) {
+          const noiseBuffer = this.ctx.createBuffer(1, Math.round(this.ctx.sampleRate * 0.022), this.ctx.sampleRate);
+          const output = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < noiseBuffer.length; i++) {
+            output[i] = Math.random() * 2 - 1;
+          }
+
+          const whiteNoise = this.ctx.createBufferSource();
+          whiteNoise.buffer = noiseBuffer;
+
+          const filter = this.ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(8500, now);
+          filter.Q.setValueAtTime(3.5, now);
+
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(0.01, now);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.021);
+
+          whiteNoise.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          whiteNoise.start(now);
+          whiteNoise.stop(now + 0.022);
+        }
+
+        step++;
+        if (step >= 16) {
+          step = 0;
+          measure = (measure + 1) % 4;
+        }
+      }, intervalMs);
+    } catch (e) {
+      console.warn('Lucky Draw BGM start error:', e);
+    }
+  }
+
+  stopLuckyDrawBGM() {
+    this._isLuckyBgmPlaying = false;
+    if (this._luckyBgmTimer) {
+      clearInterval(this._luckyBgmTimer);
+      this._luckyBgmTimer = null;
+    }
+  }
+
+  toggleLuckyDrawBGM() {
+    if (this._isLuckyBgmPlaying) {
+      this.stopLuckyDrawBGM();
+      return false;
+    } else {
+      this.startLuckyDrawBGM();
+      return true;
+    }
+  }
+
+  isLuckyDrawBGMPlaying() {
+    return Boolean(this._isLuckyBgmPlaying && !this.muted);
   }
 }
 

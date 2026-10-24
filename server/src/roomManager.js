@@ -529,7 +529,7 @@ class RoomManager {
 
     return {
       id: safeId,
-      questionType: 'CHOICE',
+      questionType: q.questionType === 'TRUE_FALSE' ? 'TRUE_FALSE' : 'CHOICE',
       questionText: q.questionText,
       timeLimitSeconds: safeTimeLimit,
       imageUrl: q.imageUrl || '',
@@ -687,7 +687,7 @@ class RoomManager {
       }
 
       details = {
-        questionType: 'CHOICE',
+        questionType: currentQuestion.questionType === 'TRUE_FALSE' ? 'TRUE_FALSE' : 'CHOICE',
         optionId
       };
     }
@@ -817,7 +817,7 @@ class RoomManager {
 
       resultPayload = {
         questionId: currentQuestion?.id || room.currentSafeQuestion?.id || null,
-        questionType: 'CHOICE',
+        questionType: currentQuestion?.questionType === 'TRUE_FALSE' ? 'TRUE_FALSE' : 'CHOICE',
         correctOptionId: currentQuestion?.options?.find(o => o.isCorrect)?.id,
         optionCounts,
         answeredCount: counts.answeredCount,

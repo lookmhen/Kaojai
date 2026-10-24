@@ -410,7 +410,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                         onError={(e) => { e.target.src = '/avatars/0291dcc0ce.svg'; }}
                         style={{ width: '26px', height: '26px', borderRadius: '50%', flexShrink: 0 }}
                       />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }}>
                         {player.name}
                       </span>
                     </button>
@@ -509,19 +509,9 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
   }
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh', paddingBottom: '40px' }}>
-      {/* Top Action Bar: Pinned to true top-right of screen */}
-      <div
-        style={{
-          position: 'fixed',
-          top: '16px',
-          right: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          zIndex: 1000
-        }}
-      >
+    <div style={{ position: 'relative', minHeight: '100vh', paddingBottom: '40px', overflowX: 'hidden', boxSizing: 'border-box' }}>
+      {/* Top Action Bar: Pinned to true top-right of screen (Responsive flow on mobile) */}
+      <div className="joinroom-top-bar">
         <LanguageToggle />
         {isAuthenticated ? (
           <div
@@ -534,7 +524,8 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
               border: '1px solid #E2E8F0',
               padding: '4px 12px',
               borderRadius: '30px',
-              boxShadow: '0 2px 10px rgba(0,0,0,0.06)'
+              boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
+              flexWrap: 'wrap'
             }}
           >
             <div
@@ -651,7 +642,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
         <div
           className="glass-card animate-pop"
           style={{
-            padding: '28px 32px',
+            padding: 'clamp(18px, 3vw, 28px) clamp(18px, 3.5vw, 32px)',
             borderLeft: '8px solid #138808',
             background: '#FFFFFF',
             boxShadow: '0 8px 24px rgba(19, 136, 8, 0.08)',
@@ -659,19 +650,21 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '24px',
-            flexWrap: 'wrap'
+            gap: '20px',
+            flexWrap: 'wrap',
+            width: '100%',
+            boxSizing: 'border-box'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: '1 1 360px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: '1 1 280px', minWidth: 0 }}>
             <div style={{ background: '#F0FDF4', padding: '16px', borderRadius: '18px', border: '1px solid #BBF7D0', flexShrink: 0 }}>
               <Gamepad2 size={38} color="#138808" />
             </div>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 800, color: '#138808', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
                 <Rocket size={14} /> {t('forStudent', 'สำหรับผู้เรียน / ผู้เข้าร่วม')}
               </div>
-              <h2 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 6px 0', lineHeight: 1.2 }}>
+              <h2 style={{ fontSize: 'clamp(1.3rem, 2.8vw, 1.7rem)', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 6px 0', lineHeight: 1.2 }}>
                 {t('joinGame', 'เข้าร่วมตอบคำถาม (Join Game)')}
               </h2>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0, lineHeight: 1.5 }}>
@@ -680,17 +673,17 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
             </div>
           </div>
 
-          <div style={{ flex: '0 0 auto', minWidth: '220px' }}>
+          <div style={{ flex: '1 1 auto', minWidth: '180px', maxWidth: '320px', width: '100%' }}>
             <button
               type="button"
               onClick={() => setScreen('PLAYER_FORM')}
               style={{
                 width: '100%',
-                padding: '16px 32px',
+                padding: '16px 24px',
                 borderRadius: '14px',
                 background: '#138808',
                 color: '#FFFFFF',
-                fontSize: '1.2rem',
+                fontSize: '1.15rem',
                 fontWeight: 800,
                 display: 'flex',
                 alignItems: 'center',
@@ -710,22 +703,24 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
         <div
           className="glass-card animate-pop"
           style={{
-            padding: '28px 32px',
+            padding: 'clamp(18px, 3vw, 28px) clamp(18px, 3.5vw, 32px)',
             borderLeft: '8px solid var(--accent-earth-blue)',
             background: '#FFFFFF',
-            boxShadow: '0 8px 24px rgba(37, 99, 235, 0.08)'
+            boxShadow: '0 8px 24px rgba(37, 99, 235, 0.08)',
+            width: '100%',
+            boxSizing: 'border-box'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', flexWrap: 'wrap', marginBottom: activeSessions.length > 0 ? '20px' : 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: '1 1 360px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap', marginBottom: activeSessions.length > 0 ? '20px' : 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: '1 1 280px', minWidth: 0 }}>
               <div style={{ background: '#EFF6FF', padding: '16px', borderRadius: '18px', border: '1px solid #BFDBFE', flexShrink: 0 }}>
                 <MonitorPlay size={38} color="var(--accent-earth-blue)" />
               </div>
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-earth-blue)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
                   <Tv size={14} /> {t('forTeacher', 'สำหรับวิทยากร / ผู้สอน')}
                 </div>
-                <h2 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 6px 0', lineHeight: 1.2 }}>
+                <h2 style={{ fontSize: 'clamp(1.3rem, 2.8vw, 1.7rem)', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 6px 0', lineHeight: 1.2 }}>
                   {t('hostDashboard', 'เปิดเกมสดขึ้นจอใหญ่ (Host Dashboard)')}
                 </h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0, lineHeight: 1.5 }}>
@@ -734,16 +729,16 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', flex: '1 1 auto' }}>
               <button
                 type="button"
                 onClick={handleProtectedHost}
                 style={{
-                  padding: '14px 24px',
+                  padding: '14px 22px',
                   borderRadius: '12px',
                   background: 'var(--accent-earth-blue)',
                   color: '#FFFFFF',
-                  fontSize: '1.05rem',
+                  fontSize: '1rem',
                   fontWeight: 800,
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -751,7 +746,8 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                   gap: '8px',
                   boxShadow: '0 4px 14px rgba(30, 58, 138, 0.25)',
                   borderBottom: '4px solid #172554',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  flex: '1 1 auto'
                 }}
               >
                 <Tv size={20} /> {t('createNewRoom', 'สร้างห้องกิจกรรมใหม่')}
@@ -761,7 +757,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                 type="button"
                 onClick={handleProtectedBackoffice}
                 style={{
-                  padding: '14px 20px',
+                  padding: '14px 18px',
                   borderRadius: '12px',
                   background: '#F8FAFC',
                   border: '1px solid #CBD5E1',
@@ -772,7 +768,8 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  flex: '1 1 auto'
                 }}
               >
                 <BookOpen size={18} color="var(--accent-earth-blue)" /> {t('quizBank', 'คลังคำถาม')}
@@ -782,7 +779,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                 type="button"
                 onClick={handleProtectedLuckyDraw}
                 style={{
-                  padding: '14px 20px',
+                  padding: '14px 18px',
                   borderRadius: '12px',
                   background: '#FFF7ED',
                   border: '1.5px solid #FDBA74',
@@ -794,7 +791,8 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                   justifyContent: 'center',
                   gap: '8px',
                   cursor: 'pointer',
-                  boxShadow: '0 2px 6px rgba(234, 88, 12, 0.1)'
+                  boxShadow: '0 2px 6px rgba(234, 88, 12, 0.1)',
+                  flex: '1 1 auto'
                 }}
               >
                 <Gift size={18} color="#EA580C" /> {t('luckyDraw', 'Lucky Draw')}
@@ -814,7 +812,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                 textAlign: 'left'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                 <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--accent-earth-blue)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Users size={16} /> ห้องที่เปิดค้างไว้ / รอทำ Post-test:
                 </span>
@@ -823,7 +821,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                 </span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(260px, 100%), 1fr))', gap: '10px' }}>
                 {activeSessions.map((sess) => (
                   <div
                     key={sess.pin}
@@ -839,7 +837,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                       boxShadow: '0 2px 4px rgba(0,0,0,0.03)'
                     }}
                   >
-                    <div style={{ overflow: 'hidden' }}>
+                    <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span style={{ fontWeight: 900, color: 'var(--accent-earth-orange)', fontSize: '1.1rem', letterSpacing: '1px' }}>
                           PIN: {sess.pin}

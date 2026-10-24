@@ -1,0 +1,2618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KaoJai — Complete Call Flow &amp; Architecture Documentation</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --border: #334155;
+  --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8;
+  --warn: #fbbf24; --err: #f87171; --ok: #34d399;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+.container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+h1 { font-size: 2.4rem; margin-bottom: 8px; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+h2 { font-size: 1.7rem; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); }
+h3 { font-size: 1.25rem; margin: 32px 0 12px; color: var(--accent); }
+h4 { font-size: 1.05rem; margin: 20px 0 8px; color: var(--warn); }
+p { margin: 8px 0; color: var(--muted); }
+.subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 32px; }
+.mermaid { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; position: relative; }
+.mermaid.is-enhanced { padding: 0; overflow: hidden; min-height: 260px; }
+.mermaid-viewport { padding: 54px 24px 24px; overflow: hidden; cursor: grab; touch-action: none; min-height: 260px; }
+.mermaid-viewport.is-dragging { cursor: grabbing; }
+.mermaid-viewport svg { max-width: none !important; height: auto; transform-origin: 0 0; transition: transform 120ms ease; }
+.mermaid-toolbar { position: absolute; top: 10px; right: 10px; z-index: 3; display: flex; align-items: center; gap: 6px; padding: 6px; background: rgba(15,23,42,0.92); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.28); }
+.mermaid-toolbar button, .mermaid-toolbar .zoom-level { height: 28px; min-width: 32px; border: 1px solid var(--border); border-radius: 6px; background: #1e293b; color: var(--text); font: 600 0.78rem system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; }
+.mermaid-toolbar button { cursor: pointer; }
+.mermaid-toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+.mermaid-toolbar .zoom-level { min-width: 52px; color: var(--muted); background: transparent; }
+.call-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.92rem; }
+.call-table th { background: #1a2744; color: var(--accent); text-align: left; padding: 10px 14px; border: 1px solid var(--border); }
+.call-table td { padding: 8px 14px; border: 1px solid var(--border); vertical-align: top; }
+.call-table tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+.tag-async { background: #7c3aed33; color: #a78bfa; }
+.tag-class { background: #05966933; color: var(--ok); }
+.tag-func { background: #2563eb33; color: var(--accent); }
+.tag-cmd { background: #d9770633; color: var(--warn); }
+.tag-endpoint { background: #dc262633; color: var(--err); }
+.tag-hook { background: #db277733; color: #f472b6; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 16px 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+.arrow-chain { font-family: 'Fira Code', monospace; font-size: 0.85rem; color: var(--accent); padding: 10px; background: rgba(56,189,248,0.06); border-radius: 6px; }
+code { font-family: 'Fira Code', 'Cascadia Code', monospace; background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 3px; font-size: 0.88em; }
+ul, ol { margin: 8px 0 8px 24px; color: var(--muted); }
+li { margin: 4px 0; }
+a { color: var(--accent); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.nav { position: sticky; top: 0; background: var(--bg); z-index: 10; padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; gap: 20px; flex-wrap: wrap; font-size: 0.9rem; }
+.nav a { text-decoration: none; }
+.nav a:hover { text-decoration: underline; }
+@media (max-width: 768px) { .container { padding: 16px; } h1 { font-size: 1.8rem; } }
+
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>KaoJai — Complete Call Flow &amp; Architecture Documentation</h1>
+<p class="subtitle">Generated from graphify knowledge graph: 399 nodes, 1051 edges, 13 communities. Commit: 6a8b1c2</p>
+
+<div class="nav">
+    <a href="#overview">Architecture Overview</a>
+    <a href="#build-graph">Graph Build</a>
+    <a href="#outputs-docs">Outputs &amp; Docs</a>
+    <a href="#tests-fixtures">Tests &amp; Fixtures</a>
+    <a href="#react-client-application-shell">React Client &amp; Application Shell</a>
+    <a href="#audio-sound-effects-system">Audio &amp; Sound Effects System</a>
+    <a href="#containerization-deployment-config">Containerization &amp; Deployment Config</a>
+    <a href="#leaderboard-podium-export-reports">Leaderboard Podium &amp; Export Reports</a>
+    <a href="#gemini-ai-quiz-generation-service">Gemini AI Quiz Generation Service</a>
+    <a href="#ui-theme-color-picker">UI Theme &amp; Color Picker</a>
+</div>
+
+<!-- ====== Architecture Overview ====== -->
+<h2 id="overview">1. Architecture Overview</h2>
+
+<div class="mermaid">
+
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    BUILD_GRAPH_321CBB04("Graph Build<br/><small>56 nodes</small>")
+    class BUILD_GRAPH_321CBB04 module;
+    OUTPUTS_DOCS_ED82387C("Outputs &amp; Docs<br/><small>17 nodes</small>")
+    class OUTPUTS_DOCS_ED82387C module;
+    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>168 nodes</small>")
+    class TESTS_FIXTURES_B84B1DCC module;
+    REACT_CLIENT_APPLICATION_SHELL_F7BB0F53("React Client &amp; Application Shell<br/><small>90 nodes</small>")
+    class REACT_CLIENT_APPLICATION_SHELL_F7BB0F53 module;
+    AUDIO_SOUND_EFFECTS_SYSTEM_44C68A13("Audio &amp; Sound Effects System<br/><small>26 nodes</small>")
+    class AUDIO_SOUND_EFFECTS_SYSTEM_44C68A13 module;
+    CONTAINERIZATION_DEPLOYMENT_CONFIG_94B0D4EB("Containerization &amp; Deployment Config<br/><small>16 nodes</small>")
+    class CONTAINERIZATION_DEPLOYMENT_CONFIG_94B0D4EB module;
+    LEADERBOARD_PODIUM_EXPORT_REPORTS_57CC773D("Leaderboard Podium &amp; Export Reports<br/><small>14 nodes</small>")
+    class LEADERBOARD_PODIUM_EXPORT_REPORTS_57CC773D module;
+    GEMINI_AI_QUIZ_GENERATION_SERVICE_E53EE978("Gemini AI Quiz Generation Service<br/><small>9 nodes</small>")
+    class GEMINI_AI_QUIZ_GENERATION_SERVICE_E53EE978 module;
+    UI_THEME_COLOR_PICKER_92C9DE32("UI Theme &amp; Color Picker<br/><small>3 nodes</small>")
+    class UI_THEME_COLOR_PICKER_92C9DE32 module;
+    LEADERBOARD_PODIUM_EXPORT_REPORTS_57CC773D -->|imports x14| REACT_CLIENT_APPLICATION_SHELL_F7BB0F53
+    REACT_CLIENT_APPLICATION_SHELL_F7BB0F53 -->|imports x9| OUTPUTS_DOCS_ED82387C
+    OUTPUTS_DOCS_ED82387C -->|imports x9| REACT_CLIENT_APPLICATION_SHELL_F7BB0F53
+    REACT_CLIENT_APPLICATION_SHELL_F7BB0F53 -->|calls x8| LEADERBOARD_PODIUM_EXPORT_REPORTS_57CC773D
+    TESTS_FIXTURES_B84B1DCC -->|imports x4| BUILD_GRAPH_321CBB04
+    BUILD_GRAPH_321CBB04 -->|imports x4| REACT_CLIENT_APPLICATION_SHELL_F7BB0F53
+    REACT_CLIENT_APPLICATION_SHELL_F7BB0F53 -->|imports x2| BUILD_GRAPH_321CBB04
+    UI_THEME_COLOR_PICKER_92C9DE32 -->|imports x2| REACT_CLIENT_APPLICATION_SHELL_F7BB0F53
+    TESTS_FIXTURES_B84B1DCC -->|imports x2| GEMINI_AI_QUIZ_GENERATION_SERVICE_E53EE978
+    BUILD_GRAPH_321CBB04 -->|imports x2| TESTS_FIXTURES_B84B1DCC
+    OUTPUTS_DOCS_ED82387C -->|imports x2| BUILD_GRAPH_321CBB04
+    REACT_CLIENT_APPLICATION_SHELL_F7BB0F53 -->|contains| AUDIO_SOUND_EFFECTS_SYSTEM_44C68A13
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h4>Architecture Layers</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
+      <tr><td>Graph Build</td><td>56</td><td><code>4, 7</code></td></tr><tr><td>Outputs &amp; Docs</td><td>17</td><td><code>8</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>168</td><td><code>1, 2, 3, 5</code></td></tr><tr><td>React Client &amp; Application Shell</td><td>90</td><td><code>0</code></td></tr><tr><td>Audio &amp; Sound Effects System</td><td>26</td><td><code>6</code></td></tr><tr><td>Containerization &amp; Deployment Config</td><td>16</td><td><code>9</code></td></tr><tr><td>Leaderboard Podium &amp; Export Reports</td><td>14</td><td><code>10</code></td></tr><tr><td>Gemini AI Quiz Generation Service</td><td>9</td><td><code>11</code></td></tr><tr><td>UI Theme &amp; Color Picker</td><td>3</td><td><code>12</code></td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Core Flow</h4>
+    <div class="arrow-chain">Containerization &amp; Deployment Config -&gt; Graph Build -&gt; React Client &amp; Application Shell -&gt; Outputs &amp; Docs -&gt; Tests &amp; Fixtures -&gt; Gemini AI Quiz Generation Service -&gt; Audio &amp; Sound Effects System</div>
+  </div>
+</div>
+<div class="grid">
+  <div class="card">
+    <h4>Graph Report Highlights</h4>
+    <ul>
+      <li>399 nodes · 1051 edges · 13 communities (11 shown, 2 thin omitted)</li>
+      <li>Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 124 edges (avg confidence: 0.85)</li>
+      <li>Token cost: 1,250 input · 850 output</li>
+      <li>1. `RoomManager` - 44 edges</li>
+      <li>2. `react` - 38 edges</li>
+      <li>3. `testRoomManager()` - 35 edges</li>
+    </ul>
+  </div>
+</div>
+<hr>
+<!-- ====== 2. Graph Build ====== -->
+<h2 id="build-graph">2. Graph Build</h2>
+<p>Graph Build groups implementation around packagejson, client, server, react, mostly in client/package.json, server/package.json, client/vite.config.js. This section covers 56 nodes and 69 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Graph Build (56 nodes, 69 edges)
+    subgraph build_graph_client_package_json_ce115de3["client/package.json"]
+        client_package_008b330d("client/package.json")
+        ref_canvas_confetti_a5ffa245("canvas-confetti<br/><small>client/package.json</small>")
+        ref_html2pdf_js_5cfa31be("html2pdf.js<br/><small>client/package.json</small>")
+        ref_qrcode_407bcc9b("qrcode<br/><small>client/package.json</small>")
+        ref_react_dom_61ea372d("react-dom<br/><small>client/package.json</small>")
+        ref_socket_io_client_fa30f114("socket.io-client<br/><small>client/package.json</small>")
+        ref_xlsx_5c2b95cb("xlsx<br/><small>client/package.json</small>")
+        ref_types_react_1bb250f2("@types/react<br/><small>client/package.json</small>")
+        ref_types_react_dom_2cfa9575("@types/react-dom<br/><small>client/package.json</small>")
+        ref_vitejs_plugin_react_2811e448("@vitejs/plugin-react<br/><small>client/package.json</small>")
+        ref_vite_c95c70db("vite<br/><small>client/package.json</small>")
+        client_package_devdependencies_types_react_dom_f09d635c("@types/react-dom@^18.3.0<br/><small>client/package.json</small>")
+    end
+    subgraph build_graph_server_package_json_32d183a2["server/package.json"]
+        server_package_3c8ec87f("server/package.json")
+        ref_cors_c3ba69b0("cors<br/><small>server/package.json</small>")
+        ref_dotenv_f23d7946("dotenv<br/><small>server/package.json</small>")
+        ref_express_54e0f975("express<br/><small>server/package.json</small>")
+        ref_socket_io_aa1f2c0c("socket.io<br/><small>server/package.json</small>")
+    end
+    client_vite_config_82cf72ee("vite.config.js")
+    client_package_008b330d -->|imports| ref_canvas_confetti_a5ffa245
+    client_package_008b330d -->|imports| ref_html2pdf_js_5cfa31be
+    client_package_008b330d -->|imports| ref_qrcode_407bcc9b
+    client_package_008b330d -->|imports| ref_react_dom_61ea372d
+    client_package_008b330d -->|imports| ref_socket_io_client_fa30f114
+    client_package_008b330d -->|imports| ref_xlsx_5c2b95cb
+    client_package_008b330d -->|imports| ref_types_react_1bb250f2
+    client_package_008b330d -->|imports| ref_types_react_dom_2cfa9575
+    client_package_008b330d -->|imports| ref_vitejs_plugin_react_2811e448
+    client_package_008b330d -->|imports| ref_vite_c95c70db
+    client_vite_config_82cf72ee -->|imports| ref_vite_c95c70db
+    client_vite_config_82cf72ee -->|imports| ref_vitejs_plugin_react_2811e448
+    server_package_3c8ec87f -->|imports| ref_cors_c3ba69b0
+    server_package_3c8ec87f -->|imports| ref_dotenv_f23d7946
+    server_package_3c8ec87f -->|imports| ref_express_54e0f975
+    server_package_3c8ec87f -->|imports| ref_socket_io_aa1f2c0c
+    %% Omitted for readability: 38 nodes, 0 edges
+    class client_package_008b330d entry;
+    class ref_canvas_confetti_a5ffa245 function;
+    class ref_html2pdf_js_5cfa31be module;
+    class ref_qrcode_407bcc9b function;
+    class ref_react_dom_61ea372d function;
+    class ref_socket_io_client_fa30f114 entry;
+    class ref_xlsx_5c2b95cb function;
+    class ref_types_react_1bb250f2 function;
+    class ref_types_react_dom_2cfa9575 function;
+    class ref_vitejs_plugin_react_2811e448 function;
+    class ref_vite_c95c70db function;
+    class client_package_devdependencies_types_react_dom_f09d635c function;
+    class server_package_3c8ec87f function;
+    class ref_cors_c3ba69b0 function;
+    class ref_dotenv_f23d7946 function;
+    class ref_express_54e0f975 function;
+    class ref_socket_io_aa1f2c0c function;
+    class client_vite_config_82cf72ee module;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>client/package.json</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>@types/react</code><br><small style="color:var(--muted)">client/package.json</small><br><code>@types/react-dom</code><br><small style="color:var(--muted)">client/package.json</small><br><code>@vitejs/plugin-react</code><br><small style="color:var(--muted)">client/package.json</small><br>+9 more</td>
+  <td>client/package.json node in client/package.json.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>dependencies</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>dependencies node in client/package.json.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>canvas-confetti@^1.9.4</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>canvas-confetti@^1.9.4 node in client/package.json.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>html2pdf.js@^0.14.0</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Exports documentation data to a target format.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>lucide-react@^0.380.0</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>lucide-react@^0.380.0 node in client/package.json.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>qrcode@^1.5.4</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>qrcode@^1.5.4 node in client/package.json.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>react@^18.3.1</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>react@^18.3.1 node in client/package.json.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>react-dom@^18.3.1</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>react-dom@^18.3.1 node in client/package.json.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>socket.io-client@^4.7.5</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>socket.io-client@^4.7.5 node in client/package.json.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>xlsx@^0.18.5</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>xlsx@^0.18.5 node in client/package.json.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>devDependencies</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>devDependencies node in client/package.json.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>@types/react@^18.3.3</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>@types/react@^18.3.3 node in client/package.json.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>@types/react-dom@^18.3.0</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>@types/react-dom@^18.3.0 node in client/package.json.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>vite@^7.3.6</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>vite@^7.3.6 node in client/package.json.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>@vitejs/plugin-react@^4.3.0</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>@vitejs/plugin-react@^4.3.0 node in client/package.json.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>name</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>name node in client/package.json.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>private</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>private node in client/package.json.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>scripts</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>scripts node in client/package.json.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>build</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>build node in client/package.json.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>dev</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>dev node in client/package.json.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>preview</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>preview node in client/package.json.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>type</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>type node in client/package.json.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>version</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>version node in client/package.json.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>vite.config.js</code><br><small style="color:var(--muted)">client/vite.config.js</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>@vitejs/plugin-react</code><br><small style="color:var(--muted)">client/package.json</small><br><code>vite</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>logger</code><br><small style="color:var(--muted)">client/vite.config.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>logger node in client/vite.config.js.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>canvas-confetti</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>client/package.json</code><br><small style="color:var(--muted)">client/package.json</small><br><code>confetti.js</code><br><small style="color:var(--muted)">src/utils/confetti.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>canvas-confetti node in client/package.json.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>html2pdf.js</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>client/package.json</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td>No direct outbound edge</td>
+  <td>Exports documentation data to a target format.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>qrcode</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>client/package.json</code><br><small style="color:var(--muted)">client/package.json</small><br><code>qrcode.js</code><br><small style="color:var(--muted)">src/utils/qrcode.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>qrcode node in client/package.json.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>react-dom</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>client/package.json</code><br><small style="color:var(--muted)">client/package.json</small><br><code>main.jsx</code><br><small style="color:var(--muted)">client/src/main.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>react-dom node in client/package.json.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>socket.io-client</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td><code>client/package.json</code><br><small style="color:var(--muted)">client/package.json</small><br><code>SocketContext.jsx</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>socket.io-client node in client/package.json.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>client/package.json</code></td><td>33 nodes</td></tr>
+<tr><td><code>server/package.json</code></td><td>21 nodes</td></tr>
+<tr><td><code>client/vite.config.js</code></td><td>2 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x39, imports x14, declares x14, imports x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 3. Outputs & Docs ====== -->
+<h2 id="outputs-docs">3. Outputs &amp; Docs</h2>
+<p>Outputs &amp; Docs groups implementation around client, errorboundaryjsx, context, components, mostly in components/common/ErrorBoundary.jsx, src/context/SocketContext.jsx, src/context/AuthContext.jsx. This section covers 17 nodes and 21 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Outputs &amp; Docs (17 nodes, 21 edges)
+    subgraph outputs_docs_components_common_ErrorBoundary_jsx_b3c49f55["components/common/ErrorBoundary.jsx"]
+        client_src_components_common_errorboundary_error_e99602e7("ErrorBoundary<br/><small>components/common/ErrorBoundary.jsx</small>")
+        client_src_components_common_errorboundary_error_5d229c33("getDerivedStateFromError()<br/><small>components/common/ErrorBoundary.jsx</small>")
+        client_src_components_common_errorboundary_error_22a86ae6("componentDidCatch()<br/><small>components/common/ErrorBoundary.jsx</small>")
+        client_src_components_common_errorboundary_error_0fc8c3a7("handleReload()<br/><small>components/common/ErrorBoundary.jsx</small>")
+        client_src_components_common_errorboundary_error_1b900680("render()<br/><small>components/common/ErrorBoundary.jsx</small>")
+        client_src_components_common_errorboundary_error_b9bea234("constructor()<br/><small>components/common/ErrorBoundary.jsx</small>")
+        client_src_components_common_errorboundary_7164c440("ErrorBoundary.jsx")
+    end
+    subgraph outputs_docs_src_context_SocketContext_jsx_496321f1["src/context/SocketContext.jsx"]
+        client_src_context_socketcontext_socketprovider_30701e88("SocketProvider()<br/><small>src/context/SocketContext.jsx</small>")
+        client_src_context_socketcontext_setstorageitem_190951db("setStorageItem()<br/><small>src/context/SocketContext.jsx</small>")
+        client_src_context_socketcontext_removestorageit_a97c098d("removeStorageItem()<br/><small>src/context/SocketContext.jsx</small>")
+        client_src_context_socketcontext_getstorageitem_743c106d("getStorageItem()<br/><small>src/context/SocketContext.jsx</small>")
+        client_src_context_socketcontext_88868f4c("SocketContext.jsx")
+        client_src_context_socketcontext_socketcontext_69c532ed("SocketContext<br/><small>src/context/SocketContext.jsx</small>")
+    end
+    client_index_html_root_058e0589("Client HTML Mounting Point<br/><small>client/index.html</small>")
+    client_src_main_81833a3f("main.jsx")
+    client_src_context_authcontext_authprovider_71edd290("AuthProvider()<br/><small>src/context/AuthContext.jsx</small>")
+    client_src_context_i18ncontext_i18nprovider_ebd28a95("I18nProvider()<br/><small>src/context/I18nContext.jsx</small>")
+    client_src_components_common_errorboundary_error_e99602e7 -->|method| client_src_components_common_errorboundary_error_5d229c33
+    client_src_components_common_errorboundary_error_e99602e7 -->|method| client_src_components_common_errorboundary_error_22a86ae6
+    client_src_components_common_errorboundary_error_e99602e7 -->|method| client_src_components_common_errorboundary_error_0fc8c3a7
+    client_src_components_common_errorboundary_error_e99602e7 -->|method| client_src_components_common_errorboundary_error_1b900680
+    client_src_components_common_errorboundary_error_e99602e7 -->|method| client_src_components_common_errorboundary_error_b9bea234
+    client_src_context_socketcontext_socketprovider_30701e88 -->|calls| client_src_context_socketcontext_setstorageitem_190951db
+    client_src_context_socketcontext_socketprovider_30701e88 -->|calls| client_src_context_socketcontext_removestorageit_a97c098d
+    client_src_context_socketcontext_socketprovider_30701e88 -->|calls| client_src_context_socketcontext_getstorageitem_743c106d
+    client_src_main_81833a3f -->|imports| client_src_context_authcontext_authprovider_71edd290
+    client_src_main_81833a3f -->|imports| client_src_context_i18ncontext_i18nprovider_ebd28a95
+    client_src_main_81833a3f -->|imports| client_src_context_socketcontext_socketprovider_30701e88
+    client_src_main_81833a3f -->|imports| client_src_components_common_errorboundary_error_e99602e7
+    client_src_main_81833a3f -->|imports| client_src_context_socketcontext_88868f4c
+    client_src_main_81833a3f -->|imports| client_src_components_common_errorboundary_7164c440
+    class client_src_components_common_errorboundary_error_e99602e7 ui;
+    class client_src_components_common_errorboundary_error_5d229c33 ui;
+    class client_src_components_common_errorboundary_error_22a86ae6 ui;
+    class client_src_components_common_errorboundary_error_0fc8c3a7 ui;
+    class client_src_components_common_errorboundary_error_1b900680 ui;
+    class client_src_components_common_errorboundary_error_b9bea234 ui;
+    class client_src_components_common_errorboundary_7164c440 ui;
+    class client_src_context_socketcontext_socketprovider_30701e88 ui;
+    class client_src_context_socketcontext_setstorageitem_190951db ui;
+    class client_src_context_socketcontext_removestorageit_a97c098d ui;
+    class client_src_context_socketcontext_getstorageitem_743c106d ui;
+    class client_src_context_socketcontext_88868f4c ui;
+    class client_src_context_socketcontext_socketcontext_69c532ed ui;
+    class client_index_html_root_058e0589 concept;
+    class client_src_main_81833a3f ui;
+    class client_src_context_authcontext_authprovider_71edd290 ui;
+    class client_src_context_i18ncontext_i18nprovider_ebd28a95 ui;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>ErrorBoundary</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>main.jsx</code><br><small style="color:var(--muted)">client/src/main.jsx</small></td>
+  <td><code>componentDidCatch()</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small><br><code>constructor()</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small><br><code>getDerivedStateFromError()</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small><br>+2 more</td>
+  <td>ErrorBoundary node in components/common/ErrorBoundary.jsx.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>.componentDidCatch()</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>ErrorBoundary</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>.componentDidCatch() node in components/common/ErrorBoundary.jsx.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>.constructor()</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>ErrorBoundary</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>.constructor() node in components/common/ErrorBoundary.jsx.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>.getDerivedStateFromError()</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>ErrorBoundary</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>.getDerivedStateFromError() node in components/common/ErrorBoundary.jsx.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>.handleReload()</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>ErrorBoundary</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>.handleReload() node in components/common/ErrorBoundary.jsx.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>.render()</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>ErrorBoundary</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>.render() node in components/common/ErrorBoundary.jsx.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>AuthProvider()</code><br><small style="color:var(--muted)">src/context/AuthContext.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>main.jsx</code><br><small style="color:var(--muted)">client/src/main.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>AuthProvider() node in src/context/AuthContext.jsx.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>I18nProvider()</code><br><small style="color:var(--muted)">src/context/I18nContext.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>main.jsx</code><br><small style="color:var(--muted)">client/src/main.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>I18nProvider() node in src/context/I18nContext.jsx.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>getStorageItem()</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>SocketProvider()</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>Supports retrieval-augmented Q&amp;A or streaming chat.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>removeStorageItem()</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>SocketProvider()</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>Supports retrieval-augmented Q&amp;A or streaming chat.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>setStorageItem()</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>SocketProvider()</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>Supports retrieval-augmented Q&amp;A or streaming chat.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>SocketProvider()</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>main.jsx</code><br><small style="color:var(--muted)">client/src/main.jsx</small></td>
+  <td><code>getStorageItem()</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small><br><code>removeStorageItem()</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small><br><code>setStorageItem()</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small></td>
+  <td>SocketProvider() node in src/context/SocketContext.jsx.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>ErrorBoundary.jsx</code><br><small style="color:var(--muted)">components/common/ErrorBoundary.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>main.jsx</code><br><small style="color:var(--muted)">client/src/main.jsx</small></td>
+  <td><code>lucide-react</code><br><small style="color:var(--muted)">client/package.json</small><br><code>react</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td>ErrorBoundary.jsx node in components/common/ErrorBoundary.jsx.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>SocketContext.jsx</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>HostHeader.jsx</code><br><small style="color:var(--muted)">components/host/HostHeader.jsx</small><br><code>HostPulse.jsx</code><br><small style="color:var(--muted)">components/host/HostPulse.jsx</small><br>+5 more</td>
+  <td><code>react</code><br><small style="color:var(--muted)">client/package.json</small><br><code>socket.io-client</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td>SocketContext.jsx node in src/context/SocketContext.jsx.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>SocketContext</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>SocketContext node in src/context/SocketContext.jsx.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>main.jsx</code><br><small style="color:var(--muted)">client/src/main.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>App()</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AuthContext.jsx</code><br><small style="color:var(--muted)">src/context/AuthContext.jsx</small><br>+9 more</td>
+  <td>main.jsx node in client/src/main.jsx.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>Client HTML Mounting Point</code><br><small style="color:var(--muted)">client/index.html</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Client HTML Mounting Point.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>components/common/ErrorBoundary.jsx</code></td><td>7 nodes</td></tr>
+<tr><td><code>src/context/SocketContext.jsx</code></td><td>6 nodes</td></tr>
+<tr><td><code>client/index.html</code></td><td>1 nodes</td></tr>
+<tr><td><code>src/context/AuthContext.jsx</code></td><td>1 nodes</td></tr>
+<tr><td><code>src/context/I18nContext.jsx</code></td><td>1 nodes</td></tr>
+<tr><td><code>client/src/main.jsx</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x6, method x5, imports x4, calls x3. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 4. Tests & Fixtures ====== -->
+<h2 id="tests-fixtures">4. Tests &amp; Fixtures</h2>
+<p>Tests &amp; Fixtures groups implementation around server, tests, roommanagerjs, dbjs, mostly in server/src/roomManager.js, server/src/db.js, server/src/index.js. This section covers 168 nodes and 437 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Tests &amp; Fixtures (168 nodes, 437 edges)
+    subgraph tests_fixtures_server_src_roomManager_js_6e61e807["server/src/roomManager.js"]
+        server_src_roommanager_roommanager_d511cfed("RoomManager<br/><small>server/src/roomManager.js</small>")
+        server_src_roommanager_roommanager_getroom_5370274c("getRoom()<br/><small>server/src/roomManager.js</small>")
+        server_src_roommanager_roommanager_getleaderboar_fe1b2e01("getLeaderboard()<br/><small>server/src/roomManager.js</small>")
+        server_src_roommanager_roommanager_submitpulse_6db3b945("submitPulse()<br/><small>server/src/roomManager.js</small>")
+        server_src_roommanager_roommanager_resetpulse_2ca5eb6e("resetPulse()<br/><small>server/src/roomManager.js</small>")
+        server_src_roommanager_roommanager_switchmode_10b92313("switchMode()<br/><small>server/src/roomManager.js</small>")
+        server_src_roommanager_roommanager_savepretestsn_769edf1d("savePretestSnapshot()<br/><small>server/src/roomManager.js</small>")
+        server_src_roommanager_roommanager_getroster_90dfc747("getRoster()<br/><small>server/src/roomManager.js</small>")
+        server_src_roommanager_roommanager_clearpretestd_ad784302("clearPretestData()<br/><small>server/src/roomManager.js</small>")
+        server_src_roommanager_roommanager_resetroomscor_8bcb55bc("resetRoomScores()<br/><small>server/src/roomManager.js</small>")
+        server_src_roommanager_roommanager_setroomquiz_927d84de("setRoomQuiz()<br/><small>server/src/roomManager.js</small>")
+        server_src_roommanager_roommanager_getroombyhost_762ee497("getRoomByHostSocketId()<br/><small>server/src/roomManager.js</small>")
+        server_src_roommanager_roommanager_resetroomtolo_9280bf5a("resetRoomToLobby()<br/><small>server/src/roomManager.js</small>")
+    end
+    server_src_db_runselftest_ed847c08("runSelfTest()<br/><small>server/src/db.js</small>")
+    server_src_index_8f1779a3("index.js")
+    server_tests_auth_test_44b5b650("auth.test.js")
+    server_tests_roommanager_test_testroommanager_c7341e78("testRoomManager()<br/><small>server/tests/roomManager.test.js</small>")
+    server_tests_run_tests_94599956("run-tests.js")
+    server_src_roommanager_roommanager_d511cfed -->|method| server_src_roommanager_roommanager_getroom_5370274c
+    server_src_roommanager_roommanager_d511cfed -->|method| server_src_roommanager_roommanager_getleaderboar_fe1b2e01
+    server_src_roommanager_roommanager_d511cfed -->|method| server_src_roommanager_roommanager_submitpulse_6db3b945
+    server_src_roommanager_roommanager_d511cfed -->|method| server_src_roommanager_roommanager_resetpulse_2ca5eb6e
+    server_src_roommanager_roommanager_d511cfed -->|method| server_src_roommanager_roommanager_switchmode_10b92313
+    server_src_roommanager_roommanager_d511cfed -->|method| server_src_roommanager_roommanager_savepretestsn_769edf1d
+    server_src_roommanager_roommanager_d511cfed -->|method| server_src_roommanager_roommanager_getroster_90dfc747
+    server_src_roommanager_roommanager_d511cfed -->|method| server_src_roommanager_roommanager_clearpretestd_ad784302
+    server_src_roommanager_roommanager_d511cfed -->|method| server_src_roommanager_roommanager_resetroomscor_8bcb55bc
+    server_src_roommanager_roommanager_d511cfed -->|method| server_src_roommanager_roommanager_setroomquiz_927d84de
+    server_src_roommanager_roommanager_d511cfed -->|method| server_src_roommanager_roommanager_getroombyhost_762ee497
+    server_src_roommanager_roommanager_d511cfed -->|method| server_src_roommanager_roommanager_resetroomtolo_9280bf5a
+    server_src_roommanager_roommanager_clearpretestd_ad784302 -->|calls| server_src_roommanager_roommanager_getroom_5370274c
+    server_src_roommanager_roommanager_getroster_90dfc747 -->|calls| server_src_roommanager_roommanager_getroom_5370274c
+    server_src_roommanager_roommanager_resetroomscor_8bcb55bc -->|calls| server_src_roommanager_roommanager_getroom_5370274c
+    server_src_roommanager_roommanager_resetroomtolo_9280bf5a -->|calls| server_src_roommanager_roommanager_getroom_5370274c
+    server_src_roommanager_roommanager_resetroomtolo_9280bf5a -->|calls| server_src_roommanager_roommanager_resetroomscor_8bcb55bc
+    server_src_roommanager_roommanager_savepretestsn_769edf1d -->|calls| server_src_roommanager_roommanager_getleaderboar_fe1b2e01
+    server_src_roommanager_roommanager_setroomquiz_927d84de -->|calls| server_src_roommanager_roommanager_getroom_5370274c
+    server_tests_roommanager_test_testroommanager_c7341e78 -->|calls| server_src_roommanager_roommanager_d511cfed
+    server_tests_run_tests_94599956 -->|imports| server_tests_roommanager_test_testroommanager_c7341e78
+    server_tests_run_tests_94599956 -->|imports| server_tests_auth_test_44b5b650
+    server_tests_auth_test_44b5b650 -->|imports| server_src_index_8f1779a3
+    server_tests_roommanager_test_testroommanager_c7341e78 -->|calls| server_src_roommanager_roommanager_switchmode_10b92313
+    %% Omitted for readability: 150 nodes, 8 edges
+    class server_src_roommanager_roommanager_d511cfed klass;
+    class server_src_roommanager_roommanager_getroom_5370274c function;
+    class server_src_roommanager_roommanager_getleaderboar_fe1b2e01 function;
+    class server_src_roommanager_roommanager_submitpulse_6db3b945 function;
+    class server_src_roommanager_roommanager_resetpulse_2ca5eb6e function;
+    class server_src_roommanager_roommanager_switchmode_10b92313 function;
+    class server_src_roommanager_roommanager_savepretestsn_769edf1d function;
+    class server_src_roommanager_roommanager_getroster_90dfc747 function;
+    class server_src_roommanager_roommanager_clearpretestd_ad784302 function;
+    class server_src_roommanager_roommanager_resetroomscor_8bcb55bc function;
+    class server_src_roommanager_roommanager_setroomquiz_927d84de function;
+    class server_src_roommanager_roommanager_getroombyhost_762ee497 function;
+    class server_src_roommanager_roommanager_resetroomtolo_9280bf5a function;
+    class server_src_db_runselftest_ed847c08 function;
+    class server_src_index_8f1779a3 module;
+    class server_tests_auth_test_44b5b650 test;
+    class server_tests_roommanager_test_testroommanager_c7341e78 test;
+    class server_tests_run_tests_94599956 test;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>analyticsReport.test.js</code><br><small style="color:var(--muted)">server/tests/analyticsReport.test.js</small><br><code>pretestPosttest.test.js</code><br><small style="color:var(--muted)">server/tests/pretestPosttest.test.js</small><br><code>roomManager.test.js</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small><br>+5 more</td>
+  <td><code>assignPlayerToTeam()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>autoAssignTeams()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>clearPretestData()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br>+32 more</td>
+  <td>RoomManager node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>.assignPlayerToTeam()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.assignPlayerToTeam() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>.autoAssignTeams()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small></td>
+  <td><code>createTeam()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>getTeamList()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td>.autoAssignTeams() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>.clearPretestData()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testPretestPosttest()</code><br><small style="color:var(--muted)">server/tests/pretestPosttest.test.js</small></td>
+  <td><code>getRoom()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>.constructor()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.constructor() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>.createRoom()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testAnalyticsReport()</code><br><small style="color:var(--muted)">server/tests/analyticsReport.test.js</small><br><code>testPretestPosttest()</code><br><small style="color:var(--muted)">server/tests/pretestPosttest.test.js</small><br>+2 more</td>
+  <td><code>generatePin()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>getAllQuizzes()</code><br><small style="color:var(--muted)">server/src/quizData.js</small><br><code>getQuizById()</code><br><small style="color:var(--muted)">server/src/quizData.js</small></td>
+  <td>.createRoom() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>.createSafeQuestion()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>joinPlayer()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>reconnectHost()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br>+2 more</td>
+  <td>No direct outbound edge</td>
+  <td>.createSafeQuestion() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>.createTeam()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>autoAssignTeams()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.createTeam() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>.deleteRoom()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small><br><code>testRosterPersistence()</code><br><small style="color:var(--muted)">server/tests/rosterPersistence.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.deleteRoom() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>.generatePin()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>createRoom()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.generatePin() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>.getAllActiveSessions()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small></td>
+  <td><code>getPlayerCounts()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td>.getAllActiveSessions() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>.getLeaderboard()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>getQuizAnalytics()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>joinPlayer()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>reconnectHost()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br>+4 more</td>
+  <td>No direct outbound edge</td>
+  <td>.getLeaderboard() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>.getPlayerCounts()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>getAllActiveSessions()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>getQuestionResult()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>joinPlayer()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br>+8 more</td>
+  <td>No direct outbound edge</td>
+  <td>.getPlayerCounts() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>.getPlayerList()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>reconnectHost()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.getPlayerList() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>.getQuestionResult()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>joinPlayer()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>reconnectHost()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br>+4 more</td>
+  <td><code>getPlayerCounts()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td>.getQuestionResult() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>.getQuizAnalytics()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>reconnectHost()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testAnalyticsReport()</code><br><small style="color:var(--muted)">server/tests/analyticsReport.test.js</small><br>+3 more</td>
+  <td><code>getLeaderboard()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>getTeamLeaderboard()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>getTeamList()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td>Orchestrates analysis and returns structured documentation data.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>.getRoom()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>clearPretestData()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>getRoster()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>joinPlayer()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br>+7 more</td>
+  <td>No direct outbound edge</td>
+  <td>.getRoom() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>.getRoomByHostSocketId()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.getRoomByHostSocketId() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>.getRoster()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testRosterPersistence()</code><br><small style="color:var(--muted)">server/tests/rosterPersistence.test.js</small></td>
+  <td><code>getRoom()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td>.getRoster() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>.getTeamLeaderboard()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>getQuizAnalytics()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small></td>
+  <td><code>getTeamList()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td>.getTeamLeaderboard() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>.getTeamList()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>autoAssignTeams()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>getQuizAnalytics()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>getTeamLeaderboard()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br>+3 more</td>
+  <td>No direct outbound edge</td>
+  <td>.getTeamList() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>.handleDisconnect()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.handleDisconnect() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>.joinPlayer()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testAnalyticsReport()</code><br><small style="color:var(--muted)">server/tests/analyticsReport.test.js</small><br><code>testPretestPosttest()</code><br><small style="color:var(--muted)">server/tests/pretestPosttest.test.js</small><br>+2 more</td>
+  <td><code>createSafeQuestion()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>getLeaderboard()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>getPlayerCounts()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br>+2 more</td>
+  <td>.joinPlayer() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>.reconnectHost()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testPretestPosttest()</code><br><small style="color:var(--muted)">server/tests/pretestPosttest.test.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small></td>
+  <td><code>createSafeQuestion()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>getLeaderboard()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>getPlayerCounts()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br>+5 more</td>
+  <td>.reconnectHost() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>.removePlayer()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testPretestPosttest()</code><br><small style="color:var(--muted)">server/tests/pretestPosttest.test.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.removePlayer() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>.removeTeam()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.removeTeam() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>.resetPulse()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small></td>
+  <td><code>getPlayerCounts()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td>.resetPulse() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>.resetRoomScores()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>resetRoomToLobby()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testPretestPosttest()</code><br><small style="color:var(--muted)">server/tests/pretestPosttest.test.js</small><br>+1 more</td>
+  <td><code>getRoom()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td>.resetRoomScores() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>.resetRoomToLobby()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testPretestPosttest()</code><br><small style="color:var(--muted)">server/tests/pretestPosttest.test.js</small><br><code>testRoomManager()</code><br><small style="color:var(--muted)">server/tests/roomManager.test.js</small></td>
+  <td><code>getRoom()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>resetRoomScores()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td>.resetRoomToLobby() node in server/src/roomManager.js.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>.savePretestSnapshot()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>RoomManager</code><br><small style="color:var(--muted)">server/src/roomManager.js</small><br><code>testPretestPosttest()</code><br><small style="color:var(--muted)">server/tests/pretestPosttest.test.js</small><br><code>testRosterPersistence()</code><br><small style="color:var(--muted)">server/tests/rosterPersistence.test.js</small></td>
+  <td><code>getLeaderboard()</code><br><small style="color:var(--muted)">server/src/roomManager.js</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>server/src/roomManager.js</code></td><td>37 nodes</td></tr>
+<tr><td><code>server/src/db.js</code></td><td>30 nodes</td></tr>
+<tr><td><code>server/src/index.js</code></td><td>15 nodes</td></tr>
+<tr><td><code>server/tests/history_and_kick.test.js</code></td><td>14 nodes</td></tr>
+<tr><td><code>server/src/quizData.js</code></td><td>13 nodes</td></tr>
+<tr><td><code>server/src/auth.js</code></td><td>6 nodes</td></tr>
+<tr><td><code>server/src/socketHandler.js</code></td><td>5 nodes</td></tr>
+<tr><td><code>server/tests/api.test.js</code></td><td>5 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: calls x172, imports x68, imports x59, indirect call x50. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 5. React Client & Application Shell ====== -->
+<h2 id="react-client-application-shell">5. React Client &amp; Application Shell</h2>
+<p>React Client &amp; Application Shell groups implementation around client, components, player, common, mostly in components/common/LuckyWaterPool.jsx, components/player/AvatarPicker.jsx, src/context/I18nContext.jsx. This section covers 90 nodes and 369 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: React Client &amp; Application Shell (90 nodes, 369 edges)
+    subgraph react_client_application_shell_client_src_App_js_35d6d801["client/src/App.jsx"]
+        client_src_app_624ee8b9("App.jsx")
+        client_src_app_appcontent_6ef81deb("AppContent()<br/><small>client/src/App.jsx</small>")
+        client_src_app_app_48be5c1e("App()<br/><small>client/src/App.jsx</small>")
+    end
+    subgraph react_client_application_shell_components_common_a9fd5f6c["components/common/LuckyDrawPage.jsx"]
+        client_src_components_common_luckydrawpage_d65939f2("LuckyDrawPage.jsx")
+        client_src_components_common_luckydrawpage_lucky_8e2fdc79("LuckyDrawPage()<br/><small>components/common/LuckyDrawPage.jsx</small>")
+    end
+    subgraph react_client_application_shell_components_player_67f7f642["components/player/JoinRoom.jsx"]
+        client_src_components_player_joinroom_b22eaadc("JoinRoom.jsx")
+        client_src_components_player_joinroom_joinroom_3f8227ae("JoinRoom()<br/><small>components/player/JoinRoom.jsx</small>")
+    end
+    subgraph react_client_application_shell_components_teache_18d07921["components/teacher/TeacherBackoffice.jsx"]
+        client_src_components_teacher_teacherbackoffice_8a05202f("TeacherBackoffice.jsx")
+        client_src_components_teacher_teacherbackoffice_bfdbe650("TeacherBackoffice()<br/><small>components/teacher/TeacherBackoffice.jsx</small>")
+    end
+    client_src_components_host_hostheader_hostheader_acd39dd9("HostHeader()<br/><small>components/host/HostHeader.jsx</small>")
+    client_src_components_host_hostlobby_hostlobby_f9873ee1("HostLobby()<br/><small>components/host/HostLobby.jsx</small>")
+    client_src_components_host_hostpulse_hostpulse_82faeba6("HostPulse()<br/><small>components/host/HostPulse.jsx</small>")
+    client_src_components_host_hostquiz_hostquiz_e363b054("HostQuiz()<br/><small>components/host/HostQuiz.jsx</small>")
+    client_src_components_player_luckydrawplayerjoin_23116a06("LuckyDrawPlayerJoin()<br/><small>components/player/LuckyDrawPlayerJoin.jsx</small>")
+    client_src_components_player_playerquiz_b2d0519d("PlayerQuiz.jsx")
+    client_src_context_authcontext_useauth_4383b943("useAuth()<br/><small>src/context/AuthContext.jsx</small>")
+    client_src_context_i18ncontext_usei18n_ed5a7387("useI18n()<br/><small>src/context/I18nContext.jsx</small>")
+    client_src_context_socketcontext_usesocket_6908eb58("useSocket()<br/><small>src/context/SocketContext.jsx</small>")
+    client_src_app_app_48be5c1e -->|calls| client_src_app_appcontent_6ef81deb
+    client_src_app_appcontent_6ef81deb -->|calls| client_src_context_i18ncontext_usei18n_ed5a7387
+    client_src_app_appcontent_6ef81deb -->|calls| client_src_context_socketcontext_usesocket_6908eb58
+    client_src_app_appcontent_6ef81deb -->|calls| client_src_context_authcontext_useauth_4383b943
+    client_src_app_appcontent_6ef81deb -->|calls| client_src_components_teacher_teacherbackoffice_bfdbe650
+    client_src_app_appcontent_6ef81deb -->|calls| client_src_components_player_joinroom_joinroom_3f8227ae
+    client_src_app_appcontent_6ef81deb -->|calls| client_src_components_common_luckydrawpage_lucky_8e2fdc79
+    client_src_app_appcontent_6ef81deb -->|calls| client_src_components_host_hostheader_hostheader_acd39dd9
+    client_src_app_appcontent_6ef81deb -->|calls| client_src_components_host_hostpulse_hostpulse_82faeba6
+    client_src_app_appcontent_6ef81deb -->|calls| client_src_components_host_hostlobby_hostlobby_f9873ee1
+    client_src_app_appcontent_6ef81deb -->|calls| client_src_components_host_hostquiz_hostquiz_e363b054
+    client_src_app_appcontent_6ef81deb -->|calls| client_src_components_player_luckydrawplayerjoin_23116a06
+    client_src_components_common_luckydrawpage_lucky_8e2fdc79 -->|calls| client_src_context_i18ncontext_usei18n_ed5a7387
+    client_src_components_host_hostheader_hostheader_acd39dd9 -->|calls| client_src_context_i18ncontext_usei18n_ed5a7387
+    client_src_components_host_hostlobby_hostlobby_f9873ee1 -->|calls| client_src_context_i18ncontext_usei18n_ed5a7387
+    client_src_components_host_hostpulse_hostpulse_82faeba6 -->|calls| client_src_context_socketcontext_usesocket_6908eb58
+    client_src_components_host_hostquiz_hostquiz_e363b054 -->|calls| client_src_context_i18ncontext_usei18n_ed5a7387
+    client_src_components_player_joinroom_joinroom_3f8227ae -->|calls| client_src_context_i18ncontext_usei18n_ed5a7387
+    client_src_components_player_joinroom_joinroom_3f8227ae -->|calls| client_src_context_socketcontext_usesocket_6908eb58
+    client_src_components_player_joinroom_joinroom_3f8227ae -->|calls| client_src_context_authcontext_useauth_4383b943
+    client_src_components_player_luckydrawplayerjoin_23116a06 -->|calls| client_src_context_socketcontext_usesocket_6908eb58
+    client_src_components_teacher_teacherbackoffice_bfdbe650 -->|calls| client_src_context_i18ncontext_usei18n_ed5a7387
+    client_src_components_teacher_teacherbackoffice_bfdbe650 -->|calls| client_src_context_authcontext_useauth_4383b943
+    client_src_app_624ee8b9 -->|imports| client_src_components_host_hostlobby_hostlobby_f9873ee1
+    %% Omitted for readability: 72 nodes, 22 edges
+    class client_src_app_624ee8b9 ui;
+    class client_src_app_appcontent_6ef81deb ui;
+    class client_src_app_app_48be5c1e ui;
+    class client_src_components_common_luckydrawpage_d65939f2 ui;
+    class client_src_components_common_luckydrawpage_lucky_8e2fdc79 ui;
+    class client_src_components_player_joinroom_b22eaadc ui;
+    class client_src_components_player_joinroom_joinroom_3f8227ae ui;
+    class client_src_components_teacher_teacherbackoffice_8a05202f ui;
+    class client_src_components_teacher_teacherbackoffice_bfdbe650 ui;
+    class client_src_components_host_hostheader_hostheader_acd39dd9 ui;
+    class client_src_components_host_hostlobby_hostlobby_f9873ee1 ui;
+    class client_src_components_host_hostpulse_hostpulse_82faeba6 ui;
+    class client_src_components_host_hostquiz_hostquiz_e363b054 ui;
+    class client_src_components_player_luckydrawplayerjoin_23116a06 ui;
+    class client_src_components_player_playerquiz_b2d0519d ui;
+    class client_src_context_authcontext_useauth_4383b943 ui;
+    class client_src_context_i18ncontext_usei18n_ed5a7387 ui;
+    class client_src_context_socketcontext_usesocket_6908eb58 ui;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>App()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>main.jsx</code><br><small style="color:var(--muted)">client/src/main.jsx</small></td>
+  <td><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td>App() node in client/src/App.jsx.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>HostHeader()</code><br><small style="color:var(--muted)">components/host/HostHeader.jsx</small><br><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>HostLobby()</code><br><small style="color:var(--muted)">components/host/HostLobby.jsx</small><br>+17 more</td>
+  <td>AppContent() node in client/src/App.jsx.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>AdminLoginModal()</code><br><small style="color:var(--muted)">components/auth/AdminLoginModal.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>JoinRoom()</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small><br><code>JoinRoom.jsx</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small></td>
+  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.jsx</small><br><code>useI18n()</code><br><small style="color:var(--muted)">src/context/I18nContext.jsx</small></td>
+  <td>AdminLoginModal() node in components/auth/AdminLoginModal.jsx.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>LanguageToggle()</code><br><small style="color:var(--muted)">components/common/LanguageToggle.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>HostHeader()</code><br><small style="color:var(--muted)">components/host/HostHeader.jsx</small><br><code>HostHeader.jsx</code><br><small style="color:var(--muted)">components/host/HostHeader.jsx</small><br><code>JoinRoom()</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small><br>+15 more</td>
+  <td><code>useI18n()</code><br><small style="color:var(--muted)">src/context/I18nContext.jsx</small></td>
+  <td>LanguageToggle() node in components/common/LanguageToggle.jsx.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>LuckyDrawPage()</code><br><small style="color:var(--muted)">components/common/LuckyDrawPage.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>fireConfetti()</code><br><small style="color:var(--muted)">src/utils/confetti.js</small><br><code>generateQRCodeSVG()</code><br><small style="color:var(--muted)">src/utils/qrcode.js</small><br><code>LanguageToggle()</code><br><small style="color:var(--muted)">components/common/LanguageToggle.jsx</small><br>+3 more</td>
+  <td>Organizes documentation pages, navigation, or content lookup.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>LuckyWaterPool()</code><br><small style="color:var(--muted)">components/common/LuckyWaterPool.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>LuckyDrawPage()</code><br><small style="color:var(--muted)">components/common/LuckyDrawPage.jsx</small><br><code>LuckyDrawPage.jsx</code><br><small style="color:var(--muted)">components/common/LuckyDrawPage.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>LuckyWaterPool() node in components/common/LuckyWaterPool.jsx.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>PrepareCountdown()</code><br><small style="color:var(--muted)">components/common/PrepareCountdown.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>PrepareCountdown() node in components/common/PrepareCountdown.jsx.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>SequenceIntroGuide()</code><br><small style="color:var(--muted)">components/common/SequenceIntroGuide.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>SequenceIntroGuide() node in components/common/SequenceIntroGuide.jsx.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>SoundToggle()</code><br><small style="color:var(--muted)">components/common/SoundToggle.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>HostHeader()</code><br><small style="color:var(--muted)">components/host/HostHeader.jsx</small><br><code>HostHeader.jsx</code><br><small style="color:var(--muted)">components/host/HostHeader.jsx</small><br><code>LuckyDrawPage()</code><br><small style="color:var(--muted)">components/common/LuckyDrawPage.jsx</small><br>+7 more</td>
+  <td>No direct outbound edge</td>
+  <td>SoundToggle() node in components/common/SoundToggle.jsx.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>HostHeader()</code><br><small style="color:var(--muted)">components/host/HostHeader.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>LanguageToggle()</code><br><small style="color:var(--muted)">components/common/LanguageToggle.jsx</small><br><code>SoundToggle()</code><br><small style="color:var(--muted)">components/common/SoundToggle.jsx</small><br><code>useI18n()</code><br><small style="color:var(--muted)">src/context/I18nContext.jsx</small></td>
+  <td>HostHeader() node in components/host/HostHeader.jsx.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>HostLobby()</code><br><small style="color:var(--muted)">components/host/HostLobby.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>generateQRCodeSVG()</code><br><small style="color:var(--muted)">src/utils/qrcode.js</small><br><code>useI18n()</code><br><small style="color:var(--muted)">src/context/I18nContext.jsx</small></td>
+  <td>HostLobby() node in components/host/HostLobby.jsx.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>HostPulse()</code><br><small style="color:var(--muted)">components/host/HostPulse.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>useSocket()</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small></td>
+  <td>HostPulse() node in components/host/HostPulse.jsx.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>HostQuiz()</code><br><small style="color:var(--muted)">components/host/HostQuiz.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>getSequenceTheme()</code><br><small style="color:var(--muted)">src/utils/sequenceThemes.js</small><br><code>useI18n()</code><br><small style="color:var(--muted)">src/context/I18nContext.jsx</small></td>
+  <td>HostQuiz() node in components/host/HostQuiz.jsx.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>AvatarPicker()</code><br><small style="color:var(--muted)">components/player/AvatarPicker.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>JoinRoom()</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small><br><code>JoinRoom.jsx</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small><br><code>LuckyDrawPlayerJoin()</code><br><small style="color:var(--muted)">components/player/LuckyDrawPlayerJoin.jsx</small><br>+1 more</td>
+  <td><code>getRandomAvatar()</code><br><small style="color:var(--muted)">components/player/AvatarPicker.jsx</small></td>
+  <td>AvatarPicker() node in components/player/AvatarPicker.jsx.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>getRandomAvatar()</code><br><small style="color:var(--muted)">components/player/AvatarPicker.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>AvatarPicker()</code><br><small style="color:var(--muted)">components/player/AvatarPicker.jsx</small><br><code>JoinRoom()</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small><br><code>JoinRoom.jsx</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small><br>+2 more</td>
+  <td>No direct outbound edge</td>
+  <td>getRandomAvatar() node in components/player/AvatarPicker.jsx.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>JoinRoom()</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>AdminLoginModal()</code><br><small style="color:var(--muted)">components/auth/AdminLoginModal.jsx</small><br><code>AvatarPicker()</code><br><small style="color:var(--muted)">components/player/AvatarPicker.jsx</small><br><code>getRandomAvatar()</code><br><small style="color:var(--muted)">components/player/AvatarPicker.jsx</small><br>+5 more</td>
+  <td>JoinRoom() node in components/player/JoinRoom.jsx.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>LuckyDrawPlayerJoin()</code><br><small style="color:var(--muted)">components/player/LuckyDrawPlayerJoin.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>AvatarPicker()</code><br><small style="color:var(--muted)">components/player/AvatarPicker.jsx</small><br><code>fireConfetti()</code><br><small style="color:var(--muted)">src/utils/confetti.js</small><br><code>getRandomAvatar()</code><br><small style="color:var(--muted)">components/player/AvatarPicker.jsx</small><br>+1 more</td>
+  <td>LuckyDrawPlayerJoin() node in components/player/LuckyDrawPlayerJoin.jsx.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>PlayerEndedView()</code><br><small style="color:var(--muted)">components/player/PlayerEndedView.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>fireConfetti()</code><br><small style="color:var(--muted)">src/utils/confetti.js</small><br><code>LanguageToggle()</code><br><small style="color:var(--muted)">components/common/LanguageToggle.jsx</small><br><code>useI18n()</code><br><small style="color:var(--muted)">src/context/I18nContext.jsx</small></td>
+  <td>PlayerEndedView() node in components/player/PlayerEndedView.jsx.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>PlayerLeaderboardView()</code><br><small style="color:var(--muted)">components/player/PlayerLeaderboardView.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>LanguageToggle()</code><br><small style="color:var(--muted)">components/common/LanguageToggle.jsx</small><br><code>useI18n()</code><br><small style="color:var(--muted)">src/context/I18nContext.jsx</small></td>
+  <td>PlayerLeaderboardView() node in components/player/PlayerLeaderboardView.jsx.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>PlayerLobby()</code><br><small style="color:var(--muted)">components/player/PlayerLobby.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>LanguageToggle()</code><br><small style="color:var(--muted)">components/common/LanguageToggle.jsx</small><br><code>SoundToggle()</code><br><small style="color:var(--muted)">components/common/SoundToggle.jsx</small><br><code>useI18n()</code><br><small style="color:var(--muted)">src/context/I18nContext.jsx</small></td>
+  <td>PlayerLobby() node in components/player/PlayerLobby.jsx.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>PlayerLuckyDrawOverlay()</code><br><small style="color:var(--muted)">components/player/PlayerLuckyDrawOverlay.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>fireConfetti()</code><br><small style="color:var(--muted)">src/utils/confetti.js</small></td>
+  <td>PlayerLuckyDrawOverlay() node in components/player/PlayerLuckyDrawOverlay.jsx.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>PlayerPulse()</code><br><small style="color:var(--muted)">components/player/PlayerPulse.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>LanguageToggle()</code><br><small style="color:var(--muted)">components/common/LanguageToggle.jsx</small><br><code>SoundToggle()</code><br><small style="color:var(--muted)">components/common/SoundToggle.jsx</small><br><code>useI18n()</code><br><small style="color:var(--muted)">src/context/I18nContext.jsx</small><br>+1 more</td>
+  <td>PlayerPulse() node in components/player/PlayerPulse.jsx.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>PlayerQuiz()</code><br><small style="color:var(--muted)">components/player/PlayerQuiz.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>LanguageToggle()</code><br><small style="color:var(--muted)">components/common/LanguageToggle.jsx</small><br><code>PlayerSequence()</code><br><small style="color:var(--muted)">components/player/PlayerSequence.jsx</small><br><code>SoundToggle()</code><br><small style="color:var(--muted)">components/common/SoundToggle.jsx</small><br>+2 more</td>
+  <td>PlayerQuiz() node in components/player/PlayerQuiz.jsx.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>PlayerSequence()</code><br><small style="color:var(--muted)">components/player/PlayerSequence.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>PlayerQuiz()</code><br><small style="color:var(--muted)">components/player/PlayerQuiz.jsx</small><br><code>PlayerQuiz.jsx</code><br><small style="color:var(--muted)">components/player/PlayerQuiz.jsx</small></td>
+  <td><code>getSequenceTheme()</code><br><small style="color:var(--muted)">src/utils/sequenceThemes.js</small><br><code>useI18n()</code><br><small style="color:var(--muted)">src/context/I18nContext.jsx</small></td>
+  <td>PlayerSequence() node in components/player/PlayerSequence.jsx.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>AiQuizGeneratorModal()</code><br><small style="color:var(--muted)">components/teacher/AiQuizGeneratorModal.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>TeacherBackoffice()</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small><br><code>TeacherBackoffice.jsx</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small></td>
+  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.jsx</small></td>
+  <td>AiQuizGeneratorModal() node in components/teacher/AiQuizGeneratorModal.jsx.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>DatabaseBackupModal()</code><br><small style="color:var(--muted)">components/teacher/DatabaseBackupModal.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>TeacherBackoffice()</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small><br><code>TeacherBackoffice.jsx</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small></td>
+  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.jsx</small></td>
+  <td>DatabaseBackupModal() node in components/teacher/DatabaseBackupModal.jsx.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>SessionHistoryModal()</code><br><small style="color:var(--muted)">components/teacher/SessionHistoryModal.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>TeacherBackoffice()</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small><br><code>TeacherBackoffice.jsx</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small></td>
+  <td><code>exportGameReportExcel()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>exportGameReportPDF()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.jsx</small></td>
+  <td>SessionHistoryModal() node in components/teacher/SessionHistoryModal.jsx.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>TeacherBackoffice()</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>AiQuizGeneratorModal()</code><br><small style="color:var(--muted)">components/teacher/AiQuizGeneratorModal.jsx</small><br><code>DatabaseBackupModal()</code><br><small style="color:var(--muted)">components/teacher/DatabaseBackupModal.jsx</small><br><code>LanguageToggle()</code><br><small style="color:var(--muted)">components/common/LanguageToggle.jsx</small><br>+4 more</td>
+  <td>TeacherBackoffice() node in components/teacher/TeacherBackoffice.jsx.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>UserManagementModal()</code><br><small style="color:var(--muted)">components/teacher/UserManagementModal.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>JoinRoom()</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small><br><code>JoinRoom.jsx</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small><br><code>TeacherBackoffice()</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small><br>+1 more</td>
+  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.jsx</small></td>
+  <td>UserManagementModal() node in components/teacher/UserManagementModal.jsx.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>AdminLoginModal()</code><br><small style="color:var(--muted)">components/auth/AdminLoginModal.jsx</small><br><code>AdminLoginModal.jsx</code><br><small style="color:var(--muted)">components/auth/AdminLoginModal.jsx</small><br><code>AiQuizGeneratorModal()</code><br><small style="color:var(--muted)">components/teacher/AiQuizGeneratorModal.jsx</small><br>+13 more</td>
+  <td>No direct outbound edge</td>
+  <td>useAuth() node in src/context/AuthContext.jsx.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>components/common/LuckyWaterPool.jsx</code></td><td>5 nodes</td></tr>
+<tr><td><code>components/player/AvatarPicker.jsx</code></td><td>4 nodes</td></tr>
+<tr><td><code>src/context/I18nContext.jsx</code></td><td>4 nodes</td></tr>
+<tr><td><code>client/src/App.jsx</code></td><td>3 nodes</td></tr>
+<tr><td><code>components/host/HostLobby.jsx</code></td><td>3 nodes</td></tr>
+<tr><td><code>components/host/HostQuiz.jsx</code></td><td>3 nodes</td></tr>
+<tr><td><code>components/player/PlayerQuiz.jsx</code></td><td>3 nodes</td></tr>
+<tr><td><code>src/context/AuthContext.jsx</code></td><td>3 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: imports x140, imports x94, calls x81, contains x49. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 6. Audio & Sound Effects System ====== -->
+<h2 id="audio-sound-effects-system">6. Audio &amp; Sound Effects System</h2>
+<p>Audio &amp; Sound Effects System groups implementation around client, utils, audiosfxjs, soundeffects, mostly in src/utils/audioSFX.js. This section covers 26 nodes and 41 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Audio &amp; Sound Effects System (26 nodes, 41 edges)
+    client_src_utils_audiosfx_soundeffects_9af1e4d2("SoundEffects<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_starttens_14be19e4("startTensionLoop()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playballc_289f7546("playBallClack()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playballc_9a853884("playBallCrack()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playbubbl_df89f2f0("playBubble()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playcomeb_ea37dda6("playComeback()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_construct_d9266ef0("constructor()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playtense_48e205a3("playTenseTick()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playcount_529a16c4("playCountdownBeep()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playcutec_9b5821e4("playCuteChime()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playcorre_ee263a0a("playCorrect()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playwrong_c35ec5b3("playWrong()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playfanfa_685297a2("playFanfare()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playpop_55990715("playPop()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playstrea_a9b120cb("playStreak()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playwater_8d238150("playWaterStir()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_getballso_1b37b159("getBallSound()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_unlock_43a1c612("unlock()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_construct_d9266ef0
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playtense_48e205a3
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playcount_529a16c4
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playcutec_9b5821e4
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playcorre_ee263a0a
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playwrong_c35ec5b3
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playfanfa_685297a2
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playpop_55990715
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playbubbl_df89f2f0
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playstrea_a9b120cb
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playcomeb_ea37dda6
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playwater_8d238150
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_getballso_1b37b159
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_unlock_43a1c612
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playballc_289f7546
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playballc_9a853884
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_starttens_14be19e4
+    %% Omitted for readability: 8 nodes, 0 edges
+    class client_src_utils_audiosfx_soundeffects_9af1e4d2 klass;
+    class client_src_utils_audiosfx_soundeffects_starttens_14be19e4 function;
+    class client_src_utils_audiosfx_soundeffects_playballc_289f7546 function;
+    class client_src_utils_audiosfx_soundeffects_playballc_9a853884 function;
+    class client_src_utils_audiosfx_soundeffects_playbubbl_df89f2f0 function;
+    class client_src_utils_audiosfx_soundeffects_playcomeb_ea37dda6 function;
+    class client_src_utils_audiosfx_soundeffects_construct_d9266ef0 function;
+    class client_src_utils_audiosfx_soundeffects_playtense_48e205a3 function;
+    class client_src_utils_audiosfx_soundeffects_playcount_529a16c4 function;
+    class client_src_utils_audiosfx_soundeffects_playcutec_9b5821e4 function;
+    class client_src_utils_audiosfx_soundeffects_playcorre_ee263a0a function;
+    class client_src_utils_audiosfx_soundeffects_playwrong_c35ec5b3 function;
+    class client_src_utils_audiosfx_soundeffects_playfanfa_685297a2 function;
+    class client_src_utils_audiosfx_soundeffects_playpop_55990715 function;
+    class client_src_utils_audiosfx_soundeffects_playstrea_a9b120cb function;
+    class client_src_utils_audiosfx_soundeffects_playwater_8d238150 function;
+    class client_src_utils_audiosfx_soundeffects_getballso_1b37b159 function;
+    class client_src_utils_audiosfx_soundeffects_unlock_43a1c612 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>constructor()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>getBallSound()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br>+22 more</td>
+  <td>SoundEffects node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>.constructor()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.constructor() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>.getBallSound()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.getBallSound() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>.init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>playBallClack()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>playBallCrack()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>playBubble()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br>+13 more</td>
+  <td>No direct outbound edge</td>
+  <td>.init() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>.isMuted()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.isMuted() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>.playBallClack()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.playBallClack() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>.playBallCrack()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.playBallCrack() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>.playBubble()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.playBubble() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>.playComeback()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.playComeback() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>.playCorrect()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.playCorrect() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>.playCountdownBeep()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.playCountdownBeep() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>.playCuteChime()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.playCuteChime() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>.playFanfare()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.playFanfare() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>.playPop()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.playPop() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>.playStreak()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.playStreak() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>.playTenseTick()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.playTenseTick() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>.playTick()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.playTick() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>.playWaterSplash()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.playWaterSplash() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>.playWaterStir()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.playWaterStir() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>.playWrong()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.playWrong() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>.setBallSound()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.setBallSound() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>.startTensionLoop()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>stopTensionLoop()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.startTensionLoop() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>.stopTensionLoop()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>startTensionLoop()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.stopTensionLoop() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>.subscribe()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.subscribe() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>.toggleMute()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.toggleMute() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>.unlock()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.unlock() node in src/utils/audioSFX.js.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>src/utils/audioSFX.js</code></td><td>26 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: method x25, calls x16. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 7. Containerization & Deployment Config ====== -->
+<h2 id="containerization-deployment-config">7. Containerization &amp; Deployment Config</h2>
+<p>Containerization &amp; Deployment Config groups implementation around docker, composeyml, volumes, context, mostly in docker-compose.yml. This section covers 16 nodes and 15 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Containerization &amp; Deployment Config (16 nodes, 15 edges)
+    docker_compose_services_kaojai_298748e3("kaojai<br/><small>docker-compose.yml</small>")
+    docker_compose_b3e2b485("docker-compose.yml")
+    docker_compose_kaojai_build_cb679f76("build<br/><small>docker-compose.yml</small>")
+    docker_compose_kaojai_env_file_bb986565("env_file<br/><small>docker-compose.yml</small>")
+    docker_compose_services_3e2f8ac7("services<br/><small>docker-compose.yml</small>")
+    docker_compose_volumes_6898014b("volumes<br/><small>docker-compose.yml</small>")
+    docker_compose_build_context_cb8568c7("context<br/><small>docker-compose.yml</small>")
+    docker_compose_build_dockerfile_fde4a0a2("dockerfile<br/><small>docker-compose.yml</small>")
+    docker_compose_env_file_path_d0a70454("path<br/><small>docker-compose.yml</small>")
+    docker_compose_env_file_required_89aa92d4("required<br/><small>docker-compose.yml</small>")
+    docker_compose_kaojai_environment_b0f184ec("environment<br/><small>docker-compose.yml</small>")
+    docker_compose_kaojai_init_d61106bf("init<br/><small>docker-compose.yml</small>")
+    docker_compose_kaojai_ports_2ca200ec("ports<br/><small>docker-compose.yml</small>")
+    docker_compose_kaojai_restart_1e3927d0("restart<br/><small>docker-compose.yml</small>")
+    docker_compose_kaojai_volumes_6412d2b9("volumes<br/><small>docker-compose.yml</small>")
+    docker_compose_volumes_server_uploads_a0ab471b("server_uploads<br/><small>docker-compose.yml</small>")
+    docker_compose_b3e2b485 -->|contains| docker_compose_services_3e2f8ac7
+    docker_compose_b3e2b485 -->|contains| docker_compose_volumes_6898014b
+    docker_compose_kaojai_build_cb679f76 -->|contains| docker_compose_build_context_cb8568c7
+    docker_compose_kaojai_build_cb679f76 -->|contains| docker_compose_build_dockerfile_fde4a0a2
+    docker_compose_kaojai_env_file_bb986565 -->|contains| docker_compose_env_file_path_d0a70454
+    docker_compose_kaojai_env_file_bb986565 -->|contains| docker_compose_env_file_required_89aa92d4
+    docker_compose_services_3e2f8ac7 -->|contains| docker_compose_services_kaojai_298748e3
+    docker_compose_services_kaojai_298748e3 -->|contains| docker_compose_kaojai_build_cb679f76
+    docker_compose_services_kaojai_298748e3 -->|contains| docker_compose_kaojai_env_file_bb986565
+    docker_compose_services_kaojai_298748e3 -->|contains| docker_compose_kaojai_environment_b0f184ec
+    docker_compose_services_kaojai_298748e3 -->|contains| docker_compose_kaojai_init_d61106bf
+    docker_compose_services_kaojai_298748e3 -->|contains| docker_compose_kaojai_ports_2ca200ec
+    docker_compose_services_kaojai_298748e3 -->|contains| docker_compose_kaojai_restart_1e3927d0
+    docker_compose_services_kaojai_298748e3 -->|contains| docker_compose_kaojai_volumes_6412d2b9
+    docker_compose_volumes_6898014b -->|contains| docker_compose_volumes_server_uploads_a0ab471b
+    class docker_compose_services_kaojai_298748e3 function;
+    class docker_compose_b3e2b485 function;
+    class docker_compose_kaojai_build_cb679f76 function;
+    class docker_compose_kaojai_env_file_bb986565 function;
+    class docker_compose_services_3e2f8ac7 function;
+    class docker_compose_volumes_6898014b function;
+    class docker_compose_build_context_cb8568c7 function;
+    class docker_compose_build_dockerfile_fde4a0a2 function;
+    class docker_compose_env_file_path_d0a70454 function;
+    class docker_compose_env_file_required_89aa92d4 function;
+    class docker_compose_kaojai_environment_b0f184ec function;
+    class docker_compose_kaojai_init_d61106bf function;
+    class docker_compose_kaojai_ports_2ca200ec function;
+    class docker_compose_kaojai_restart_1e3927d0 function;
+    class docker_compose_kaojai_volumes_6412d2b9 function;
+    class docker_compose_volumes_server_uploads_a0ab471b function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>docker-compose.yml</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>docker-compose.yml node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>context</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>context node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>dockerfile</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>dockerfile node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>path</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>path node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>required</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>required node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>build</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>build node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>env_file</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>env_file node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>environment</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>environment node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>init</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>init node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>ports</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ports node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>restart</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>restart node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>volumes</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>volumes node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>services</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>services node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>kaojai</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>kaojai node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>volumes</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>volumes node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>server_uploads</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>server_uploads node in docker-compose.yml.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>docker-compose.yml</code></td><td>16 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x15. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 8. Leaderboard Podium & Export Reports ====== -->
+<h2 id="leaderboard-podium-export-reports">8. Leaderboard Podium &amp; Export Reports</h2>
+<p>Leaderboard Podium &amp; Export Reports groups implementation around client, components, host, exportreportjs, mostly in src/utils/exportReport.js, components/host/HostLeaderboard.jsx, components/host/SportsPodium.jsx. This section covers 14 nodes and 24 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Leaderboard Podium &amp; Export Reports (14 nodes, 24 edges)
+    subgraph leaderboard_podium_export_reports_src_utils_expo_c4f8f700["src/utils/exportReport.js"]
+        client_src_utils_exportreport_8fafbdd0("exportReport.js")
+        client_src_utils_exportreport_exportgamereportcs_743a0965("exportGameReportCSV()<br/><small>src/utils/exportReport.js</small>")
+        client_src_utils_exportreport_exportgamereportex_b4f42b4c("exportGameReportExcel()<br/><small>src/utils/exportReport.js</small>")
+        client_src_utils_exportreport_exportgamereportpd_b99ff738("exportGameReportPDF()<br/><small>src/utils/exportReport.js</small>")
+        client_src_utils_exportreport_preparereportdata_6448dc3d("prepareReportData()<br/><small>src/utils/exportReport.js</small>")
+    end
+    subgraph leaderboard_podium_export_reports_External_gener_68a2bf8f["External / generated"]
+        ref_html2canvas_34a43d58("ref_html2canvas")
+        ref_jspdf_cb10dc1c("ref_jspdf")
+    end
+    subgraph leaderboard_podium_export_reports_components_hos_f31b36f7["components/host/HostLeaderboard.jsx"]
+        client_src_components_host_hostleaderboard_6530852b("HostLeaderboard.jsx")
+        client_src_components_host_hostleaderboard_hostl_9168cc64("HostLeaderboard()<br/><small>components/host/HostLeaderboard.jsx</small>")
+    end
+    subgraph leaderboard_podium_export_reports_components_hos_0296c808["components/host/SportsPodium.jsx"]
+        client_src_components_host_sportspodium_sportspo_03221185("SportsPodium()<br/><small>components/host/SportsPodium.jsx</small>")
+        client_src_components_host_sportspodium_bdaecec9("SportsPodium.jsx")
+    end
+    subgraph leaderboard_podium_export_reports_components_hos_c2237ac3["components/host/TeamPodium.jsx"]
+        client_src_components_host_teampodium_teampodium_3dbec270("TeamPodium()<br/><small>components/host/TeamPodium.jsx</small>")
+        client_src_components_host_teampodium_53c8a9b0("TeamPodium.jsx")
+    end
+    spec_team_battle_cd0eefe7("Team Battle &amp; Tug-of-War Score Aggregation<br/><small>spec.md</small>")
+    client_src_components_host_hostleaderboard_hostl_9168cc64 -->|calls| client_src_components_host_sportspodium_sportspo_03221185
+    client_src_components_host_hostleaderboard_hostl_9168cc64 -->|calls| client_src_components_host_teampodium_teampodium_3dbec270
+    client_src_components_host_hostleaderboard_hostl_9168cc64 -->|calls| client_src_utils_exportreport_exportgamereportex_b4f42b4c
+    client_src_components_host_hostleaderboard_hostl_9168cc64 -->|calls| client_src_utils_exportreport_exportgamereportpd_b99ff738
+    client_src_utils_exportreport_exportgamereportcs_743a0965 -->|calls| client_src_utils_exportreport_preparereportdata_6448dc3d
+    client_src_utils_exportreport_exportgamereportex_b4f42b4c -->|calls| client_src_utils_exportreport_preparereportdata_6448dc3d
+    client_src_utils_exportreport_exportgamereportpd_b99ff738 -->|calls| client_src_utils_exportreport_preparereportdata_6448dc3d
+    client_src_components_host_hostleaderboard_6530852b -->|imports| client_src_utils_exportreport_exportgamereportex_b4f42b4c
+    client_src_components_host_hostleaderboard_6530852b -->|imports| client_src_utils_exportreport_exportgamereportpd_b99ff738
+    client_src_components_host_hostleaderboard_6530852b -->|imports| client_src_components_host_sportspodium_sportspo_03221185
+    client_src_components_host_hostleaderboard_6530852b -->|imports| client_src_components_host_teampodium_teampodium_3dbec270
+    client_src_components_host_hostleaderboard_6530852b -->|imports| client_src_utils_exportreport_8fafbdd0
+    client_src_components_host_hostleaderboard_6530852b -->|imports| client_src_components_host_sportspodium_bdaecec9
+    client_src_components_host_hostleaderboard_6530852b -->|imports| client_src_components_host_teampodium_53c8a9b0
+    client_src_utils_exportreport_8fafbdd0 -->|imports| ref_html2canvas_34a43d58
+    client_src_utils_exportreport_8fafbdd0 -->|imports| ref_jspdf_cb10dc1c
+    class client_src_utils_exportreport_8fafbdd0 module;
+    class client_src_utils_exportreport_exportgamereportcs_743a0965 function;
+    class client_src_utils_exportreport_exportgamereportex_b4f42b4c function;
+    class client_src_utils_exportreport_exportgamereportpd_b99ff738 function;
+    class client_src_utils_exportreport_preparereportdata_6448dc3d function;
+    class ref_html2canvas_34a43d58 function;
+    class ref_jspdf_cb10dc1c function;
+    class client_src_components_host_hostleaderboard_6530852b ui;
+    class client_src_components_host_hostleaderboard_hostl_9168cc64 ui;
+    class client_src_components_host_sportspodium_sportspo_03221185 ui;
+    class client_src_components_host_sportspodium_bdaecec9 ui;
+    class client_src_components_host_teampodium_teampodium_3dbec270 ui;
+    class client_src_components_host_teampodium_53c8a9b0 ui;
+    class spec_team_battle_cd0eefe7 test;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>exportGameReportExcel()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>exportGameReportPDF()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>fireConfetti()</code><br><small style="color:var(--muted)">src/utils/confetti.js</small><br>+3 more</td>
+  <td>HostLeaderboard() node in components/host/HostLeaderboard.jsx.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>SportsPodium()</code><br><small style="color:var(--muted)">components/host/SportsPodium.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>SportsPodium() node in components/host/SportsPodium.jsx.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>TeamPodium()</code><br><small style="color:var(--muted)">components/host/TeamPodium.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>TeamPodium() node in components/host/TeamPodium.jsx.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>exportGameReportCSV()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>prepareReportData()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
+  <td>Exports documentation data to a target format.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>exportGameReportExcel()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>SessionHistoryModal()</code><br><small style="color:var(--muted)">components/teacher/SessionHistoryModal.jsx</small><br>+1 more</td>
+  <td><code>prepareReportData()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
+  <td>Exports documentation data to a target format.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>exportGameReportPDF()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>SessionHistoryModal()</code><br><small style="color:var(--muted)">components/teacher/SessionHistoryModal.jsx</small><br>+1 more</td>
+  <td><code>prepareReportData()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
+  <td>Exports documentation data to a target format.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>prepareReportData()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>exportGameReportCSV()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>exportGameReportExcel()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>exportGameReportPDF()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>prepareReportData() node in src/utils/exportReport.js.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>audioSFX.js</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>confetti.js</code><br><small style="color:var(--muted)">src/utils/confetti.js</small><br><code>exportGameReportExcel()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br>+12 more</td>
+  <td>HostLeaderboard.jsx node in components/host/HostLeaderboard.jsx.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>SportsPodium.jsx</code><br><small style="color:var(--muted)">components/host/SportsPodium.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
+  <td><code>lucide-react</code><br><small style="color:var(--muted)">client/package.json</small><br><code>react</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td>SportsPodium.jsx node in components/host/SportsPodium.jsx.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>TeamPodium.jsx</code><br><small style="color:var(--muted)">components/host/TeamPodium.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
+  <td><code>lucide-react</code><br><small style="color:var(--muted)">client/package.json</small><br><code>react</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td>TeamPodium.jsx node in components/host/TeamPodium.jsx.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>exportReport.js</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>SessionHistoryModal.jsx</code><br><small style="color:var(--muted)">components/teacher/SessionHistoryModal.jsx</small></td>
+  <td><code>ref_html2canvas</code><br><code>ref_jspdf</code><br><code>xlsx</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td>Exports documentation data to a target format.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>Team Battle &amp; Tug-of-War Score Aggregation</code><br><small style="color:var(--muted)">spec.md</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Team Battle &amp; Tug-of-War Score Aggregation node in spec.md.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>ref_html2canvas</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>exportReport.js</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>Exports documentation data to a target format.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>ref_jspdf</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>exportReport.js</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>ref_jspdf node in project.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>src/utils/exportReport.js</code></td><td>5 nodes</td></tr>
+<tr><td><code>components/host/HostLeaderboard.jsx</code></td><td>2 nodes</td></tr>
+<tr><td><code>components/host/SportsPodium.jsx</code></td><td>2 nodes</td></tr>
+<tr><td><code>components/host/TeamPodium.jsx</code></td><td>2 nodes</td></tr>
+<tr><td><code>spec.md</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: calls x7, contains x7, imports x5, imports x4. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 9. Gemini AI Quiz Generation Service ====== -->
+<h2 id="gemini-ai-quiz-generation-service">9. Gemini AI Quiz Generation Service</h2>
+<p>Gemini AI Quiz Generation Service groups implementation around aiservicejs, server, buildsystemprompt, builduserprompt, mostly in server/src/aiService.js. This section covers 9 nodes and 13 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Gemini AI Quiz Generation Service (9 nodes, 13 edges)
+    server_src_aiservice_generateaiquiz_98ba5a95("generateAiQuiz()<br/><small>server/src/aiService.js</small>")
+    server_src_aiservice_generatemockquiz_e5558979("generateMockQuiz()<br/><small>server/src/aiService.js</small>")
+    server_src_aiservice_normalizeandvalidatequiz_1b1b0d0f("normalizeAndValidateQuiz()<br/><small>server/src/aiService.js</small>")
+    server_src_aiservice_buildsystemprompt_960bcb04("buildSystemPrompt()<br/><small>server/src/aiService.js</small>")
+    server_src_aiservice_builduserprompt_bd6e357f("buildUserPrompt()<br/><small>server/src/aiService.js</small>")
+    server_src_aiservice_callgeminiapi_ff7374ad("callGeminiApi()<br/><small>server/src/aiService.js</small>")
+    server_src_aiservice_gemini_models_59555569("GEMINI_MODELS<br/><small>server/src/aiService.js</small>")
+    server_src_aiservice_quiz_response_schema_ea40abcc("QUIZ_RESPONSE_SCHEMA<br/><small>server/src/aiService.js</small>")
+    server_src_aiservice_239fc4e4("aiService.js")
+    server_src_aiservice_generateaiquiz_98ba5a95 -->|calls| server_src_aiservice_generatemockquiz_e5558979
+    server_src_aiservice_generateaiquiz_98ba5a95 -->|calls| server_src_aiservice_normalizeandvalidatequiz_1b1b0d0f
+    server_src_aiservice_generateaiquiz_98ba5a95 -->|calls| server_src_aiservice_buildsystemprompt_960bcb04
+    server_src_aiservice_generateaiquiz_98ba5a95 -->|calls| server_src_aiservice_builduserprompt_bd6e357f
+    server_src_aiservice_generateaiquiz_98ba5a95 -->|calls| server_src_aiservice_callgeminiapi_ff7374ad
+    class server_src_aiservice_generateaiquiz_98ba5a95 function;
+    class server_src_aiservice_generatemockquiz_e5558979 function;
+    class server_src_aiservice_normalizeandvalidatequiz_1b1b0d0f function;
+    class server_src_aiservice_buildsystemprompt_960bcb04 function;
+    class server_src_aiservice_builduserprompt_bd6e357f function;
+    class server_src_aiservice_callgeminiapi_ff7374ad api;
+    class server_src_aiservice_gemini_models_59555569 klass;
+    class server_src_aiservice_quiz_response_schema_ea40abcc klass;
+    class server_src_aiservice_239fc4e4 module;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>buildSystemPrompt()</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>generateAiQuiz()</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>Builds structured prompts for model calls.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>buildUserPrompt()</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>generateAiQuiz()</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>Builds structured prompts for model calls.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>callGeminiApi()</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td><span class="tag tag-endpoint">API</span></td>
+  <td><code>generateAiQuiz()</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>callGeminiApi() node in server/src/aiService.js.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>generateAiQuiz()</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>aiService.js</code><br><small style="color:var(--muted)">server/src/aiService.js</small><br><code>index.js</code><br><small style="color:var(--muted)">server/src/index.js</small></td>
+  <td><code>buildSystemPrompt()</code><br><small style="color:var(--muted)">server/src/aiService.js</small><br><code>buildUserPrompt()</code><br><small style="color:var(--muted)">server/src/aiService.js</small><br><code>callGeminiApi()</code><br><small style="color:var(--muted)">server/src/aiService.js</small><br>+2 more</td>
+  <td>generateAiQuiz() node in server/src/aiService.js.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>generateMockQuiz()</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>aiService.js</code><br><small style="color:var(--muted)">server/src/aiService.js</small><br><code>generateAiQuiz()</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>generateMockQuiz() node in server/src/aiService.js.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>normalizeAndValidateQuiz()</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>aiService.js</code><br><small style="color:var(--muted)">server/src/aiService.js</small><br><code>generateAiQuiz()</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>normalizeAndValidateQuiz() node in server/src/aiService.js.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>aiService.js</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>index.js</code><br><small style="color:var(--muted)">server/src/index.js</small></td>
+  <td><code>generateAiQuiz()</code><br><small style="color:var(--muted)">server/src/aiService.js</small><br><code>generateMockQuiz()</code><br><small style="color:var(--muted)">server/src/aiService.js</small><br><code>normalizeAndValidateQuiz()</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td>aiService.js node in server/src/aiService.js.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>GEMINI_MODELS</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>GEMINI_MODELS node in server/src/aiService.js.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>QUIZ_RESPONSE_SCHEMA</code><br><small style="color:var(--muted)">server/src/aiService.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>QUIZ_RESPONSE_SCHEMA node in server/src/aiService.js.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>server/src/aiService.js</code></td><td>9 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: calls x5, contains x5, indirect call x3. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 10. UI Theme & Color Picker ====== -->
+<h2 id="ui-theme-color-picker">10. UI Theme &amp; Color Picker</h2>
+<p>UI Theme &amp; Color Picker groups implementation around themepickerjsx, client, components, themepicker, mostly in src/components/ThemePicker.jsx. This section covers 3 nodes and 2 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: UI Theme &amp; Color Picker (3 nodes, 2 edges)
+    client_src_components_themepicker_ac9d6145("ThemePicker.jsx")
+    client_src_components_themepicker_themepicker_6787850d("ThemePicker()<br/><small>src/components/ThemePicker.jsx</small>")
+    client_src_components_themepicker_preset_colors_0449e964("PRESET_COLORS<br/><small>src/components/ThemePicker.jsx</small>")
+    client_src_components_themepicker_ac9d6145 -->|contains| client_src_components_themepicker_themepicker_6787850d
+    client_src_components_themepicker_ac9d6145 -->|contains| client_src_components_themepicker_preset_colors_0449e964
+    class client_src_components_themepicker_ac9d6145 ui;
+    class client_src_components_themepicker_themepicker_6787850d ui;
+    class client_src_components_themepicker_preset_colors_0449e964 ui;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>ThemePicker()</code><br><small style="color:var(--muted)">src/components/ThemePicker.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ThemePicker() node in src/components/ThemePicker.jsx.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>ThemePicker.jsx</code><br><small style="color:var(--muted)">src/components/ThemePicker.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>lucide-react</code><br><small style="color:var(--muted)">client/package.json</small><br><code>react</code><br><small style="color:var(--muted)">client/package.json</small></td>
+  <td>ThemePicker.jsx node in src/components/ThemePicker.jsx.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>PRESET_COLORS</code><br><small style="color:var(--muted)">src/components/ThemePicker.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>PRESET_COLORS node in src/components/ThemePicker.jsx.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>src/components/ThemePicker.jsx</code></td><td>3 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<h2 id="hyperedges">Group Relationships (Hyperedges)</h2>
+<div class="grid">
+
+  <div class="card">
+    <h4>Real-time Interactive Active Learning Gamification</h4>
+    <p><code>form</code> — 5 participants</p>
+    <ul>
+      <li><code>readme_quiz_engine</code></li>
+      <li><code>spec_training_pulse</code></li>
+      <li><code>spec_lucky_draw_pool</code></li>
+      <li><code>spec_team_battle</code></li>
+      <li><code>readme_learning_gain</code></li>
+    </ul>
+  </div>
+</div>
+<hr>
+<h2 id="stats">Project Statistics</h2>
+
+<div class="grid">
+  <div class="card">
+    <h4>Graph</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><td>Nodes</td><td>399</td></tr>
+      <tr><td>Edges</td><td>1051</td></tr>
+      <tr><td>Hyperedges</td><td>1</td></tr>
+      <tr><td>Communities</td><td>13</td></tr>
+      <tr><td>Documented Sections</td><td>9</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Edge Confidence</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><td>EXTRACTED</td><td>927</td></tr>
+      <tr><td>INFERRED</td><td>124</td></tr>
+      <tr><td>AMBIGUOUS</td><td>0</td></tr>
+    </table>
+  </div>
+</div>
+
+<div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
+  <p>KaoJai — Architecture Documentation</p>
+  <p>Generated: 2026-10-24 14:07 UTC · graphify callflow-html</p>
+</div>
+
+</div><!-- .container -->
+
+<script>
+(function () {
+  const mermaidConfig = {
+    startOnLoad: false,
+    theme: 'dark',
+    securityLevel: 'loose',
+    flowchart: { htmlLabels: true, useMaxWidth: true },
+    themeVariables: {
+      primaryColor: '#1e293b',
+      primaryTextColor: '#e2e8f0',
+      primaryBorderColor: '#38bdf8',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#334155',
+      lineColor: '#64748b',
+      textColor: '#e2e8f0',
+    }
+  };
+
+  mermaid.initialize(mermaidConfig);
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function enhanceMermaidDiagrams() {
+    document.querySelectorAll('.mermaid').forEach((container) => {
+      if (container.dataset.zoomReady === 'true') return;
+      const svg = container.querySelector('svg');
+      if (!svg) return;
+
+      container.dataset.zoomReady = 'true';
+      container.classList.add('is-enhanced');
+
+      const viewport = document.createElement('div');
+      viewport.className = 'mermaid-viewport';
+      svg.parentNode.insertBefore(viewport, svg);
+      viewport.appendChild(svg);
+
+      const toolbar = document.createElement('div');
+      toolbar.className = 'mermaid-toolbar';
+      toolbar.innerHTML = [
+        '<button type="button" data-action="zoom-out" title="Zoom out">-</button>',
+        '<span class="zoom-level" data-role="level">100%</span>',
+        '<button type="button" data-action="zoom-in" title="Zoom in">+</button>',
+        '<button type="button" data-action="fit" title="Fit width">Fit</button>',
+        '<button type="button" data-action="reset" title="Reset view">Reset</button>'
+      ].join('');
+      container.insertBefore(toolbar, viewport);
+
+      const state = { scale: 1, x: 0, y: 0, dragging: false, startX: 0, startY: 0, originX: 0, originY: 0 };
+      const level = toolbar.querySelector('[data-role="level"]');
+
+      function applyTransform() {
+        svg.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+        level.textContent = `${Math.round(state.scale * 100)}%`;
+      }
+
+      function zoomBy(delta) {
+        state.scale = clamp(state.scale + delta, 0.25, 3);
+        applyTransform();
+      }
+
+      function reset() {
+        state.scale = 1;
+        state.x = 0;
+        state.y = 0;
+        applyTransform();
+      }
+
+      function fitWidth() {
+        const rawWidth = svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width
+          ? svg.viewBox.baseVal.width
+          : svg.getBoundingClientRect().width / state.scale;
+        if (!rawWidth) {
+          reset();
+          return;
+        }
+        state.scale = clamp((viewport.clientWidth - 48) / rawWidth, 0.25, 1.4);
+        state.x = 0;
+        state.y = 0;
+        applyTransform();
+      }
+
+      toolbar.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.dataset.action;
+        if (action === 'zoom-in') zoomBy(0.15);
+        if (action === 'zoom-out') zoomBy(-0.15);
+        if (action === 'fit') fitWidth();
+        if (action === 'reset') reset();
+      });
+
+      viewport.addEventListener('wheel', (event) => {
+        if (!event.ctrlKey && !event.metaKey) return;
+        event.preventDefault();
+        zoomBy(event.deltaY < 0 ? 0.1 : -0.1);
+      }, { passive: false });
+
+      viewport.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        state.dragging = true;
+        state.startX = event.clientX;
+        state.startY = event.clientY;
+        state.originX = state.x;
+        state.originY = state.y;
+        viewport.classList.add('is-dragging');
+        viewport.setPointerCapture(event.pointerId);
+      });
+
+      viewport.addEventListener('pointermove', (event) => {
+        if (!state.dragging) return;
+        state.x = state.originX + event.clientX - state.startX;
+        state.y = state.originY + event.clientY - state.startY;
+        applyTransform();
+      });
+
+      function endDrag(event) {
+        if (!state.dragging) return;
+        state.dragging = false;
+        viewport.classList.remove('is-dragging');
+        if (viewport.hasPointerCapture(event.pointerId)) {
+          viewport.releasePointerCapture(event.pointerId);
+        }
+      }
+
+      viewport.addEventListener('pointerup', endDrag);
+      viewport.addEventListener('pointercancel', endDrag);
+      applyTransform();
+    });
+  }
+
+  function renderMermaid() {
+    const result = mermaid.run
+      ? mermaid.run({ querySelector: '.mermaid' })
+      : Promise.resolve();
+    Promise.resolve(result)
+      .then(enhanceMermaidDiagrams)
+      .catch((error) => {
+        console.error('Mermaid render failed:', error);
+        enhanceMermaidDiagrams();
+      });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderMermaid);
+  } else {
+    renderMermaid();
+  }
+})();
+</script>
+
+</body>
+</html>

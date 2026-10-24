@@ -9,7 +9,7 @@ import { sfx } from '../../utils/audioSFX';
 import {
   Gift, Trophy, Users, QrCode, FileSpreadsheet, Download, Upload,
   RotateCcw, Sparkles, X, Check, Copy, Trash2, ArrowLeft, ShieldAlert,
-  Sliders, Award, RefreshCw, ChevronRight, Maximize2, Lock, Unlock
+  Sliders, Award, RefreshCw, ChevronRight, Maximize2, Lock, Unlock, Link2, Plus, Minus, Music
 } from 'lucide-react';
 
 export const LuckyDrawPage = ({
@@ -30,15 +30,117 @@ export const LuckyDrawPage = ({
   const [isRegistrationLocked, setIsRegistrationLocked] = useState(false);
   const [autoLockOnDraw, setAutoLockOnDraw] = useState(true);
   const [serverHost, setServerHost] = useState(null);
+  const [isBgmPlaying, setIsBgmPlaying] = useState(() => sfx.isLuckyDrawBGMPlaying());
+
+  const handleToggleBgm = () => {
+    sfx.unlock();
+    const playing = sfx.toggleLuckyDrawBGM();
+    setIsBgmPlaying(playing);
+  };
+
+  useEffect(() => {
+    const unsub = sfx.subscribe((isMuted) => {
+      if (isMuted) {
+        setIsBgmPlaying(false);
+      }
+    });
+    return () => {
+      unsub();
+      sfx.stopLuckyDrawBGM();
+    };
+  }, []);
 
   // Tabs: 'QR' | 'MANUAL' | 'ROOM'
   const [activeTab, setActiveTab] = useState(() => (players && players.length > 0 ? 'ROOM' : 'QR'));
 
-  // Prize configuration
+  // Prize configuration: 'MANUAL' | 'PRESET'
+  const [prizeMode, setPrizeMode] = useState('MANUAL');
+  const [manualPrizeEnabled, setManualPrizeEnabled] = useState(true);
   const [prizeName, setPrizeName] = useState('รางวัลพิเศษ 🎉');
+
+  // Preset Prizes Inventory
+  const [presetPrizes, setPresetPrizes] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kaojai_lucky_presets');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [
+      { id: 'prize_1', name: 'รางวัลที่ 1: แท็บเล็ต iPad 10th Gen', totalCount: 1, remainingCount: 1 },
+      { id: 'prize_2', name: 'รางวัลที่ 2: หูฟังไร้สาย Wireless Earbuds', totalCount: 2, remainingCount: 2 },
+      { id: 'prize_3', name: 'รางวัลที่ 3: กระบอกน้ำเก็บความเย็น', totalCount: 5, remainingCount: 5 }
+    ];
+  });
+  const [activePresetPrizeId, setActivePresetPrizeId] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kaojai_lucky_presets');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0].id;
+      }
+    } catch (e) {}
+    return 'prize_1';
+  });
+  const [isPrizeManagerOpen, setIsPrizeManagerOpen] = useState(false);
+  const [newPresetName, setNewPresetName] = useState('');
+  const [newPresetCount, setNewPresetCount] = useState(1);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('kaojai_lucky_presets', JSON.stringify(presetPrizes));
+    } catch (e) {}
+  }, [presetPrizes]);
+
+  const currentWinnerRef = useRef(null);
   const [currentWinner, setCurrentWinner] = useState(null);
   const [winnerHistory, setWinnerHistory] = useState([]);
   const [copiedHistory, setCopiedHistory] = useState(false);
+
+  const currentActivePreset = useMemo(() => {
+    return presetPrizes.find(p => p.id === activePresetPrizeId) || presetPrizes[0] || null;
+  }, [presetPrizes, activePresetPrizeId]);
+
+  const handleAddPreset = (e) => {
+    e?.preventDefault();
+    if (!newPresetName.trim()) return;
+    const count = Math.max(1, parseInt(newPresetCount, 10) || 1);
+    const newPrize = {
+      id: `prize_${Date.now()}`,
+      name: newPresetName.trim(),
+      totalCount: count,
+      remainingCount: count
+    };
+    setPresetPrizes(prev => [...prev, newPrize]);
+    setActivePresetPrizeId(newPrize.id);
+    setNewPresetName('');
+    setNewPresetCount(1);
+  };
+
+  const handleRemovePreset = (id) => {
+    setPresetPrizes(prev => {
+      const filtered = prev.filter(p => p.id !== id);
+      if (activePresetPrizeId === id && filtered.length > 0) {
+        setActivePresetPrizeId(filtered[0].id);
+      }
+      return filtered;
+    });
+  };
+
+  const handleAdjustRemaining = (id, delta) => {
+    setPresetPrizes(prev => prev.map(p => {
+      if (p.id === id) {
+        const next = Math.max(0, Math.min(p.totalCount, p.remainingCount + delta));
+        return { ...p, remainingCount: next };
+      }
+      return p;
+    }));
+  };
+
+  const handleResetAllStock = () => {
+    setPresetPrizes(prev => prev.map(p => ({ ...p, remainingCount: p.totalCount })));
+  };
 
   // Exclusions (Toggleable freely)
   const [excludePreviousWinners, setExcludePreviousWinners] = useState(true);
@@ -239,11 +341,42 @@ export const LuckyDrawPage = ({
   // Water Pool Ball Scoop handler
   const handlePoolWinner = (winnerCand) => {
     if (!winnerCand) return;
-    setCurrentWinner(winnerCand);
+
+    let effectivePrize = '';
+    if (prizeMode === 'PRESET') {
+      const currentPreset = currentActivePreset;
+      effectivePrize = currentPreset ? currentPreset.name : (prizeName || 'รางวัลพิเศษ 🎉');
+
+      // Auto-decrement stock for preset prize
+      if (currentPreset && currentPreset.remainingCount > 0) {
+        setPresetPrizes(prev => {
+          const nextStock = Math.max(0, currentPreset.remainingCount - 1);
+          const updated = prev.map(p => p.id === currentPreset.id ? { ...p, remainingCount: nextStock } : p);
+          // If this prize just ran out, auto-advance to next prize that still has stock
+          if (nextStock === 0) {
+            const nextAvailable = updated.find(p => p.id !== currentPreset.id && p.remainingCount > 0);
+            if (nextAvailable) {
+              setActivePresetPrizeId(nextAvailable.id);
+            }
+          }
+          return updated;
+        });
+      }
+    } else {
+      effectivePrize = manualPrizeEnabled
+        ? (prizeName.trim() || 'รางวัลพิเศษ 🎉')
+        : 'ผู้โชคดี (ไม่ระบุของรางวัล)';
+    }
+
+    const winnerWithPrize = {
+      ...winnerCand,
+      prize: effectivePrize
+    };
+
+    setCurrentWinner(winnerWithPrize);
 
     const newRecord = {
-      ...winnerCand,
-      prize: prizeName || 'รางวัลพิเศษ 🎉',
+      ...winnerWithPrize,
       drawnAt: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     };
     setWinnerHistory(prev => [newRecord, ...prev]);
@@ -260,7 +393,7 @@ export const LuckyDrawPage = ({
         socket.emit('host_spin_lucky_draw', {
           pin: activePin,
           hostToken: activeHostToken,
-          prizeName: prizeName || 'รางวัลพิเศษ 🎉',
+          prizeName: effectivePrize,
           winner: {
             id: winnerCand.id,
             name: winnerCand.name,
@@ -366,6 +499,7 @@ export const LuckyDrawPage = ({
   };
 
   const handleBack = () => {
+    sfx.stopLuckyDrawBGM();
     if (socket && activePin && activeHostToken) {
       try {
         socket.emit('host_close_lucky_draw', { pin: activePin, hostToken: activeHostToken });
@@ -390,21 +524,8 @@ export const LuckyDrawPage = ({
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', display: 'flex', flexDirection: 'column' }}>
       {/* Top Header Bar */}
-      <header
-        style={{
-          background: '#FFFFFF',
-          borderBottom: '1px solid #E2E8F0',
-          padding: '16px 32px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          position: 'sticky',
-          top: 0,
-          zIndex: 50,
-          boxShadow: '0 2px 10px rgba(15, 23, 42, 0.04)'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      <header className="luckydraw-header">
+        <div className="luckydraw-header-left" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', flex: '1 1 auto', minWidth: 0 }}>
           <button
             type="button"
             onClick={handleBack}
@@ -420,13 +541,14 @@ export const LuckyDrawPage = ({
               fontSize: '0.95rem',
               fontWeight: 800,
               cursor: 'pointer',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              flexShrink: 0
             }}
           >
             <ArrowLeft size={18} /> {t('backToRoles', 'กลับสู่หน้าหลัก')}
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: '1 1 auto' }}>
             <div
               style={{
                 width: '42px',
@@ -437,14 +559,15 @@ export const LuckyDrawPage = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#FFFFFF',
-                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
+                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+                flexShrink: 0
               }}
             >
               <Gift size={24} />
             </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h1 style={{ margin: 0, fontSize: '1.45rem', fontWeight: 900, color: 'var(--text-main, #1E293B)', letterSpacing: '0.5px' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <h1 style={{ margin: 0, fontSize: 'clamp(1.1rem, 2.5vw, 1.45rem)', fontWeight: 900, color: 'var(--text-main, #1E293B)', letterSpacing: '0.5px', wordBreak: 'break-word' }}>
                   KAOJAI LUCKY DRAW ARENA 🎁 🌊
                 </h1>
                 <span
@@ -455,20 +578,21 @@ export const LuckyDrawPage = ({
                     fontWeight: 800,
                     padding: '3px 12px',
                     borderRadius: '20px',
-                    border: '1px solid #FDE68A'
+                    border: '1px solid #FDE68A',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   ระบบสุ่มผู้โชคดีเต็มจอ
                 </span>
               </div>
-              <p style={{ margin: '2px 0 0', fontSize: '0.85rem', color: '#64748B' }}>
+              <p style={{ margin: '2px 0 0', fontSize: '0.85rem', color: '#64748B', wordBreak: 'break-word' }}>
                 {activePin ? `เชื่อมต่อห้องกิจกรรม PIN: ${activePin} • สแกน QR หรือกรอกรายชื่อเพื่อร่วมลุ้น` : 'โหมดอิสระ (Standalone) • สุ่มรายชื่อสำหรับงานสัมมนา ปาร์ตี้บริษัท'}
               </p>
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', flexShrink: 0 }}>
           {activePin && (
             <div
               style={{
@@ -486,14 +610,39 @@ export const LuckyDrawPage = ({
             </div>
           )}
 
+          {/* Lucky Draw BGM Toggle Button */}
+          <button
+            type="button"
+            onClick={handleToggleBgm}
+            title={isBgmPlaying ? 'ปิดเสียงดนตรีประกอบ Lucky Draw' : 'เปิดเสียงดนตรีประกอบ Lucky Draw'}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              borderRadius: '24px',
+              background: isBgmPlaying ? '#FFF7ED' : '#F1F5F9',
+              border: `1.5px solid ${isBgmPlaying ? '#FDBA74' : '#CBD5E1'}`,
+              color: isBgmPlaying ? '#C2410C' : '#64748B',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              boxShadow: isBgmPlaying ? '0 2px 8px rgba(245, 158, 11, 0.25)' : 'none',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <Music size={15} color={isBgmPlaying ? '#EA580C' : '#64748B'} />
+            <span>{isBgmPlaying ? '🎵 ดนตรี: กำลังเล่น' : '🔇 ดนตรี: ปิดอยู่'}</span>
+          </button>
+
           <LanguageToggle />
           <SoundToggle />
         </div>
       </header>
 
       {/* Main Container - Full-width 2-Column Responsive Layout */}
-      <main style={{ flex: 1, padding: '24px 32px', maxWidth: '1440px', width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.25fr) minmax(380px, 0.75fr)', gap: '24px', alignItems: 'start' }}>
+      <main style={{ flex: 1, padding: 'clamp(16px, 2.5vw, 24px)', maxWidth: '1440px', width: '100%', margin: '0 auto', boxSizing: 'border-box', overflowX: 'hidden' }}>
+        <div className="luckydraw-arena-grid">
           
           {/* LEFT COLUMN: THE ARENA STAGE (Water Pool Stage & Prize Input) */}
           <div
@@ -501,43 +650,214 @@ export const LuckyDrawPage = ({
             style={{
               background: '#FFFFFF',
               borderRadius: '24px',
-              padding: '28px',
+              padding: 'clamp(16px, 3vw, 28px)',
               boxShadow: '0 8px 30px rgba(0, 0, 0, 0.05)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              border: '1px solid #E2E8F0'
+              border: '1px solid #E2E8F0',
+              width: '100%',
+              maxWidth: '100%',
+              boxSizing: 'border-box',
+              minWidth: 0,
+              overflow: 'hidden'
             }}
           >
-            {/* Prize Input */}
-            <div style={{ width: '100%', maxWidth: '520px', marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>
-                🎁 ชื่อของรางวัลรอบนี้:
-              </label>
-              <input
-                type="text"
-                value={prizeName}
-                onChange={(e) => setPrizeName(e.target.value)}
-                placeholder="เช่น รางวัลที่ 1 ทีวี 55 นิ้ว, Gift Voucher 500.-"
-                disabled={Boolean(currentWinner)}
-                style={{
-                  width: '100%',
-                  padding: '12px 18px',
-                  borderRadius: '16px',
-                  border: '2px solid #CBD5E1',
-                  fontSize: '1.05rem',
-                  fontWeight: 800,
-                  color: '#1E293B',
-                  outline: 'none',
-                  background: '#FFFFFF',
-                  boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.04)',
-                  boxSizing: 'border-box'
-                }}
-              />
+            {/* Dual Prize Mode Selector: Manual vs Preset */}
+            <div style={{ width: '100%', maxWidth: '600px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ display: 'inline-flex', background: '#F1F5F9', padding: '3px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                  <button
+                    type="button"
+                    onClick={() => setPrizeMode('MANUAL')}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '9px',
+                      border: 'none',
+                      background: prizeMode === 'MANUAL' ? '#FFFFFF' : 'transparent',
+                      color: prizeMode === 'MANUAL' ? '#EA580C' : '#64748B',
+                      fontWeight: 800,
+                      fontSize: '0.82rem',
+                      cursor: 'pointer',
+                      boxShadow: prizeMode === 'MANUAL' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <Gift size={14} /> ใส่ชื่อรางวัลเอง / ไม่ระบุ
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPrizeMode('PRESET')}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '9px',
+                      border: 'none',
+                      background: prizeMode === 'PRESET' ? '#FFFFFF' : 'transparent',
+                      color: prizeMode === 'PRESET' ? '#EA580C' : '#64748B',
+                      fontWeight: 800,
+                      fontSize: '0.82rem',
+                      cursor: 'pointer',
+                      boxShadow: prizeMode === 'PRESET' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <Sliders size={14} /> ตั้งค่ารางวัลล่วงหน้า ({presetPrizes.length})
+                  </button>
+                </div>
+
+                {prizeMode === 'PRESET' && (
+                  <button
+                    type="button"
+                    onClick={() => setIsPrizeManagerOpen(true)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '10px',
+                      background: '#FFF7ED',
+                      border: '1px solid #FDBA74',
+                      color: '#C2410C',
+                      fontWeight: 800,
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                  >
+                    <Sliders size={13} /> จัดการคลังรางวัล
+                  </button>
+                )}
+              </div>
+
+              {/* Mode 1: MANUAL (Optional Name or Custom Input) */}
+              {prizeMode === 'MANUAL' && (
+                <div style={{ background: '#FFFFFF', padding: '12px 16px', borderRadius: '16px', border: '1.5px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '0.88rem', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      🎁 ชื่อของรางวัลรอบนี้:
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#64748B', cursor: 'pointer', fontWeight: 700 }}>
+                      <input
+                        type="checkbox"
+                        checked={manualPrizeEnabled}
+                        onChange={(e) => setManualPrizeEnabled(e.target.checked)}
+                        style={{ accentColor: '#EA580C', cursor: 'pointer' }}
+                      />
+                      ระบุชื่อของรางวัล
+                    </label>
+                  </div>
+
+                  {manualPrizeEnabled ? (
+                    <input
+                      type="text"
+                      value={prizeName}
+                      onChange={(e) => setPrizeName(e.target.value)}
+                      placeholder="เช่น รางวัลที่ 1 ทีวี 55 นิ้ว, Gift Voucher 500.- (หรือเว้นว่างได้)"
+                      disabled={Boolean(currentWinner)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 16px',
+                        borderRadius: '12px',
+                        border: '1.5px solid #CBD5E1',
+                        fontSize: '1rem',
+                        fontWeight: 700,
+                        color: '#1E293B',
+                        outline: 'none',
+                        background: '#F8FAFC',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  ) : (
+                    <div style={{ padding: '10px 14px', background: '#F8FAFC', borderRadius: '12px', fontSize: '0.86rem', color: '#64748B', fontStyle: 'italic', border: '1px dashed #CBD5E1' }}>
+                      ✨ ไม่ระบุชื่อของรางวัล (สุ่มเฉพาะผู้โชคดี)
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Mode 2: PRESET (Advance Inventory & Stock) */}
+              {prizeMode === 'PRESET' && (
+                <div style={{ background: '#FFFFFF', padding: '12px 16px', borderRadius: '16px', border: '1.5px solid #FDBA74', boxShadow: '0 2px 10px rgba(234, 88, 12, 0.08)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#C2410C', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      🎁 รางวัลที่กำลังสุ่มในรอบนี้:
+                    </span>
+                    {currentActivePreset && (
+                      <span style={{
+                        fontSize: '0.78rem',
+                        fontWeight: 800,
+                        padding: '3px 10px',
+                        borderRadius: '10px',
+                        background: currentActivePreset.remainingCount > 0 ? '#DCFCE7' : '#FEE2E2',
+                        color: currentActivePreset.remainingCount > 0 ? '#15803D' : '#B91C1C',
+                        border: currentActivePreset.remainingCount > 0 ? '1px solid #BBF7D0' : '1px solid #FECACA'
+                      }}>
+                        {currentActivePreset.remainingCount > 0
+                          ? `คงเหลือ ${currentActivePreset.remainingCount} / ${currentActivePreset.totalCount} ชิ้น`
+                          : '❌ รางวัลหมดแล้ว (0 ชิ้น)'}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <select
+                      value={activePresetPrizeId}
+                      onChange={(e) => setActivePresetPrizeId(e.target.value)}
+                      disabled={Boolean(currentWinner)}
+                      style={{
+                        flex: 1,
+                        padding: '10px 14px',
+                        borderRadius: '12px',
+                        border: '1.5px solid #FDBA74',
+                        fontSize: '0.96rem',
+                        fontWeight: 800,
+                        color: '#1E293B',
+                        background: '#FFF7ED',
+                        outline: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {presetPrizes.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} {p.remainingCount > 0 ? `(เหลือ ${p.remainingCount}/${p.totalCount})` : '— หมดแล้ว'}
+                        </option>
+                      ))}
+                    </select>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsPrizeManagerOpen(true)}
+                      title="แก้ไข / เพิ่มของรางวัล"
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: '12px',
+                        background: '#F1F5F9',
+                        border: '1px solid #CBD5E1',
+                        color: '#475569',
+                        fontWeight: 700,
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        flexShrink: 0
+                      }}
+                    >
+                      <Plus size={15} /> เพิ่ม/จัดการ
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* The Main Arena Stage Canvas */}
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '440px' }}>
+            <div style={{ width: '100%', maxWidth: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '380px', overflow: 'hidden' }}>
               <LuckyWaterPool
                 candidates={candidatePool}
                 onSelectWinner={handlePoolWinner}
@@ -560,12 +880,17 @@ export const LuckyDrawPage = ({
             style={{
               background: '#FFFFFF',
               borderRadius: '24px',
-              padding: '24px',
+              padding: 'clamp(16px, 2.5vw, 24px)',
               boxShadow: '0 8px 30px rgba(0, 0, 0, 0.05)',
               border: '1px solid #E2E8F0',
               display: 'flex',
               flexDirection: 'column',
-              gap: '20px'
+              gap: '20px',
+              width: '100%',
+              maxWidth: '100%',
+              boxSizing: 'border-box',
+              minWidth: 0,
+              overflow: 'hidden'
             }}
           >
             {/* Candidate Source Tabs */}
@@ -576,7 +901,8 @@ export const LuckyDrawPage = ({
                   borderBottom: '2px solid #F1F5F9',
                   gap: '6px',
                   paddingBottom: '4px',
-                  alignItems: 'stretch'
+                  alignItems: 'stretch',
+                  flexWrap: 'wrap'
                 }}
               >
                 {/* TAB 1: QR LIVE REGISTRATION (Always Available) */}
@@ -710,10 +1036,44 @@ export const LuckyDrawPage = ({
                         <div style={{ marginTop: '10px', fontSize: '1.45rem', fontWeight: 900, color: '#EA580C', letterSpacing: '3px' }}>
                           PIN: {activePin || '...'}
                         </div>
+
+                        {/* Direct clickable join link */}
+                        {joinUrl && (
+                          <div
+                            onClick={handleCopyJoinLink}
+                            title="คลิกเพื่อคัดลอกลิงก์"
+                            style={{
+                              marginTop: '8px',
+                              padding: '5px 10px',
+                              borderRadius: '8px',
+                              background: copiedLink ? '#DCFCE7' : '#F8FAFC',
+                              border: `1px solid ${copiedLink ? '#86EFAC' : '#E2E8F0'}`,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              maxWidth: '210px',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <Link2 size={12} color={copiedLink ? '#15803D' : '#64748B'} />
+                            <span style={{
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              color: copiedLink ? '#15803D' : '#2563EB',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {joinUrl}
+                            </span>
+                            {copiedLink ? <Check size={12} color="#15803D" /> : <Copy size={12} color="#64748B" />}
+                          </div>
+                        )}
                       </div>
 
                       {/* Action buttons: Projector Fullscreen & Copy Link */}
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
                         <button
                           type="button"
                           onClick={() => setIsQrFullscreen(true)}
@@ -772,7 +1132,7 @@ export const LuckyDrawPage = ({
                         alignItems: 'center',
                         gap: '8px'
                       }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '8px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{
                               width: '10px',
@@ -1350,25 +1710,45 @@ export const LuckyDrawPage = ({
               />
             )}
 
-            <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#1E293B', marginBottom: '8px' }}>
+            <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2.2rem)', fontWeight: 900, color: '#1E293B', marginBottom: '8px', wordBreak: 'break-word' }}>
               {currentWinner.name}
             </div>
 
-            <div
-              style={{
-                display: 'inline-block',
-                background: '#FFF7ED',
-                border: '1.5px solid #FFEDD5',
-                color: '#EA580C',
-                padding: '10px 24px',
-                borderRadius: '24px',
-                fontWeight: 800,
-                fontSize: '1.1rem',
-                marginBottom: '28px'
-              }}
-            >
-              🎁 {prizeName || 'รางวัลพิเศษ 🎉'}
-            </div>
+            {currentWinner.prize && currentWinner.prize !== 'ผู้โชคดี (ไม่ระบุของรางวัล)' ? (
+              <div
+                style={{
+                  display: 'inline-block',
+                  background: '#FFF7ED',
+                  border: '1.5px solid #FFEDD5',
+                  color: '#EA580C',
+                  padding: '10px 24px',
+                  borderRadius: '24px',
+                  fontWeight: 800,
+                  fontSize: 'clamp(0.95rem, 2.5vw, 1.1rem)',
+                  marginBottom: '28px',
+                  maxWidth: '100%',
+                  wordBreak: 'break-word'
+                }}
+              >
+                🎁 {currentWinner.prize}
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: 'inline-block',
+                  background: '#F0FDF4',
+                  border: '1.5px solid #BBF7D0',
+                  color: '#166534',
+                  padding: '8px 20px',
+                  borderRadius: '24px',
+                  fontWeight: 800,
+                  fontSize: '0.95rem',
+                  marginBottom: '28px'
+                }}
+              >
+                ✨ ผู้โชคดีประจำรอบนี้
+              </div>
+            )}
 
             <div>
               <button
@@ -1483,10 +1863,45 @@ export const LuckyDrawPage = ({
               )}
             </div>
 
-            <div style={{ background: '#F8FAFC', borderRadius: '16px', padding: '14px 20px', border: '1px solid #E2E8F0', marginBottom: '20px' }}>
-              <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '4px' }}>หรือเข้าผ่านลิงก์</div>
-              <div style={{ fontSize: '1rem', fontWeight: 800, color: '#2563EB', wordBreak: 'break-all' }}>
-                {joinUrl}
+            <div
+              onClick={handleCopyJoinLink}
+              title="คลิกเพื่อคัดลอกลิงก์"
+              style={{
+                background: copiedLink ? '#DCFCE7' : '#F8FAFC',
+                borderRadius: '16px',
+                padding: '14px 20px',
+                border: `1.5px solid ${copiedLink ? '#86EFAC' : '#E2E8F0'}`,
+                marginBottom: '20px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <div style={{ textAlign: 'left', overflow: 'hidden' }}>
+                <div style={{ fontSize: '0.85rem', color: copiedLink ? '#15803D' : '#64748B', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Link2 size={14} /> {copiedLink ? 'คัดลอกลิงก์เรียบร้อย!' : 'หรือเข้าผ่านลิงก์ (คลิกเพื่อคัดลอก)'}
+                </div>
+                <div style={{ fontSize: '1rem', fontWeight: 800, color: copiedLink ? '#15803D' : '#2563EB', wordBreak: 'break-all' }}>
+                  {joinUrl}
+                </div>
+              </div>
+              <div style={{
+                padding: '8px 14px',
+                borderRadius: '8px',
+                background: copiedLink ? '#16A34A' : '#EFF6FF',
+                color: copiedLink ? '#FFFFFF' : '#2563EB',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                flexShrink: 0
+              }}>
+                {copiedLink ? <Check size={16} /> : <Copy size={16} />}
+                <span>{copiedLink ? 'คัดลอกแล้ว' : 'คัดลอก'}</span>
               </div>
             </div>
 
@@ -1517,6 +1932,324 @@ export const LuckyDrawPage = ({
                 {isRegistrationLocked ? '🔒 ปิดรับลงทะเบียนแล้ว' : '🟢 เปิดรับลงทะเบียน'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Prize Manager Modal */}
+      {isPrizeManagerOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
+            backgroundColor: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsPrizeManagerOpen(false);
+          }}
+        >
+          <div
+            className="glass-card"
+            style={{
+              width: '100%',
+              maxWidth: '560px',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '24px',
+              padding: '28px',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)',
+              border: '2px solid #E2E8F0',
+              position: 'relative',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #E2E8F0', paddingBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ background: '#FFF7ED', padding: '10px', borderRadius: '12px', border: '1px solid #FFEDD5', color: '#EA580C' }}>
+                  <Gift size={22} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#1E293B' }}>
+                    ตั้งค่าของรางวัลล่วงหน้า (Prize Presets)
+                  </h3>
+                  <p style={{ margin: '2px 0 0', fontSize: '0.82rem', color: '#64748B' }}>
+                    กำหนดรายการของรางวัลและจำนวนชิ้น ระบบจะตัดสต็อกอัตโนมัติเมื่อลูกบอลแตก
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPrizeManagerOpen(false)}
+                style={{
+                  background: '#F1F5F9',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#64748B'
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Add New Prize Form */}
+            <form onSubmit={handleAddPreset} style={{ background: '#F8FAFC', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0', marginBottom: '20px' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#334155', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Plus size={15} color="#EA580C" /> เพิ่มของรางวัลใหม่
+              </div>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  value={newPresetName}
+                  onChange={(e) => setNewPresetName(e.target.value)}
+                  placeholder="เช่น รางวัลที่ 1: แท็บเล็ต iPad 10th Gen"
+                  style={{
+                    flex: '1 1 240px',
+                    padding: '8px 12px',
+                    borderRadius: '10px',
+                    border: '1.5px solid #CBD5E1',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    outline: 'none',
+                    background: '#FFFFFF'
+                  }}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <input
+                    type="number"
+                    min="1"
+                    max="999"
+                    value={newPresetCount}
+                    onChange={(e) => setNewPresetCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    style={{
+                      width: '65px',
+                      padding: '8px 10px',
+                      borderRadius: '10px',
+                      border: '1.5px solid #CBD5E1',
+                      fontSize: '0.9rem',
+                      fontWeight: 800,
+                      textAlign: 'center',
+                      outline: 'none',
+                      background: '#FFFFFF'
+                    }}
+                  />
+                  <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#64748B' }}>ชิ้น</span>
+                </div>
+                <button
+                  type="submit"
+                  disabled={!newPresetName.trim()}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '10px',
+                    background: newPresetName.trim() ? '#EA580C' : '#CBD5E1',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    fontWeight: 800,
+                    fontSize: '0.88rem',
+                    cursor: newPresetName.trim() ? 'pointer' : 'default',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <Plus size={15} /> เพิ่ม
+                </button>
+              </div>
+            </form>
+
+            {/* Prize Inventory List */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#475569' }}>
+                  รายการรางวัล ({presetPrizes.length})
+                </span>
+                <button
+                  type="button"
+                  onClick={handleResetAllStock}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#2563EB',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <RefreshCw size={12} /> รีเซ็ตสต็อกทั้งหมด
+                </button>
+              </div>
+
+              {presetPrizes.length === 0 ? (
+                <div style={{ padding: '24px', textAlign: 'center', color: '#94A3B8', fontSize: '0.9rem', background: '#F8FAFC', borderRadius: '14px', border: '1px dashed #CBD5E1' }}>
+                  ยังไม่มีของรางวัลในคลัง กรุณาเพิ่มรางวัลด้านบน
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {presetPrizes.map((prize) => {
+                    const isSelected = activePresetPrizeId === prize.id;
+                    const isOutOfStock = prize.remainingCount === 0;
+
+                    return (
+                      <div
+                        key={prize.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '12px',
+                          padding: '10px 14px',
+                          borderRadius: '14px',
+                          background: isSelected ? '#FFF7ED' : '#F8FAFC',
+                          border: isSelected ? '1.5px solid #FDBA74' : '1px solid #E2E8F0',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                          <button
+                            type="button"
+                            onClick={() => setActivePresetPrizeId(prize.id)}
+                            title={isSelected ? 'กำลังสุ่มรางวัลนี้' : 'เลือกเป็นรางวัลที่จะสุ่ม'}
+                            style={{
+                              width: '18px',
+                              height: '18px',
+                              borderRadius: '50%',
+                              border: isSelected ? '5px solid #EA580C' : '2px solid #94A3B8',
+                              background: '#FFFFFF',
+                              cursor: 'pointer',
+                              padding: 0,
+                              flexShrink: 0
+                            }}
+                          />
+                          <div style={{ overflow: 'hidden' }}>
+                            <div style={{
+                              fontSize: '0.92rem',
+                              fontWeight: 800,
+                              color: isOutOfStock ? '#94A3B8' : '#1E293B',
+                              textDecoration: isOutOfStock ? 'line-through' : 'none',
+                              whiteSpace: 'nowrap',
+                              textOverflow: 'ellipsis',
+                              overflow: 'hidden'
+                            }}>
+                              {prize.name}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: isOutOfStock ? '#DC2626' : '#64748B', fontWeight: 600 }}>
+                              {isOutOfStock ? '❌ รางวัลหมดแล้ว' : `คงเหลือ ${prize.remainingCount} จาก ${prize.totalCount} ชิ้น`}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Quantity Adjusters */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                          <button
+                            type="button"
+                            onClick={() => handleAdjustRemaining(prize.id, -1)}
+                            disabled={prize.remainingCount <= 0}
+                            title="ลดจำนวนคงเหลือ 1"
+                            style={{
+                              width: '26px',
+                              height: '26px',
+                              borderRadius: '6px',
+                              border: '1px solid #CBD5E1',
+                              background: '#FFFFFF',
+                              color: '#475569',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: prize.remainingCount <= 0 ? 'default' : 'pointer',
+                              opacity: prize.remainingCount <= 0 ? 0.35 : 1
+                            }}
+                          >
+                            <Minus size={13} />
+                          </button>
+
+                          <span style={{ fontSize: '0.88rem', fontWeight: 800, minWidth: '32px', textAlign: 'center', color: isOutOfStock ? '#DC2626' : '#1E293B' }}>
+                            {prize.remainingCount}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => handleAdjustRemaining(prize.id, 1)}
+                            disabled={prize.remainingCount >= prize.totalCount}
+                            title="เพิ่มจำนวนคงเหลือ 1"
+                            style={{
+                              width: '26px',
+                              height: '26px',
+                              borderRadius: '6px',
+                              border: '1px solid #CBD5E1',
+                              background: '#FFFFFF',
+                              color: '#475569',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: prize.remainingCount >= prize.totalCount ? 'default' : 'pointer',
+                              opacity: prize.remainingCount >= prize.totalCount ? 0.35 : 1
+                            }}
+                          >
+                            <Plus size={13} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRemovePreset(prize.id)}
+                            title="ลบรางวัลนี้"
+                            style={{
+                              marginLeft: '6px',
+                              width: '26px',
+                              height: '26px',
+                              borderRadius: '6px',
+                              border: 'none',
+                              background: '#FEE2E2',
+                              color: '#DC2626',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Done Button */}
+            <button
+              type="button"
+              onClick={() => setIsPrizeManagerOpen(false)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '14px',
+                background: '#EA580C',
+                color: '#FFFFFF',
+                fontWeight: 800,
+                fontSize: '0.95rem',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(234, 88, 12, 0.25)'
+              }}
+            >
+              บันทึกและปิด
+            </button>
           </div>
         </div>
       )}
