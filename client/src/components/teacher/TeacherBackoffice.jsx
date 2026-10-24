@@ -5,8 +5,11 @@ import { AiQuizGeneratorModal } from './AiQuizGeneratorModal';
 import { UserManagementModal } from './UserManagementModal';
 import { SessionHistoryModal } from './SessionHistoryModal';
 import { DatabaseBackupModal } from './DatabaseBackupModal';
+import { LanguageToggle } from '../common/LanguageToggle';
+import { useI18n } from '../../context/I18nContext';
 
 export const TeacherBackoffice = ({ onBack }) => {
+  const { t } = useI18n();
   const { user, isAuthenticated, isAdmin, isTeacher, logout, authFetch } = useAuth();
   const [quizzes, setQuizzes] = useState([]);
   const [activeQuiz, setActiveQuiz] = useState(null);
@@ -349,7 +352,7 @@ export const TeacherBackoffice = ({ onBack }) => {
               cursor: 'pointer'
             }}
           >
-            <ArrowLeft size={16} /> กลับหน้าหลัก
+            <ArrowLeft size={16} /> {t('backToRoles', 'กลับหน้าหลัก')}
           </button>
 
           <div>
@@ -532,6 +535,8 @@ export const TeacherBackoffice = ({ onBack }) => {
             </button>
           )}
 
+          <LanguageToggle />
+
           <div style={{ width: '1px', height: '28px', background: '#E2E8F0', margin: '0 2px' }} />
 
           {/* Current User Profile & Logout */}
@@ -561,7 +566,7 @@ export const TeacherBackoffice = ({ onBack }) => {
                 logout();
                 onBack?.();
               }}
-              title="ออกจากระบบ"
+              title={t('logout', 'ออกจากระบบ')}
               style={{
                 background: '#FEF2F2',
                 border: '1px solid #FECACA',
@@ -576,7 +581,7 @@ export const TeacherBackoffice = ({ onBack }) => {
                 cursor: 'pointer'
               }}
             >
-              <LogOut size={13} /> ออก
+              <LogOut size={13} /> {t('logout', 'ออก')}
             </button>
           </div>
         </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GripVertical, ArrowUp, ArrowDown, Check, Send, Sparkles, CheckCircle2, XCircle } from 'lucide-react';
 import { sfx } from '../../utils/audioSFX';
 import { getSequenceTheme } from '../../utils/sequenceThemes';
+import { useI18n } from '../../context/I18nContext';
 
 export const PlayerSequence = ({
   question,
@@ -10,6 +11,7 @@ export const PlayerSequence = ({
   feedback,
   result
 }) => {
+  const { t } = useI18n();
   const [items, setItems] = useState([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [draggedIdx, setDraggedIdx] = useState(null);
@@ -116,7 +118,7 @@ export const PlayerSequence = ({
           color: '#B45309'
         }}
       >
-        <Sparkles size={16} /> ลากหรือกดลูกศร ⬆️ ⬇️ เพื่อจัดเรียงลำดับขั้นตอนให้ถูกต้อง
+        <Sparkles size={16} /> {t('dragToReorder', 'ลากหรือกดลูกศร ⬆️ ⬇️ เพื่อจัดเรียงลำดับขั้นตอนให้ถูกต้อง')}
       </div>
 
       {/* Sequence Items List */}
@@ -325,7 +327,7 @@ export const PlayerSequence = ({
               cursor: 'pointer'
             }}
           >
-            <Send size={18} /> ยืนยันลำดับคำตอบ (Submit Sequence)
+            <Send size={18} /> {t('submitSequenceBtn', 'ยืนยันลำดับคำตอบ (Submit Sequence)')}
           </button>
         ) : (
           <div
@@ -344,7 +346,7 @@ export const PlayerSequence = ({
           >
             <Check size={20} color="#166534" />
             <span style={{ fontWeight: 800, fontSize: '0.95rem' }}>
-              บันทึกการส่งลำดับคำตอบแล้ว! รอวิทยากรเฉลยสรุปผล...
+              {t('sequenceSubmittedNotice', 'บันทึกการส่งลำดับคำตอบแล้ว! รอวิทยากรเฉลยสรุปผล...')}
             </span>
           </div>
         )}
@@ -354,7 +356,7 @@ export const PlayerSequence = ({
       {result && result.correctSequence && (
         <div className="glass-card animate-pop" style={{ marginTop: '20px', padding: '18px 16px', textAlign: 'left' }}>
           <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Sparkles size={16} color="var(--accent-earth-orange)" /> เฉลยลำดับขั้นตอนที่ถูกต้อง:
+            <Sparkles size={16} color="var(--accent-earth-orange)" /> {t('correctSequenceOrder', 'เฉลยลำดับขั้นตอนที่ถูกต้อง:')}
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {result.correctSequence.map((step, sIdx) => {

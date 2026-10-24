@@ -1,8 +1,11 @@
 import React, { useEffect } from 'react';
 import { Trophy, Award, Flag, Eye, Sparkles, LogOut } from 'lucide-react';
 import { sfx } from '../../utils/audioSFX';
+import { LanguageToggle } from '../common/LanguageToggle';
+import { useI18n } from '../../context/I18nContext';
 
 export const PlayerLeaderboardView = ({ player, leaderboard, quizMode = 'NORMAL', onLeave }) => {
+  const { t } = useI18n();
   const isPretest = quizMode === 'PRETEST';
   const myEntry = leaderboard?.find(p => p.playerId === player?.playerId);
   const myRankIdx = leaderboard ? leaderboard.findIndex(p => p.playerId === player?.playerId) : -1;
@@ -18,16 +21,20 @@ export const PlayerLeaderboardView = ({ player, leaderboard, quizMode = 'NORMAL'
 
   return (
     <div style={{ maxWidth: '440px', margin: '40px auto', padding: '0 16px', textAlign: 'center' }}>
-      <div className="glass-card animate-pop" style={{ padding: '32px 20px' }}>
+      <div className="glass-card animate-pop" style={{ padding: '32px 20px', position: 'relative' }}>
+        <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
+          <LanguageToggle />
+        </div>
+
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: isPretest ? 'var(--accent-earth-blue)' : 'var(--accent-earth-orange)', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
           <Flag size={16} /> {isPretest ? 'PRE-TEST RECORDED' : 'LEADERBOARD STANDINGS'}
         </div>
 
         <h1 style={{ fontSize: '1.7rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '6px' }}>
-          {isPretest ? 'บันทึกคำตอบรอบนี้เรียบร้อย! ✨' : 'สรุปอันดับและการแข่งขันรอบนี้! 🏎️'}
+          {isPretest ? t('pretestRecorded', 'บันทึกคำตอบรอบนี้เรียบร้อย! ✨') : t('roundLeaderboardTitle', 'สรุปอันดับและการแข่งขันรอบนี้! 🏎️')}
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '22px' }}>
-          {isPretest ? 'โหมดทดสอบก่อนเรียน ไม่แสดงคะแนนเพื่อรอเทียบผลตอน Post-test' : 'สังเกตการวิ่งแซงของรถแข่งบนหน้าจอใหญ่ของวิทยากร'}
+          {isPretest ? t('pretestNotice', 'โหมดทดสอบก่อนเรียน ไม่แสดงคะแนนเพื่อรอเทียบผลตอน Post-test') : t('roundLeaderboardDesc', 'สังเกตการวิ่งแซงของรถแข่งบนหน้าจอใหญ่ของวิทยากร')}
         </p>
 
         {/* My Rank and Score Card */}
@@ -42,7 +49,7 @@ export const PlayerLeaderboardView = ({ player, leaderboard, quizMode = 'NORMAL'
 
           {!isPretest && pointsEarned > 0 && (
             <div style={{ color: '#166534', fontWeight: 800, fontSize: '0.9rem', marginTop: '4px' }}>
-              +{pointsEarned} คะแนนในรอบนี้! ✨
+              +{pointsEarned} {t('pointsEarnedThisRound', 'คะแนนในรอบนี้! ✨')}
             </div>
           )}
 
@@ -59,19 +66,19 @@ export const PlayerLeaderboardView = ({ player, leaderboard, quizMode = 'NORMAL'
               fontWeight: 800,
               marginTop: '12px'
             }}>
-              <Sparkles size={16} /> บันทึกสถิติคำตอบครบถ้วน
+              <Sparkles size={16} /> {t('pretestNoScoreNotice', 'บันทึกสถิติคำตอบครบถ้วน')}
             </div>
           ) : (
             <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #E2E8F0' }}>
               <div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>อันดับของคุณ</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>{t('yourRank', 'อันดับของคุณ')}</div>
                 <div style={{ fontSize: '1.7rem', fontWeight: 900, color: 'var(--accent-earth-orange)' }}>
                   {myRank ? `#${myRank}` : '-'}
                 </div>
               </div>
               <div style={{ width: '1px', background: '#CBD5E1' }} />
               <div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>คะแนนรวม</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>{t('totalScore', 'คะแนนรวม')}</div>
                 <div style={{ fontSize: '1.7rem', fontWeight: 900, color: 'var(--accent-earth-green)' }}>
                   {myScore.toLocaleString()} Pts
                 </div>
@@ -95,7 +102,7 @@ export const PlayerLeaderboardView = ({ player, leaderboard, quizMode = 'NORMAL'
           }}
         >
           <Eye size={18} />
-          <span>รอวิทยากรเปิดคำถามข้อถัดไป...</span>
+          <span>{t('waitingNextQuestion', 'รอวิทยากรเปิดคำถามข้อถัดไป...')}</span>
         </div>
 
         {onLeave && (
@@ -119,7 +126,7 @@ export const PlayerLeaderboardView = ({ player, leaderboard, quizMode = 'NORMAL'
                 cursor: 'pointer'
               }}
             >
-              <LogOut size={16} color="#DC2626" /> ออกจากห้อง / กลับหน้าหลัก
+              <LogOut size={16} color="#DC2626" /> {t('leaveRoomBtn', 'ออกจากห้อง / กลับหน้าหลัก')}
             </button>
           </div>
         )}

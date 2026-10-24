@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { LuckyWaterPool } from './LuckyWaterPool';
 import { SoundToggle } from './SoundToggle';
+import { LanguageToggle } from './LanguageToggle';
+import { useI18n } from '../../context/I18nContext';
 import { generateQRCodeSVG } from '../../utils/qrcode';
 import { fireConfetti } from '../../utils/confetti';
 import { sfx } from '../../utils/audioSFX';
@@ -18,6 +20,7 @@ export const LuckyDrawPage = ({
   socket = null,
   onBack = null
 }) => {
+  const { t } = useI18n();
   // Real-time Room & QR session state
   const [activePin, setActivePin] = useState(pin);
   const [activeHostToken, setActiveHostToken] = useState(hostToken);
@@ -420,7 +423,7 @@ export const LuckyDrawPage = ({
               transition: 'all 0.2s'
             }}
           >
-            <ArrowLeft size={18} /> กลับสู่หน้าหลัก
+            <ArrowLeft size={18} /> {t('backToRoles', 'กลับสู่หน้าหลัก')}
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -483,6 +486,7 @@ export const LuckyDrawPage = ({
             </div>
           )}
 
+          <LanguageToggle />
           <SoundToggle />
         </div>
       </header>

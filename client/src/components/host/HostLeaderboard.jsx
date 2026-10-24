@@ -5,8 +5,10 @@ import { Trophy, ArrowRight, Users, Flag, RotateCcw, FileSpreadsheet, FileText, 
 import { exportGameReportExcel, exportGameReportPDF } from '../../utils/exportReport';
 import { SportsPodium } from './SportsPodium';
 import { TeamPodium } from './TeamPodium';
+import { useI18n } from '../../context/I18nContext';
 
 export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, pretestData, isEnded, onNextQuestion, onResetToLobby, onLeave, onOpenLuckyDraw }) => {
+  const { t } = useI18n();
   const [animatedScores, setAnimatedScores] = useState({});
   const teamsEnabled = Boolean(quizAnalytics?.teamsEnabled);
   const teamLeaderboard = quizAnalytics?.teamLeaderboard || [];
@@ -44,7 +46,7 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
           <Flag size={18} color="var(--accent-earth-orange)" /> {isEnded ? '🏆 FINAL PODIUM CHAMPIONS 🏆' : 'KAOJAI RACING LEADERBOARD'} <Flag size={18} color="var(--accent-earth-orange)" />
         </div>
         <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-main)', margin: 0 }}>
-          {isEnded ? 'สรุปอันดับผู้ชนะการแข่งขันสิ้นสุดเกม! 🎉' : 'สรุปการอันดับและการเปลี่ยนแปลงคะแนนรอบนี้ 🏎️💨'}
+          {isEnded ? t('finalPodiumTitle', 'สรุปอันดับผู้ชนะการแข่งขันสิ้นสุดเกม! 🎉') : t('roundRacingTitle', 'สรุปการอันดับและการเปลี่ยนแปลงคะแนนรอบนี้ 🏎️💨')}
         </h1>
 
         {/* View Switcher */}
@@ -70,7 +72,7 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
                   transition: 'all 0.2s ease'
                 }}
               >
-                <Trophy size={15} /> แท่นรับรางวัลเดี่ยว
+                <Trophy size={15} /> {t('podiumIndividual', 'แท่นรับรางวัลเดี่ยว')}
               </button>
             )}
 
@@ -94,7 +96,7 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
                   transition: 'all 0.2s ease'
                 }}
               >
-                <Users size={15} /> 👥 คะแนนทีม Team Battle
+                <Users size={15} /> 👥 {t('teamBattle', 'คะแนนทีม Team Battle')}
               </button>
             )}
 
@@ -117,7 +119,7 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
                 transition: 'all 0.2s ease'
               }}
             >
-              <Flag size={15} /> แทร็กคะแนนรายบุคคล Racing
+              <Flag size={15} /> {t('racingTrackView', 'แทร็กคะแนนรายบุคคล Racing')}
             </button>
           </div>
         )}
@@ -511,7 +513,7 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
                 cursor: 'pointer'
               }}
             >
-              <RotateCcw size={20} /> จบเกม / กลับสู่หน้า Lobby
+              <RotateCcw size={20} /> {t('resetToLobby', 'จบเกม / กลับสู่หน้า Lobby')}
             </button>
 
             {onLeave && (
@@ -533,7 +535,7 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
                   cursor: 'pointer'
                 }}
               >
-                <LogOut size={20} color="#DC2626" /> ออกจากห้อง / กลับหน้าหลัก
+                <LogOut size={20} color="#DC2626" /> {t('leaveRoomBtn', 'ออกจากห้อง / กลับหน้าหลัก')}
               </button>
             )}
           </>
@@ -556,7 +558,7 @@ export const HostLeaderboard = ({ pin, leaderboard, pulseVotes, quizAnalytics, p
               cursor: 'pointer'
             }}
           >
-            ลุยคำถามถัดไป <ArrowRight size={20} />
+            {t('nextQuestion', 'ลุยคำถามถัดไป')} <ArrowRight size={20} />
           </button>
         )}
       </div>

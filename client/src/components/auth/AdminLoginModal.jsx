@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Lock, User, Eye, EyeOff, X, AlertCircle, Loader2, KeyRound } from 'lucide-react';
+import { useI18n } from '../../context/I18nContext';
 
 export const AdminLoginModal = ({ isOpen, onClose, onSuccess, redirectLabel = '' }) => {
+  const { t } = useI18n();
   const { login, isAuthenticated, user } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -148,7 +150,7 @@ export const AdminLoginModal = ({ isOpen, onClose, onSuccess, redirectLabel = ''
             <KeyRound size={14} /> Teacher & Admin Portal
           </div>
           <h2 style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--text-main, #1E293B)', margin: '0 0 6px 0' }}>
-            เข้าสู่ระบบ KaoJai
+            {t('login', 'เข้าสู่ระบบ')} KaoJai
           </h2>
           <p style={{ color: 'var(--text-muted, #64748B)', fontSize: '0.9rem', margin: 0, lineHeight: 1.4 }}>
             {redirectLabel ? (
@@ -185,7 +187,7 @@ export const AdminLoginModal = ({ isOpen, onClose, onSuccess, redirectLabel = ''
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main, #1E293B)', marginBottom: '6px' }}>
-              ชื่อผู้ใช้งาน (Username)
+              {t('username', 'ชื่อผู้ใช้งาน (Username)')}
             </label>
             <div style={{ position: 'relative' }}>
               <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }}>
@@ -284,7 +286,7 @@ export const AdminLoginModal = ({ isOpen, onClose, onSuccess, redirectLabel = ''
                 <Loader2 size={20} className="animate-spin" /> กำลังตรวจสอบข้อมูล...
               </>
             ) : (
-              'เข้าสู่ระบบ (Sign In)'
+              t('login', 'เข้าสู่ระบบ (Sign In)')
             )}
           </button>
         </form>

@@ -3,21 +3,24 @@ import { useSocket } from '../../context/SocketContext';
 import { sfx } from '../../utils/audioSFX';
 import { Smile, Meh, Frown, Users, Bell, Sparkles, X, Heart, Flame, Lightbulb, HelpCircle, LogOut } from 'lucide-react';
 import { SoundToggle } from '../common/SoundToggle';
-
-const QUICK_REACTIONS = [
-  { emoji: '🔥', label: 'สุดยอด' },
-  { emoji: '💡', label: 'เก็ทเลย' },
-  { emoji: '👏', label: 'ปรบมือ' },
-  { emoji: '❤️', label: 'ชอบมาก' },
-  { emoji: '❓', label: 'สงสัย' }
-];
+import { LanguageToggle } from '../common/LanguageToggle';
+import { useI18n } from '../../context/I18nContext';
 
 export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers, onLeave, pulseRound }) => {
+  const { t, lang } = useI18n();
   const { socket } = useSocket();
   const [activeChoice, setActiveChoice] = useState(null);
   const [nudgeAlert, setNudgeAlert] = useState(null);
   const [resetNotice, setResetNotice] = useState(null);
   const [floatingEmojis, setFloatingEmojis] = useState([]);
+
+  const quickReactions = [
+    { emoji: '🔥', label: lang === 'en' ? 'Awesome' : 'สุดยอด' },
+    { emoji: '💡', label: lang === 'en' ? 'Got it!' : 'เก็ทเลย' },
+    { emoji: '👏', label: lang === 'en' ? 'Clap' : 'ปรบมือ' },
+    { emoji: '❤️', label: lang === 'en' ? 'Love it' : 'ชอบมาก' },
+    { emoji: '❓', label: lang === 'en' ? 'Question' : 'สงสัย' }
+  ];
 
   useEffect(() => {
     if (!socket) return;
@@ -306,14 +309,15 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers, onL
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div className="counter-badge" style={{ fontSize: '0.82rem', padding: '4px 12px' }}>
             <Users size={14} color="var(--accent-earth-orange)" />
-            <span>ตอบแล้ว <span className="highlight">{pulseAnsweredCount}</span> / {totalPlayers}</span>
+            <span>{t('answered', 'ตอบแล้ว ')}<span className="highlight">{pulseAnsweredCount}</span> / {totalPlayers}</span>
           </div>
+          <LanguageToggle />
           <SoundToggle size={16} style={{ width: '32px', height: '32px' }} />
           {onLeave && (
             <button
               type="button"
               onClick={onLeave}
-              title="ออกจากห้อง / กลับหน้าหลัก"
+              title={t('leaveRoomBtn', 'ออกจากห้อง / กลับหน้าหลัก')}
               style={{
                 width: '32px',
                 height: '32px',
@@ -372,10 +376,10 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers, onL
       >
         <div style={{ fontSize: '1.6rem', marginBottom: '4px' }}>💚💛❤️</div>
         <h2 style={{ fontSize: '1.35rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '4px' }}>
-          ความเข้าใจในหัวข้อนี้เป็นอย่างไรบ้าง?
+          {t('pulseTitle', 'ความเข้าใจในหัวข้อนี้เป็นอย่างไรบ้าง?')}
         </h2>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', fontWeight: 600 }}>
-          รอบประเมินที่ {pulseRound || 1} • ส่งสัญญาณบอกวิทยากรได้ทันที ✨
+          {t('pulseDesc', 'คลิกเลือกสัญญาณเพื่อแจ้งวิทยากรว่าคุณตามทันหรือไม่')}
         </p>
       </div>
 
@@ -422,9 +426,9 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers, onL
               <Smile size={26} color={activeChoice === 'green' ? '#FFFFFF' : '#15803D'} />
             </div>
             <div>
-              <div style={{ fontSize: '1.02rem', lineHeight: 1.2 }}>เข้าใจดีเยี่ยม!</div>
+              <div style={{ fontSize: '1.02rem', lineHeight: 1.2 }}>{t('pulseGreat', 'เข้าใจดีเยี่ยม!')}</div>
               <div style={{ fontSize: '0.78rem', opacity: activeChoice === 'green' ? 0.9 : 0.8, fontWeight: 600 }}>
-                Clear & Confident พร้อมลุยต่อ
+                Clear & Confident
               </div>
             </div>
           </div>
@@ -472,9 +476,9 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers, onL
               <Meh size={26} color={activeChoice === 'yellow' ? '#FFFFFF' : '#B45309'} />
             </div>
             <div>
-              <div style={{ fontSize: '1.02rem', lineHeight: 1.2 }}>ขอตัวอย่างเพิ่มเติม</div>
+              <div style={{ fontSize: '1.02rem', lineHeight: 1.2 }}>{t('pulseOkay', 'ขอตัวอย่างเพิ่มเติม')}</div>
               <div style={{ fontSize: '0.78rem', opacity: activeChoice === 'yellow' ? 0.9 : 0.8, fontWeight: 600 }}>
-                Need Case Study / ตัวอย่างรูปธรรม
+                Need Case Study / ตัวอย่าง
               </div>
             </div>
           </div>
@@ -522,9 +526,9 @@ export const PlayerPulse = ({ pin, player, pulseAnsweredCount, totalPlayers, onL
               <Frown size={26} color={activeChoice === 'red' ? '#FFFFFF' : '#DC2626'} />
             </div>
             <div>
-              <div style={{ fontSize: '1.02rem', lineHeight: 1.2 }}>ขอให้อธิบายซ้ำอีกครั้ง</div>
+              <div style={{ fontSize: '1.02rem', lineHeight: 1.2 }}>{t('pulseConfused', 'ขอให้อธิบายซ้ำอีกครั้ง')}</div>
               <div style={{ fontSize: '0.78rem', opacity: activeChoice === 'red' ? 0.9 : 0.8, fontWeight: 600 }}>
-                Need Recap สรุปประเด็นหลักใหม่อีกที
+                Need Recap สรุปใหม่อีกที
               </div>
             </div>
           </div>

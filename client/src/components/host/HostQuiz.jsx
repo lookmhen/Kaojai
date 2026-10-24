@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { sfx } from '../../utils/audioSFX';
 import { Users, Clock, ArrowRight, Trophy, BarChart3, Check, ListOrdered, Sparkles, CheckCircle2 } from 'lucide-react';
 import { getSequenceTheme } from '../../utils/sequenceThemes';
+import { useI18n } from '../../context/I18nContext';
 
 const OPTION_STYLES = [
   { bg: 'var(--choice-red-gradient)', color: '#991B1B', symbol: '▲' },
@@ -11,6 +12,7 @@ const OPTION_STYLES = [
 ];
 
 export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNextQuestion, onShowLeaderboard }) => {
+  const { t } = useI18n();
   const getDuration = (q) => Math.max(5, Number(q?.timeLimitSeconds) || 30);
   const initialDuration = getDuration(question);
   const [timeLeft, setTimeLeft] = useState(initialDuration);
@@ -94,13 +96,13 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
       {/* Status Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-          คำถามที่ {(question?.questionIndex ?? 0) + 1} / {question?.totalQuestions ?? 1}
+          {t('question', 'คำถามที่')} {(question?.questionIndex ?? 0) + 1} / {question?.totalQuestions ?? 1}
         </div>
 
         {/* Counter Badge */}
         <div className="counter-badge" style={{ fontSize: '1.15rem', padding: '8px 20px' }}>
           <Users size={20} color="var(--accent-earth-orange)" />
-          <span>ตอบแล้ว <span className="highlight" style={{ fontSize: '1.4rem' }}>{answeredCount}</span> / {totalPlayers} คน</span>
+          <span>{t('answered', 'ตอบแล้ว ')}<span className="highlight" style={{ fontSize: '1.4rem' }}>{answeredCount}</span> / {totalPlayers} {t('personUnit', 'คน')}</span>
         </div>
 
         {/* Timer Box */}
@@ -513,7 +515,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
           }}
         >
           <Trophy size={18} color="var(--accent-earth-orange)" />
-          {isFinalQuestion ? 'สรุปผลคะแนนรอบสุดท้าย / ผู้ชนะ 🏆' : 'ดู Leaderboard'}
+          {isFinalQuestion ? t('finalPodiumTitle', 'สรุปผลคะแนนรอบสุดท้าย / ผู้ชนะ 🏆') : t('showLeaderboardBtn', 'ดู Leaderboard')}
         </button>
 
         <button
@@ -532,7 +534,7 @@ export const HostQuiz = ({ question, result, answeredCount, totalPlayers, onNext
             boxShadow: isFinalQuestion ? '0 4px 14px rgba(19, 136, 8, 0.35)' : '0 4px 12px rgba(30, 58, 138, 0.2)'
           }}
         >
-          {isFinalQuestion ? 'จบเกมทันที 🏁' : 'ข้อถัดไป'} {!isFinalQuestion && <ArrowRight size={18} />}
+          {isFinalQuestion ? t('endSession', 'จบเกมทันที 🏁') : t('nextQuestion', 'ข้อถัดไป')} {!isFinalQuestion && <ArrowRight size={18} />}
         </button>
       </div>
     </div>

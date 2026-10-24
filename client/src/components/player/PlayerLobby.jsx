@@ -1,6 +1,8 @@
 import React from 'react';
 import { Users, Clock, UsersRound, Check, CheckCircle2, LogOut } from 'lucide-react';
 import { SoundToggle } from '../common/SoundToggle';
+import { LanguageToggle } from '../common/LanguageToggle';
+import { useI18n } from '../../context/I18nContext';
 
 export const PlayerLobby = ({
   player,
@@ -11,6 +13,7 @@ export const PlayerLobby = ({
   onAssignTeam,
   onLeave
 }) => {
+  const { t } = useI18n();
   const currentTeam = teams.find(t => t.id === player?.teamId);
 
   return (
@@ -20,7 +23,7 @@ export const PlayerLobby = ({
           <button
             type="button"
             onClick={onLeave}
-            title="ออกจากห้อง / กลับหน้าหลัก"
+            title={t('leaveRoomBtn', 'ออกจากห้อง / กลับหน้าหลัก')}
             style={{
               position: 'absolute',
               top: '16px',
@@ -41,7 +44,8 @@ export const PlayerLobby = ({
           </button>
         )}
 
-        <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
+        <div style={{ position: 'absolute', top: '16px', right: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <LanguageToggle />
           <SoundToggle size={16} style={{ width: '34px', height: '34px' }} />
         </div>
 
@@ -90,7 +94,7 @@ export const PlayerLobby = ({
                 }}
               >
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: currentTeam.color }} />
-                <span>สังกัด: {currentTeam.name}</span>
+                <span>{t('yourTeam', 'สังกัด:')} {currentTeam.name}</span>
               </div>
             ) : (
               <div
@@ -107,13 +111,13 @@ export const PlayerLobby = ({
                   fontSize: '0.82rem'
                 }}
               >
-                <span>⚠️ คุณยังไม่ได้เลือกทีม</span>
+                <span>{t('noTeamWarning', '⚠️ คุณยังไม่ได้เลือกทีม')}</span>
               </div>
             )}
           </div>
         ) : (
           <p style={{ color: 'var(--accent-earth-green)', fontSize: '0.9rem', fontWeight: 700, marginBottom: '16px' }}>
-            คุณเข้าสู่ห้องสำเร็จแล้ว! 🎉
+            {t('roomJoinedSuccess', 'คุณเข้าสู่ห้องสำเร็จแล้ว! 🎉')}
           </p>
         )}
 
@@ -131,7 +135,7 @@ export const PlayerLobby = ({
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-main)' }}>
-                <UsersRound size={17} color="#7C3AED" /> แตะเลือกทีมของคุณ:
+                <UsersRound size={17} color="#7C3AED" /> {t('selectTeam', 'แตะเลือกทีมของคุณ:')}
               </div>
               {currentTeam && onAssignTeam && (
                 <button
@@ -149,7 +153,7 @@ export const PlayerLobby = ({
                     gap: '4px'
                   }}
                 >
-                  <LogOut size={13} /> ออกจากทีม
+                  <LogOut size={13} /> {t('leaveTeam', 'ออกจากทีม')}
                 </button>
               )}
             </div>
@@ -192,7 +196,7 @@ export const PlayerLobby = ({
                             {team.name}
                           </div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            สมาชิก {memberCount} คน
+                            {memberCount} {t('membersUnit', 'คน')}
                           </div>
                         </div>
                       </div>
@@ -211,7 +215,7 @@ export const PlayerLobby = ({
                             borderRadius: '20px'
                           }}
                         >
-                          <Check size={14} /> ทีมคุณ
+                          <Check size={14} /> {t('myTeamBadge', 'ทีมคุณ')}
                         </div>
                       ) : (
                         <div
@@ -224,7 +228,7 @@ export const PlayerLobby = ({
                             borderRadius: '8px'
                           }}
                         >
-                          เข้าทีมนี้
+                          {t('joinThisTeam', 'เข้าทีมนี้')}
                         </div>
                       )}
                     </button>
@@ -233,7 +237,7 @@ export const PlayerLobby = ({
               </div>
             ) : (
               <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textAlign: 'center', padding: '10px 0' }}>
-                วิทยากรยังไม่ได้สร้างทีม กรุณารอสักครู่...
+                {t('noTeamsCreated', 'วิทยากรยังไม่ได้สร้างทีม กรุณารอสักครู่...')}
               </div>
             )}
           </div>
@@ -243,7 +247,7 @@ export const PlayerLobby = ({
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#F1F5F9', border: '1px solid #CBD5E1', padding: '8px 20px', borderRadius: '30px', marginBottom: '20px' }}>
           <Users size={18} color="var(--accent-earth-orange)" />
           <span style={{ fontSize: '0.92rem', fontWeight: 600, color: 'var(--text-main)' }}>
-            ผู้เข้าร่วมทั้งหมด: <strong style={{ color: 'var(--accent-earth-orange)', fontSize: '1.1rem' }}>{totalPlayers}</strong> คน
+            {t('totalParticipants', 'ผู้เข้าร่วมทั้งหมด:')} <strong style={{ color: 'var(--accent-earth-orange)', fontSize: '1.1rem' }}>{totalPlayers}</strong> {t('personUnit', 'คน')}
           </span>
         </div>
 
@@ -251,10 +255,10 @@ export const PlayerLobby = ({
         <div style={{ background: '#F8FAFC', border: '1px dashed #CBD5E1', borderRadius: '16px', padding: '18px 14px' }}>
           <Clock size={26} color="var(--accent-earth-blue)" style={{ marginBottom: '6px' }} />
           <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)' }}>
-            {mode === 'PULSE' ? 'โหมด Training Pulse' : 'รอวิทยากรเริ่มเกม (Waiting for Host...)'}
+            {mode === 'PULSE' ? 'Training Pulse' : t('waitingForHost', 'รอวิทยากรเริ่มเกม (Waiting for Host...)')}
           </h3>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '4px', lineHeight: 1.4 }}>
-            หน้าจอจะอัปเดตอัตโนมัติเมื่อ Host เริ่มกิจกรรม ✨
+            {t('autoUpdateNotice', 'หน้าจอจะอัปเดตอัตโนมัติเมื่อ Host เริ่มกิจกรรม ✨')}
           </p>
         </div>
 
@@ -280,7 +284,7 @@ export const PlayerLobby = ({
                 transition: 'all 0.2s'
               }}
             >
-              <LogOut size={16} color="#DC2626" /> ออกจากห้อง / กลับหน้าหลัก
+              <LogOut size={16} color="#DC2626" /> {t('leaveRoomBtn', 'ออกจากห้อง / กลับหน้าหลัก')}
             </button>
           </div>
         )}

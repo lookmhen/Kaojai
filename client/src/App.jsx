@@ -18,10 +18,12 @@ import { LuckyDrawPage } from './components/common/LuckyDrawPage';
 import { PlayerLuckyDrawOverlay } from './components/player/PlayerLuckyDrawOverlay';
 import { LuckyDrawPlayerJoin } from './components/player/LuckyDrawPlayerJoin';
 import { useAuth } from './context/AuthContext';
+import { useI18n } from './context/I18nContext';
 import { WifiOff, AlertCircle, X } from 'lucide-react';
 import './styles/global.css';
 
 export function AppContent() {
+  const { t } = useI18n();
   const { socket, isConnected, session, saveSessionData, clearSession, syncSession, needsSyncRef } = useSocket();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   
@@ -854,10 +856,10 @@ export function AppContent() {
             <div style={{ maxWidth: '600px', margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
               <div className="glass-card animate-pop" style={{ padding: '40px 24px' }}>
                 <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
-                  เตรียมตัวให้พร้อมสำหรับคำถามถัดไป!
+                  {t('getReadyNextQuestion', 'เตรียมตัวให้พร้อมสำหรับคำถามถัดไป!')}
                 </h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-                  ระบบกำลังโหลดข้อมูลคำถาม กรุณารอสักครู่ ✨
+                  {t('loadingQuestionData', 'ระบบกำลังโหลดข้อมูลคำถาม กรุณารอสักครู่ ✨')}
                 </p>
               </div>
             </div>
@@ -943,10 +945,10 @@ export function AppContent() {
             <div style={{ maxWidth: '440px', margin: '60px auto', padding: '0 16px', textAlign: 'center' }}>
               <div className="glass-card animate-pop" style={{ padding: '36px 20px' }}>
                 <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
-                  เตรียมตัวให้พร้อม!
+                  {t('getReadyNextQuestion', 'เตรียมตัวให้พร้อม!')}
                 </h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: 1.5 }}>
-                  ระบบกำลังโหลดคำถามข้อถัดไป กรุณารอสักครู่ ✨
+                  {t('loadingQuestionData', 'ระบบกำลังโหลดคำถามข้อถัดไป กรุณารอสักครู่ ✨')}
                 </p>
               </div>
             </div>

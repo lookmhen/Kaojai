@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { generateQRCodeSVG } from '../../utils/qrcode';
 import { Play, Users, BookOpen, QrCode, Shuffle, Plus, Trash2, UsersRound, ToggleLeft, ToggleRight, X, UserMinus, Hand, ClipboardList, TrendingUp, CheckCircle2 } from 'lucide-react';
+import { useI18n } from '../../context/I18nContext';
 
 const TEAM_COLOR_PRESETS = [
   '#E11D48', '#2563EB', '#D97706', '#059669', '#7C3AED', '#0891B2'
@@ -16,6 +17,7 @@ export const HostLobby = ({
   onClearPretest = null,
   onRemovePlayer = null
 }) => {
+  const { t } = useI18n();
   const [quizzes, setQuizzes] = useState([]);
   const [selectedQuizId, setSelectedQuizId] = useState(propSelectedQuizId || pretestData?.quizId || '');
   const [showCreateTeam, setShowCreateTeam] = useState(false);
@@ -187,7 +189,7 @@ export const HostLobby = ({
             }}
           >
             <Play size={22} />
-            {connectedPlayers.length === 0 ? 'รอผู้เข้าร่วมสแกนเข้าห้อง...' : `เริ่มเกมปกติ (${connectedPlayers.length} คน)`}
+            {connectedPlayers.length === 0 ? t('waitingParticipants', 'รอผู้เข้าร่วมสแกนเข้าห้อง...') : `${t('startGame', 'เริ่มเกมปกติ')} (${connectedPlayers.length} ${t('personUnit', 'คน')})`}
           </button>
 
           {/* Pre-test */}
@@ -206,7 +208,7 @@ export const HostLobby = ({
                 cursor: connectedPlayers.length > 0 ? 'pointer' : 'not-allowed'
               }}
             >
-              <ClipboardList size={20} /> 📝 เริ่ม Pre-test (ซ่อนเฉลย)
+              <ClipboardList size={20} /> 📝 {t('startQuiz', 'เริ่ม')} Pre-test
             </button>
           )}
 
@@ -226,7 +228,7 @@ export const HostLobby = ({
                 cursor: connectedPlayers.length > 0 ? 'pointer' : 'not-allowed'
               }}
             >
-              <TrendingUp size={20} /> 🚀 เริ่ม Post-test (เปิดเฉลย)
+              <TrendingUp size={20} /> 🚀 {t('startQuiz', 'เริ่ม')} Post-test
             </button>
           )}
         </div>

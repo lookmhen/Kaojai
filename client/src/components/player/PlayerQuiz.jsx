@@ -3,6 +3,8 @@ import { useSocket } from '../../context/SocketContext';
 import { sfx } from '../../utils/audioSFX';
 import { CheckCircle2, XCircle, Users, Clock, BarChart3, Flame, Zap } from 'lucide-react';
 import { SoundToggle } from '../common/SoundToggle';
+import { LanguageToggle } from '../common/LanguageToggle';
+import { useI18n } from '../../context/I18nContext';
 import { PlayerSequence } from './PlayerSequence';
 
 const OPTION_STYLES = [
@@ -13,6 +15,7 @@ const OPTION_STYLES = [
 ];
 
 export const PlayerQuiz = ({ question, result, pin, player, answeredCount, totalPlayers, quizMode = 'NORMAL' }) => {
+  const { t } = useI18n();
   const { socket } = useSocket();
   const [selectedOptionId, setSelectedOptionId] = useState(null);
   const [feedback, setFeedback] = useState(null);
@@ -190,7 +193,7 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
       {/* Top Status Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-          ข้อที่ {question.questionIndex + 1} / {question.totalQuestions}
+          {t('question', 'คำถาม')} {question.questionIndex + 1} / {question.totalQuestions}
         </div>
 
         {/* Visible Countdown Timer */}
@@ -211,12 +214,13 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
           </span>
         </div>
 
-        {/* Counter Badge & Sound Toggle */}
+        {/* Counter Badge, Language Toggle & Sound Toggle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div className="counter-badge" style={{ padding: '6px 12px', fontSize: '0.9rem' }}>
             <Users size={14} color="var(--accent-earth-orange)" />
             <span><span className="highlight" style={{ fontSize: '1.1rem' }}>{answeredCount}</span>/{totalPlayers}</span>
           </div>
+          <LanguageToggle />
           <SoundToggle size={15} style={{ width: '32px', height: '32px' }} />
         </div>
       </div>
@@ -260,17 +264,17 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
             feedback.isPretest ? (
               <>
                 <CheckCircle2 size={50} color="#1D4ED8" style={{ marginBottom: '10px' }} />
-                <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#1D4ED8' }}>บันทึกคำตอบแล้ว ✨</h3>
+                <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#1D4ED8' }}>{t('pretestRecorded', 'บันทึกคำตอบแล้ว ✨')}</h3>
                 <p style={{ fontSize: '0.95rem', marginTop: '8px', color: '#3B82F6' }}>
-                  (โหมด Pre-test — ผลจะเปิดเผยตอน Post-test)
+                  {t('pretestNotice', '(โหมด Pre-test — ผลจะเปิดเผยตอน Post-test)')}
                 </p>
               </>
             ) : feedback.isCorrect ? (
               <>
                 <CheckCircle2 size={50} color="#166534" style={{ marginBottom: '10px' }} />
-                <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#166534' }}>ถูกต้องที่สุด! 🎉</h3>
+                <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#166534' }}>{t('correctAnswer', 'ถูกต้องที่สุด! 🎉')}</h3>
                 <p style={{ fontSize: '1.25rem', marginTop: '6px', fontWeight: 800, color: '#15803D' }}>
-                  +{feedback.pointsEarned} คะแนน!
+                  +{feedback.pointsEarned} {t('pts', 'คะแนน')}!
                 </p>
 
                 {/* Streak Badge */}
@@ -325,51 +329,51 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
                     }}
                   >
                     <Zap size={16} />
-                    <span>Comeback Boost! +40 (กำลังใจคนสู้กลับ!)</span>
+                    <span>Comeback Boost! +40 ({t('comebackBonusNotice', 'กำลังใจคนสู้กลับ!')})</span>
                   </div>
                 )}
 
                 {/* Points Breakdown */}
                 {(feedback.streakBonus > 0 || feedback.comebackBonus > 0) && (
                   <div style={{ fontSize: '0.78rem', color: '#15803D', marginTop: '8px', opacity: 0.9 }}>
-                    ฐานความเร็ว {feedback.basePoints || (feedback.pointsEarned - (feedback.streakBonus || 0) - (feedback.comebackBonus || 0))}
-                    {feedback.streakBonus > 0 && ` + โบนัสคอมโบ ${feedback.streakBonus}`}
-                    {feedback.comebackBonus > 0 && ` + สู้กลับ ${feedback.comebackBonus}`}
+                    {t('speedBasePoints', 'ฐานความเร็ว')} {feedback.basePoints || (feedback.pointsEarned - (feedback.streakBonus || 0) - (feedback.comebackBonus || 0))}
+                    {feedback.streakBonus > 0 && ` + ${t('streakBonusNotice', 'โบนัสคอมโบ')} ${feedback.streakBonus}`}
+                    {feedback.comebackBonus > 0 && ` + ${t('comebackBonusNotice', 'สู้กลับ')} ${feedback.comebackBonus}`}
                   </div>
                 )}
               </>
             ) : (
               <>
                 <XCircle size={50} color="#991B1B" style={{ marginBottom: '10px' }} />
-                <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#991B1B' }}>ยังไม่ถูกต้อง 😅</h3>
+                <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#991B1B' }}>{t('wrongAnswer', 'ยังไม่ถูกต้อง 😅')}</h3>
                 <p style={{ fontSize: '0.95rem', marginTop: '6px', color: 'var(--text-muted)' }}>
-                  ไม่ต้องเสียใจ สะสมความเข้าใจในข้อถัดไปกันนะ!
+                  {t('wrongEncourage', 'ไม่ต้องเสียใจ สะสมความเข้าใจในข้อถัดไปกันนะ!')}
                 </p>
               </>
             )
           ) : (isSubmitting || selectedOptionId) ? (
             <>
               <CheckCircle2 size={50} color="#1D4ED8" style={{ marginBottom: '10px' }} />
-              <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#1D4ED8' }}>บันทึกคำตอบแล้ว ✨</h3>
+              <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#1D4ED8' }}>{t('pretestRecorded', 'บันทึกคำตอบแล้ว ✨')}</h3>
               <p style={{ fontSize: '0.95rem', marginTop: '6px', color: 'var(--text-muted)' }}>
-                ส่งคำตอบเรียบร้อยแล้ว กำลังประมวลผลคะแนน...
+                {t('answerRecordedWait', 'ส่งคำตอบเรียบร้อยแล้ว กำลังประมวลผลคะแนน...')}
               </p>
             </>
           ) : (
             <>
               <Clock size={50} color="#D97706" style={{ marginBottom: '10px' }} />
-              <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#B45309' }}>หมดเวลาตอบคำถาม ⏳</h3>
+              <h3 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#B45309' }}>{t('timeOut', 'หมดเวลาตอบคำถาม ⏳')}</h3>
               <p style={{ fontSize: '0.95rem', marginTop: '6px', color: 'var(--text-muted)' }}>
-                ไม่ได้ส่งคำตอบทันในรอบนี้ ลุยต่อในข้อถัดไปนะ!
+                {t('timeOutEncourage', 'ไม่ได้ส่งคำตอบทันในรอบนี้ ลุยต่อในข้อถัดไปนะ!')}
               </p>
             </>
           )}
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '16px' }}>
             {hasMatchingResult
               ? (isFinalQuestion
-                  ? '🏁 คำถามข้อสุดท้ายเสร็จสิ้นแล้ว! เตรียมดูสรุปผลคะแนนและผู้ชนะบนหน้าจอใหญ่...'
-                  : 'สรุปผลคำตอบของเพื่อนๆ ทุกคนในข้อนี้:')
-              : 'รอการสรุปผลคำตอบจากวิทยากร...'}
+                  ? t('lastQuestionNotice', '🏁 คำถามข้อสุดท้ายเสร็จสิ้นแล้ว! เตรียมดูสรุปผลคะแนนและผู้ชนะบนหน้าจอใหญ่...')
+                  : t('classResultsNotice', 'สรุปผลคำตอบของเพื่อนๆ ทุกคนในข้อนี้:'))
+              : t('waitingHostSummary', 'รอการสรุปผลคำตอบจากวิทยากร...')}
           </p>
 
           {hasMatchingResult && !result.isPretest && result.quizMode !== 'PRETEST' && result.optionCounts && (
@@ -426,7 +430,7 @@ export const PlayerQuiz = ({ question, result, pin, player, answeredCount, total
                   const styleObj = OPTION_STYLES[idx % OPTION_STYLES.length];
                   return (
                     <div key={opt.id} style={{ fontSize: '0.75rem', fontWeight: 700, color: isCorrect ? '#166534' : 'var(--text-muted)' }}>
-                      {styleObj.symbol} ข้อ {idx + 1}
+                      {styleObj.symbol} {t('optionNumber', 'ข้อ')} {idx + 1}
                     </div>
                   );
                 })}
