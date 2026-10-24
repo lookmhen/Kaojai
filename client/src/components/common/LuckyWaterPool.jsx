@@ -1434,11 +1434,6 @@ export const LuckyWaterPool = ({
       prevY: y,
       isHover: true
     };
-
-    const normDist = Math.hypot((x - cx) / waterRx, (y - waterCy) / waterRy);
-    if (moveDist > 3 && normDist <= 1.1) {
-      sfx.playWaterStir(Math.min(1.2, moveDist / 15));
-    }
   };
 
   const handleMouseEnter = () => {
