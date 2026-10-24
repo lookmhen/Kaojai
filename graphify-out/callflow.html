@@ -60,7 +60,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 <div class="container">
 
 <h1>KaoJai — Complete Call Flow &amp; Architecture Documentation</h1>
-<p class="subtitle">Generated from graphify knowledge graph: 399 nodes, 1051 edges, 13 communities. Commit: 6a8b1c2</p>
+<p class="subtitle">Generated from graphify knowledge graph: 409 nodes, 1081 edges, 13 communities. Commit: edf1cc9</p>
 
 <div class="nav">
     <a href="#overview">Architecture Overview</a>
@@ -84,34 +84,34 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 flowchart LR
     BUILD_GRAPH_321CBB04("Graph Build<br/><small>56 nodes</small>")
     class BUILD_GRAPH_321CBB04 module;
-    OUTPUTS_DOCS_ED82387C("Outputs &amp; Docs<br/><small>17 nodes</small>")
+    OUTPUTS_DOCS_ED82387C("Outputs &amp; Docs<br/><small>15 nodes</small>")
     class OUTPUTS_DOCS_ED82387C module;
     TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>168 nodes</small>")
     class TESTS_FIXTURES_B84B1DCC module;
-    REACT_CLIENT_APPLICATION_SHELL_F7BB0F53("React Client &amp; Application Shell<br/><small>90 nodes</small>")
+    REACT_CLIENT_APPLICATION_SHELL_F7BB0F53("React Client &amp; Application Shell<br/><small>99 nodes</small>")
     class REACT_CLIENT_APPLICATION_SHELL_F7BB0F53 module;
-    AUDIO_SOUND_EFFECTS_SYSTEM_44C68A13("Audio &amp; Sound Effects System<br/><small>26 nodes</small>")
+    AUDIO_SOUND_EFFECTS_SYSTEM_44C68A13("Audio &amp; Sound Effects System<br/><small>34 nodes</small>")
     class AUDIO_SOUND_EFFECTS_SYSTEM_44C68A13 module;
     CONTAINERIZATION_DEPLOYMENT_CONFIG_94B0D4EB("Containerization &amp; Deployment Config<br/><small>16 nodes</small>")
     class CONTAINERIZATION_DEPLOYMENT_CONFIG_94B0D4EB module;
-    LEADERBOARD_PODIUM_EXPORT_REPORTS_57CC773D("Leaderboard Podium &amp; Export Reports<br/><small>14 nodes</small>")
+    LEADERBOARD_PODIUM_EXPORT_REPORTS_57CC773D("Leaderboard Podium &amp; Export Reports<br/><small>9 nodes</small>")
     class LEADERBOARD_PODIUM_EXPORT_REPORTS_57CC773D module;
     GEMINI_AI_QUIZ_GENERATION_SERVICE_E53EE978("Gemini AI Quiz Generation Service<br/><small>9 nodes</small>")
     class GEMINI_AI_QUIZ_GENERATION_SERVICE_E53EE978 module;
     UI_THEME_COLOR_PICKER_92C9DE32("UI Theme &amp; Color Picker<br/><small>3 nodes</small>")
     class UI_THEME_COLOR_PICKER_92C9DE32 module;
-    LEADERBOARD_PODIUM_EXPORT_REPORTS_57CC773D -->|imports x14| REACT_CLIENT_APPLICATION_SHELL_F7BB0F53
-    REACT_CLIENT_APPLICATION_SHELL_F7BB0F53 -->|imports x9| OUTPUTS_DOCS_ED82387C
-    OUTPUTS_DOCS_ED82387C -->|imports x9| REACT_CLIENT_APPLICATION_SHELL_F7BB0F53
     REACT_CLIENT_APPLICATION_SHELL_F7BB0F53 -->|calls x8| LEADERBOARD_PODIUM_EXPORT_REPORTS_57CC773D
+    OUTPUTS_DOCS_ED82387C -->|imports x8| REACT_CLIENT_APPLICATION_SHELL_F7BB0F53
+    REACT_CLIENT_APPLICATION_SHELL_F7BB0F53 -->|contains x6| OUTPUTS_DOCS_ED82387C
+    LEADERBOARD_PODIUM_EXPORT_REPORTS_57CC773D -->|imports x5| REACT_CLIENT_APPLICATION_SHELL_F7BB0F53
     TESTS_FIXTURES_B84B1DCC -->|imports x4| BUILD_GRAPH_321CBB04
     BUILD_GRAPH_321CBB04 -->|imports x4| REACT_CLIENT_APPLICATION_SHELL_F7BB0F53
-    REACT_CLIENT_APPLICATION_SHELL_F7BB0F53 -->|imports x2| BUILD_GRAPH_321CBB04
+    REACT_CLIENT_APPLICATION_SHELL_F7BB0F53 -->|imports x3| BUILD_GRAPH_321CBB04
     UI_THEME_COLOR_PICKER_92C9DE32 -->|imports x2| REACT_CLIENT_APPLICATION_SHELL_F7BB0F53
     TESTS_FIXTURES_B84B1DCC -->|imports x2| GEMINI_AI_QUIZ_GENERATION_SERVICE_E53EE978
     BUILD_GRAPH_321CBB04 -->|imports x2| TESTS_FIXTURES_B84B1DCC
-    OUTPUTS_DOCS_ED82387C -->|imports x2| BUILD_GRAPH_321CBB04
     REACT_CLIENT_APPLICATION_SHELL_F7BB0F53 -->|contains| AUDIO_SOUND_EFFECTS_SYSTEM_44C68A13
+    LEADERBOARD_PODIUM_EXPORT_REPORTS_57CC773D -->|imports| BUILD_GRAPH_321CBB04
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -128,24 +128,24 @@ flowchart LR
     <h4>Architecture Layers</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
-      <tr><td>Graph Build</td><td>56</td><td><code>4, 7</code></td></tr><tr><td>Outputs &amp; Docs</td><td>17</td><td><code>8</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>168</td><td><code>1, 2, 3, 5</code></td></tr><tr><td>React Client &amp; Application Shell</td><td>90</td><td><code>0</code></td></tr><tr><td>Audio &amp; Sound Effects System</td><td>26</td><td><code>6</code></td></tr><tr><td>Containerization &amp; Deployment Config</td><td>16</td><td><code>9</code></td></tr><tr><td>Leaderboard Podium &amp; Export Reports</td><td>14</td><td><code>10</code></td></tr><tr><td>Gemini AI Quiz Generation Service</td><td>9</td><td><code>11</code></td></tr><tr><td>UI Theme &amp; Color Picker</td><td>3</td><td><code>12</code></td></tr>
+      <tr><td>Graph Build</td><td>56</td><td><code>4, 7</code></td></tr><tr><td>Outputs &amp; Docs</td><td>15</td><td><code>8</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>168</td><td><code>1, 2, 3, 5</code></td></tr><tr><td>React Client &amp; Application Shell</td><td>99</td><td><code>0</code></td></tr><tr><td>Audio &amp; Sound Effects System</td><td>34</td><td><code>6</code></td></tr><tr><td>Containerization &amp; Deployment Config</td><td>16</td><td><code>9</code></td></tr><tr><td>Leaderboard Podium &amp; Export Reports</td><td>9</td><td><code>10</code></td></tr><tr><td>Gemini AI Quiz Generation Service</td><td>9</td><td><code>11</code></td></tr><tr><td>UI Theme &amp; Color Picker</td><td>3</td><td><code>12</code></td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Core Flow</h4>
-    <div class="arrow-chain">Containerization &amp; Deployment Config -&gt; Graph Build -&gt; React Client &amp; Application Shell -&gt; Outputs &amp; Docs -&gt; Tests &amp; Fixtures -&gt; Gemini AI Quiz Generation Service -&gt; Audio &amp; Sound Effects System</div>
+    <div class="arrow-chain">Containerization &amp; Deployment Config -&gt; Graph Build -&gt; React Client &amp; Application Shell -&gt; Leaderboard Podium &amp; Export Reports -&gt; Outputs &amp; Docs -&gt; Tests &amp; Fixtures -&gt; Gemini AI Quiz Generation Service</div>
   </div>
 </div>
 <div class="grid">
   <div class="card">
     <h4>Graph Report Highlights</h4>
     <ul>
-      <li>399 nodes · 1051 edges · 13 communities (11 shown, 2 thin omitted)</li>
-      <li>Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 124 edges (avg confidence: 0.85)</li>
-      <li>Token cost: 1,250 input · 850 output</li>
+      <li>409 nodes · 1081 edges · 13 communities (11 shown, 2 thin omitted)</li>
+      <li>Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 124 edges (avg confidence: 0.85)</li>
+      <li>Token cost: 0 input · 0 output</li>
       <li>1. `RoomManager` - 44 edges</li>
-      <li>2. `react` - 38 edges</li>
-      <li>3. `testRoomManager()` - 35 edges</li>
+      <li>2. `react` - 39 edges</li>
+      <li>3. `useI18n()` - 35 edges</li>
     </ul>
   </div>
 </div>
@@ -497,12 +497,12 @@ flowchart LR
 
 <!-- ====== 3. Outputs & Docs ====== -->
 <h2 id="outputs-docs">3. Outputs &amp; Docs</h2>
-<p>Outputs &amp; Docs groups implementation around client, errorboundaryjsx, context, components, mostly in components/common/ErrorBoundary.jsx, src/context/SocketContext.jsx, src/context/AuthContext.jsx. This section covers 17 nodes and 21 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Outputs &amp; Docs groups implementation around client, errorboundaryjsx, components, common, mostly in components/common/ErrorBoundary.jsx, src/context/SocketContext.jsx, src/context/AuthContext.jsx. This section covers 15 nodes and 15 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Outputs &amp; Docs (17 nodes, 21 edges)
+    %% Section: Outputs &amp; Docs (15 nodes, 15 edges)
     subgraph outputs_docs_components_common_ErrorBoundary_jsx_b3c49f55["components/common/ErrorBoundary.jsx"]
         client_src_components_common_errorboundary_error_e99602e7("ErrorBoundary<br/><small>components/common/ErrorBoundary.jsx</small>")
         client_src_components_common_errorboundary_error_5d229c33("getDerivedStateFromError()<br/><small>components/common/ErrorBoundary.jsx</small>")
@@ -517,8 +517,6 @@ flowchart LR
         client_src_context_socketcontext_setstorageitem_190951db("setStorageItem()<br/><small>src/context/SocketContext.jsx</small>")
         client_src_context_socketcontext_removestorageit_a97c098d("removeStorageItem()<br/><small>src/context/SocketContext.jsx</small>")
         client_src_context_socketcontext_getstorageitem_743c106d("getStorageItem()<br/><small>src/context/SocketContext.jsx</small>")
-        client_src_context_socketcontext_88868f4c("SocketContext.jsx")
-        client_src_context_socketcontext_socketcontext_69c532ed("SocketContext<br/><small>src/context/SocketContext.jsx</small>")
     end
     client_index_html_root_058e0589("Client HTML Mounting Point<br/><small>client/index.html</small>")
     client_src_main_81833a3f("main.jsx")
@@ -536,7 +534,6 @@ flowchart LR
     client_src_main_81833a3f -->|imports| client_src_context_i18ncontext_i18nprovider_ebd28a95
     client_src_main_81833a3f -->|imports| client_src_context_socketcontext_socketprovider_30701e88
     client_src_main_81833a3f -->|imports| client_src_components_common_errorboundary_error_e99602e7
-    client_src_main_81833a3f -->|imports| client_src_context_socketcontext_88868f4c
     client_src_main_81833a3f -->|imports| client_src_components_common_errorboundary_7164c440
     class client_src_components_common_errorboundary_error_e99602e7 ui;
     class client_src_components_common_errorboundary_error_5d229c33 ui;
@@ -549,8 +546,6 @@ flowchart LR
     class client_src_context_socketcontext_setstorageitem_190951db ui;
     class client_src_context_socketcontext_removestorageit_a97c098d ui;
     class client_src_context_socketcontext_getstorageitem_743c106d ui;
-    class client_src_context_socketcontext_88868f4c ui;
-    class client_src_context_socketcontext_socketcontext_69c532ed ui;
     class client_index_html_root_058e0589 concept;
     class client_src_main_81833a3f ui;
     class client_src_context_authcontext_authprovider_71edd290 ui;
@@ -682,22 +677,6 @@ flowchart LR
 </tr>
 <tr>
   <td>14</td>
-  <td><code>SocketContext.jsx</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>HostHeader.jsx</code><br><small style="color:var(--muted)">components/host/HostHeader.jsx</small><br><code>HostPulse.jsx</code><br><small style="color:var(--muted)">components/host/HostPulse.jsx</small><br>+5 more</td>
-  <td><code>react</code><br><small style="color:var(--muted)">client/package.json</small><br><code>socket.io-client</code><br><small style="color:var(--muted)">client/package.json</small></td>
-  <td>SocketContext.jsx node in src/context/SocketContext.jsx.</td>
-</tr>
-<tr>
-  <td>15</td>
-  <td><code>SocketContext</code><br><small style="color:var(--muted)">src/context/SocketContext.jsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>SocketContext node in src/context/SocketContext.jsx.</td>
-</tr>
-<tr>
-  <td>16</td>
   <td><code>main.jsx</code><br><small style="color:var(--muted)">client/src/main.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
@@ -705,7 +684,7 @@ flowchart LR
   <td>main.jsx node in client/src/main.jsx.</td>
 </tr>
 <tr>
-  <td>17</td>
+  <td>15</td>
   <td><code>Client HTML Mounting Point</code><br><small style="color:var(--muted)">client/index.html</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -720,7 +699,7 @@ flowchart LR
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
       <tr><td><code>components/common/ErrorBoundary.jsx</code></td><td>7 nodes</td></tr>
-<tr><td><code>src/context/SocketContext.jsx</code></td><td>6 nodes</td></tr>
+<tr><td><code>src/context/SocketContext.jsx</code></td><td>4 nodes</td></tr>
 <tr><td><code>client/index.html</code></td><td>1 nodes</td></tr>
 <tr><td><code>src/context/AuthContext.jsx</code></td><td>1 nodes</td></tr>
 <tr><td><code>src/context/I18nContext.jsx</code></td><td>1 nodes</td></tr>
@@ -729,7 +708,7 @@ flowchart LR
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x6, method x5, imports x4, calls x3. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: method x5, imports x4, calls x3, contains x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -1092,12 +1071,12 @@ flowchart LR
 
 <!-- ====== 5. React Client & Application Shell ====== -->
 <h2 id="react-client-application-shell">5. React Client &amp; Application Shell</h2>
-<p>React Client &amp; Application Shell groups implementation around client, components, player, common, mostly in components/common/LuckyWaterPool.jsx, components/player/AvatarPicker.jsx, src/context/I18nContext.jsx. This section covers 90 nodes and 369 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>React Client &amp; Application Shell groups implementation around client, components, player, host, mostly in components/common/LuckyWaterPool.jsx, components/player/AvatarPicker.jsx, src/context/I18nContext.jsx. This section covers 99 nodes and 408 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: React Client &amp; Application Shell (90 nodes, 369 edges)
+    %% Section: React Client &amp; Application Shell (99 nodes, 408 edges)
     subgraph react_client_application_shell_client_src_App_js_35d6d801["client/src/App.jsx"]
         client_src_app_624ee8b9("App.jsx")
         client_src_app_appcontent_6ef81deb("AppContent()<br/><small>client/src/App.jsx</small>")
@@ -1107,20 +1086,20 @@ flowchart LR
         client_src_components_common_luckydrawpage_d65939f2("LuckyDrawPage.jsx")
         client_src_components_common_luckydrawpage_lucky_8e2fdc79("LuckyDrawPage()<br/><small>components/common/LuckyDrawPage.jsx</small>")
     end
+    subgraph react_client_application_shell_components_host_H_76538266["components/host/HostLeaderboard.jsx"]
+        client_src_components_host_hostleaderboard_6530852b("HostLeaderboard.jsx")
+        client_src_components_host_hostleaderboard_hostl_9168cc64("HostLeaderboard()<br/><small>components/host/HostLeaderboard.jsx</small>")
+    end
     subgraph react_client_application_shell_components_player_67f7f642["components/player/JoinRoom.jsx"]
         client_src_components_player_joinroom_b22eaadc("JoinRoom.jsx")
         client_src_components_player_joinroom_joinroom_3f8227ae("JoinRoom()<br/><small>components/player/JoinRoom.jsx</small>")
-    end
-    subgraph react_client_application_shell_components_teache_18d07921["components/teacher/TeacherBackoffice.jsx"]
-        client_src_components_teacher_teacherbackoffice_8a05202f("TeacherBackoffice.jsx")
-        client_src_components_teacher_teacherbackoffice_bfdbe650("TeacherBackoffice()<br/><small>components/teacher/TeacherBackoffice.jsx</small>")
     end
     client_src_components_host_hostheader_hostheader_acd39dd9("HostHeader()<br/><small>components/host/HostHeader.jsx</small>")
     client_src_components_host_hostlobby_hostlobby_f9873ee1("HostLobby()<br/><small>components/host/HostLobby.jsx</small>")
     client_src_components_host_hostpulse_hostpulse_82faeba6("HostPulse()<br/><small>components/host/HostPulse.jsx</small>")
     client_src_components_host_hostquiz_hostquiz_e363b054("HostQuiz()<br/><small>components/host/HostQuiz.jsx</small>")
-    client_src_components_player_luckydrawplayerjoin_23116a06("LuckyDrawPlayerJoin()<br/><small>components/player/LuckyDrawPlayerJoin.jsx</small>")
     client_src_components_player_playerquiz_b2d0519d("PlayerQuiz.jsx")
+    client_src_components_teacher_teacherbackoffice_bfdbe650("TeacherBackoffice()<br/><small>components/teacher/TeacherBackoffice.jsx</small>")
     client_src_context_authcontext_useauth_4383b943("useAuth()<br/><small>src/context/AuthContext.jsx</small>")
     client_src_context_i18ncontext_usei18n_ed5a7387("useI18n()<br/><small>src/context/I18nContext.jsx</small>")
     client_src_context_socketcontext_usesocket_6908eb58("useSocket()<br/><small>src/context/SocketContext.jsx</small>")
@@ -1134,36 +1113,36 @@ flowchart LR
     client_src_app_appcontent_6ef81deb -->|calls| client_src_components_host_hostheader_hostheader_acd39dd9
     client_src_app_appcontent_6ef81deb -->|calls| client_src_components_host_hostpulse_hostpulse_82faeba6
     client_src_app_appcontent_6ef81deb -->|calls| client_src_components_host_hostlobby_hostlobby_f9873ee1
+    client_src_app_appcontent_6ef81deb -->|calls| client_src_components_host_hostleaderboard_hostl_9168cc64
     client_src_app_appcontent_6ef81deb -->|calls| client_src_components_host_hostquiz_hostquiz_e363b054
-    client_src_app_appcontent_6ef81deb -->|calls| client_src_components_player_luckydrawplayerjoin_23116a06
     client_src_components_common_luckydrawpage_lucky_8e2fdc79 -->|calls| client_src_context_i18ncontext_usei18n_ed5a7387
     client_src_components_host_hostheader_hostheader_acd39dd9 -->|calls| client_src_context_i18ncontext_usei18n_ed5a7387
+    client_src_components_host_hostleaderboard_hostl_9168cc64 -->|calls| client_src_context_i18ncontext_usei18n_ed5a7387
     client_src_components_host_hostlobby_hostlobby_f9873ee1 -->|calls| client_src_context_i18ncontext_usei18n_ed5a7387
     client_src_components_host_hostpulse_hostpulse_82faeba6 -->|calls| client_src_context_socketcontext_usesocket_6908eb58
     client_src_components_host_hostquiz_hostquiz_e363b054 -->|calls| client_src_context_i18ncontext_usei18n_ed5a7387
     client_src_components_player_joinroom_joinroom_3f8227ae -->|calls| client_src_context_i18ncontext_usei18n_ed5a7387
     client_src_components_player_joinroom_joinroom_3f8227ae -->|calls| client_src_context_socketcontext_usesocket_6908eb58
     client_src_components_player_joinroom_joinroom_3f8227ae -->|calls| client_src_context_authcontext_useauth_4383b943
-    client_src_components_player_luckydrawplayerjoin_23116a06 -->|calls| client_src_context_socketcontext_usesocket_6908eb58
     client_src_components_teacher_teacherbackoffice_bfdbe650 -->|calls| client_src_context_i18ncontext_usei18n_ed5a7387
     client_src_components_teacher_teacherbackoffice_bfdbe650 -->|calls| client_src_context_authcontext_useauth_4383b943
     client_src_app_624ee8b9 -->|imports| client_src_components_host_hostlobby_hostlobby_f9873ee1
-    %% Omitted for readability: 72 nodes, 22 edges
+    %% Omitted for readability: 81 nodes, 21 edges
     class client_src_app_624ee8b9 ui;
     class client_src_app_appcontent_6ef81deb ui;
     class client_src_app_app_48be5c1e ui;
     class client_src_components_common_luckydrawpage_d65939f2 ui;
     class client_src_components_common_luckydrawpage_lucky_8e2fdc79 ui;
+    class client_src_components_host_hostleaderboard_6530852b ui;
+    class client_src_components_host_hostleaderboard_hostl_9168cc64 ui;
     class client_src_components_player_joinroom_b22eaadc ui;
     class client_src_components_player_joinroom_joinroom_3f8227ae ui;
-    class client_src_components_teacher_teacherbackoffice_8a05202f ui;
-    class client_src_components_teacher_teacherbackoffice_bfdbe650 ui;
     class client_src_components_host_hostheader_hostheader_acd39dd9 ui;
     class client_src_components_host_hostlobby_hostlobby_f9873ee1 ui;
     class client_src_components_host_hostpulse_hostpulse_82faeba6 ui;
     class client_src_components_host_hostquiz_hostquiz_e363b054 ui;
-    class client_src_components_player_luckydrawplayerjoin_23116a06 ui;
     class client_src_components_player_playerquiz_b2d0519d ui;
+    class client_src_components_teacher_teacherbackoffice_bfdbe650 ui;
     class client_src_context_authcontext_useauth_4383b943 ui;
     class client_src_context_i18ncontext_usei18n_ed5a7387 ui;
     class client_src_context_socketcontext_usesocket_6908eb58 ui;
@@ -1270,6 +1249,14 @@ flowchart LR
 </tr>
 <tr>
   <td>11</td>
+  <td><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
+  <td><code>exportGameReportExcel()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>exportGameReportPDF()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>fireConfetti()</code><br><small style="color:var(--muted)">src/utils/confetti.js</small><br>+4 more</td>
+  <td>HostLeaderboard() node in components/host/HostLeaderboard.jsx.</td>
+</tr>
+<tr>
+  <td>12</td>
   <td><code>HostLobby()</code><br><small style="color:var(--muted)">components/host/HostLobby.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
@@ -1277,7 +1264,7 @@ flowchart LR
   <td>HostLobby() node in components/host/HostLobby.jsx.</td>
 </tr>
 <tr>
-  <td>12</td>
+  <td>13</td>
   <td><code>HostPulse()</code><br><small style="color:var(--muted)">components/host/HostPulse.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
@@ -1285,7 +1272,7 @@ flowchart LR
   <td>HostPulse() node in components/host/HostPulse.jsx.</td>
 </tr>
 <tr>
-  <td>13</td>
+  <td>14</td>
   <td><code>HostQuiz()</code><br><small style="color:var(--muted)">components/host/HostQuiz.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
@@ -1293,7 +1280,31 @@ flowchart LR
   <td>HostQuiz() node in components/host/HostQuiz.jsx.</td>
 </tr>
 <tr>
-  <td>14</td>
+  <td>15</td>
+  <td><code>SportsPodium()</code><br><small style="color:var(--muted)">components/host/SportsPodium.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>SportsPodium() node in components/host/SportsPodium.jsx.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>TeamPodium()</code><br><small style="color:var(--muted)">components/host/TeamPodium.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>TeamPodium() node in components/host/TeamPodium.jsx.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>TugOfWarView()</code><br><small style="color:var(--muted)">components/host/TugOfWarView.jsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
+  <td><code>useI18n()</code><br><small style="color:var(--muted)">src/context/I18nContext.jsx</small></td>
+  <td>TugOfWarView() node in components/host/TugOfWarView.jsx.</td>
+</tr>
+<tr>
+  <td>18</td>
   <td><code>AvatarPicker()</code><br><small style="color:var(--muted)">components/player/AvatarPicker.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>JoinRoom()</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small><br><code>JoinRoom.jsx</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small><br><code>LuckyDrawPlayerJoin()</code><br><small style="color:var(--muted)">components/player/LuckyDrawPlayerJoin.jsx</small><br>+1 more</td>
@@ -1301,7 +1312,7 @@ flowchart LR
   <td>AvatarPicker() node in components/player/AvatarPicker.jsx.</td>
 </tr>
 <tr>
-  <td>15</td>
+  <td>19</td>
   <td><code>getRandomAvatar()</code><br><small style="color:var(--muted)">components/player/AvatarPicker.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>AvatarPicker()</code><br><small style="color:var(--muted)">components/player/AvatarPicker.jsx</small><br><code>JoinRoom()</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small><br><code>JoinRoom.jsx</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small><br>+2 more</td>
@@ -1309,7 +1320,7 @@ flowchart LR
   <td>getRandomAvatar() node in components/player/AvatarPicker.jsx.</td>
 </tr>
 <tr>
-  <td>16</td>
+  <td>20</td>
   <td><code>JoinRoom()</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
@@ -1317,7 +1328,7 @@ flowchart LR
   <td>JoinRoom() node in components/player/JoinRoom.jsx.</td>
 </tr>
 <tr>
-  <td>17</td>
+  <td>21</td>
   <td><code>LuckyDrawPlayerJoin()</code><br><small style="color:var(--muted)">components/player/LuckyDrawPlayerJoin.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
@@ -1325,7 +1336,7 @@ flowchart LR
   <td>LuckyDrawPlayerJoin() node in components/player/LuckyDrawPlayerJoin.jsx.</td>
 </tr>
 <tr>
-  <td>18</td>
+  <td>22</td>
   <td><code>PlayerEndedView()</code><br><small style="color:var(--muted)">components/player/PlayerEndedView.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
@@ -1333,7 +1344,7 @@ flowchart LR
   <td>PlayerEndedView() node in components/player/PlayerEndedView.jsx.</td>
 </tr>
 <tr>
-  <td>19</td>
+  <td>23</td>
   <td><code>PlayerLeaderboardView()</code><br><small style="color:var(--muted)">components/player/PlayerLeaderboardView.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
@@ -1341,7 +1352,7 @@ flowchart LR
   <td>PlayerLeaderboardView() node in components/player/PlayerLeaderboardView.jsx.</td>
 </tr>
 <tr>
-  <td>20</td>
+  <td>24</td>
   <td><code>PlayerLobby()</code><br><small style="color:var(--muted)">components/player/PlayerLobby.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
@@ -1349,7 +1360,7 @@ flowchart LR
   <td>PlayerLobby() node in components/player/PlayerLobby.jsx.</td>
 </tr>
 <tr>
-  <td>21</td>
+  <td>25</td>
   <td><code>PlayerLuckyDrawOverlay()</code><br><small style="color:var(--muted)">components/player/PlayerLuckyDrawOverlay.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
@@ -1357,7 +1368,7 @@ flowchart LR
   <td>PlayerLuckyDrawOverlay() node in components/player/PlayerLuckyDrawOverlay.jsx.</td>
 </tr>
 <tr>
-  <td>22</td>
+  <td>26</td>
   <td><code>PlayerPulse()</code><br><small style="color:var(--muted)">components/player/PlayerPulse.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
@@ -1365,7 +1376,7 @@ flowchart LR
   <td>PlayerPulse() node in components/player/PlayerPulse.jsx.</td>
 </tr>
 <tr>
-  <td>23</td>
+  <td>27</td>
   <td><code>PlayerQuiz()</code><br><small style="color:var(--muted)">components/player/PlayerQuiz.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
@@ -1373,7 +1384,7 @@ flowchart LR
   <td>PlayerQuiz() node in components/player/PlayerQuiz.jsx.</td>
 </tr>
 <tr>
-  <td>24</td>
+  <td>28</td>
   <td><code>PlayerSequence()</code><br><small style="color:var(--muted)">components/player/PlayerSequence.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>PlayerQuiz()</code><br><small style="color:var(--muted)">components/player/PlayerQuiz.jsx</small><br><code>PlayerQuiz.jsx</code><br><small style="color:var(--muted)">components/player/PlayerQuiz.jsx</small></td>
@@ -1381,7 +1392,7 @@ flowchart LR
   <td>PlayerSequence() node in components/player/PlayerSequence.jsx.</td>
 </tr>
 <tr>
-  <td>25</td>
+  <td>29</td>
   <td><code>AiQuizGeneratorModal()</code><br><small style="color:var(--muted)">components/teacher/AiQuizGeneratorModal.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>TeacherBackoffice()</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small><br><code>TeacherBackoffice.jsx</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small></td>
@@ -1389,44 +1400,12 @@ flowchart LR
   <td>AiQuizGeneratorModal() node in components/teacher/AiQuizGeneratorModal.jsx.</td>
 </tr>
 <tr>
-  <td>26</td>
+  <td>30</td>
   <td><code>DatabaseBackupModal()</code><br><small style="color:var(--muted)">components/teacher/DatabaseBackupModal.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>TeacherBackoffice()</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small><br><code>TeacherBackoffice.jsx</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small></td>
   <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.jsx</small></td>
   <td>DatabaseBackupModal() node in components/teacher/DatabaseBackupModal.jsx.</td>
-</tr>
-<tr>
-  <td>27</td>
-  <td><code>SessionHistoryModal()</code><br><small style="color:var(--muted)">components/teacher/SessionHistoryModal.jsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>TeacherBackoffice()</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small><br><code>TeacherBackoffice.jsx</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small></td>
-  <td><code>exportGameReportExcel()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>exportGameReportPDF()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.jsx</small></td>
-  <td>SessionHistoryModal() node in components/teacher/SessionHistoryModal.jsx.</td>
-</tr>
-<tr>
-  <td>28</td>
-  <td><code>TeacherBackoffice()</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
-  <td><code>AiQuizGeneratorModal()</code><br><small style="color:var(--muted)">components/teacher/AiQuizGeneratorModal.jsx</small><br><code>DatabaseBackupModal()</code><br><small style="color:var(--muted)">components/teacher/DatabaseBackupModal.jsx</small><br><code>LanguageToggle()</code><br><small style="color:var(--muted)">components/common/LanguageToggle.jsx</small><br>+4 more</td>
-  <td>TeacherBackoffice() node in components/teacher/TeacherBackoffice.jsx.</td>
-</tr>
-<tr>
-  <td>29</td>
-  <td><code>UserManagementModal()</code><br><small style="color:var(--muted)">components/teacher/UserManagementModal.jsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>JoinRoom()</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small><br><code>JoinRoom.jsx</code><br><small style="color:var(--muted)">components/player/JoinRoom.jsx</small><br><code>TeacherBackoffice()</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small><br>+1 more</td>
-  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.jsx</small></td>
-  <td>UserManagementModal() node in components/teacher/UserManagementModal.jsx.</td>
-</tr>
-<tr>
-  <td>30</td>
-  <td><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.jsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>AdminLoginModal()</code><br><small style="color:var(--muted)">components/auth/AdminLoginModal.jsx</small><br><code>AdminLoginModal.jsx</code><br><small style="color:var(--muted)">components/auth/AdminLoginModal.jsx</small><br><code>AiQuizGeneratorModal()</code><br><small style="color:var(--muted)">components/teacher/AiQuizGeneratorModal.jsx</small><br>+13 more</td>
-  <td>No direct outbound edge</td>
-  <td>useAuth() node in src/context/AuthContext.jsx.</td>
 </tr>
 </table>
 
@@ -1447,26 +1426,27 @@ flowchart LR
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: imports x140, imports x94, calls x81, contains x49. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: imports x161, imports x101, calls x86, contains x54. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
 
 <!-- ====== 6. Audio & Sound Effects System ====== -->
 <h2 id="audio-sound-effects-system">6. Audio &amp; Sound Effects System</h2>
-<p>Audio &amp; Sound Effects System groups implementation around client, utils, audiosfxjs, soundeffects, mostly in src/utils/audioSFX.js. This section covers 26 nodes and 41 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Audio &amp; Sound Effects System groups implementation around client, utils, audiosfxjs, soundeffects, mostly in src/utils/audioSFX.js. This section covers 34 nodes and 60 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Audio &amp; Sound Effects System (26 nodes, 41 edges)
+    %% Section: Audio &amp; Sound Effects System (34 nodes, 60 edges)
     client_src_utils_audiosfx_soundeffects_9af1e4d2("SoundEffects<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_togglemut_08190645("toggleMute()<br/><small>src/utils/audioSFX.js</small>")
     client_src_utils_audiosfx_soundeffects_starttens_14be19e4("startTensionLoop()<br/><small>src/utils/audioSFX.js</small>")
-    client_src_utils_audiosfx_soundeffects_playballc_289f7546("playBallClack()<br/><small>src/utils/audioSFX.js</small>")
-    client_src_utils_audiosfx_soundeffects_playballc_9a853884("playBallCrack()<br/><small>src/utils/audioSFX.js</small>")
-    client_src_utils_audiosfx_soundeffects_playbubbl_df89f2f0("playBubble()<br/><small>src/utils/audioSFX.js</small>")
-    client_src_utils_audiosfx_soundeffects_playcomeb_ea37dda6("playComeback()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_togglelob_c5c0becb("toggleLobbyBGM()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_toggleluc_cd4a0e6c("toggleLuckyDrawBGM()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_startlobb_d79ee964("startLobbyBGM()<br/><small>src/utils/audioSFX.js</small>")
     client_src_utils_audiosfx_soundeffects_construct_d9266ef0("constructor()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playtick_198e5cd2("playTick()<br/><small>src/utils/audioSFX.js</small>")
     client_src_utils_audiosfx_soundeffects_playtense_48e205a3("playTenseTick()<br/><small>src/utils/audioSFX.js</small>")
     client_src_utils_audiosfx_soundeffects_playcount_529a16c4("playCountdownBeep()<br/><small>src/utils/audioSFX.js</small>")
     client_src_utils_audiosfx_soundeffects_playcutec_9b5821e4("playCuteChime()<br/><small>src/utils/audioSFX.js</small>")
@@ -1474,11 +1454,11 @@ flowchart LR
     client_src_utils_audiosfx_soundeffects_playwrong_c35ec5b3("playWrong()<br/><small>src/utils/audioSFX.js</small>")
     client_src_utils_audiosfx_soundeffects_playfanfa_685297a2("playFanfare()<br/><small>src/utils/audioSFX.js</small>")
     client_src_utils_audiosfx_soundeffects_playpop_55990715("playPop()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playbubbl_df89f2f0("playBubble()<br/><small>src/utils/audioSFX.js</small>")
     client_src_utils_audiosfx_soundeffects_playstrea_a9b120cb("playStreak()<br/><small>src/utils/audioSFX.js</small>")
-    client_src_utils_audiosfx_soundeffects_playwater_8d238150("playWaterStir()<br/><small>src/utils/audioSFX.js</small>")
-    client_src_utils_audiosfx_soundeffects_getballso_1b37b159("getBallSound()<br/><small>src/utils/audioSFX.js</small>")
-    client_src_utils_audiosfx_soundeffects_unlock_43a1c612("unlock()<br/><small>src/utils/audioSFX.js</small>")
+    client_src_utils_audiosfx_soundeffects_playcomeb_ea37dda6("playComeback()<br/><small>src/utils/audioSFX.js</small>")
     client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_construct_d9266ef0
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playtick_198e5cd2
     client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playtense_48e205a3
     client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playcount_529a16c4
     client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playcutec_9b5821e4
@@ -1489,20 +1469,21 @@ flowchart LR
     client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playbubbl_df89f2f0
     client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playstrea_a9b120cb
     client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playcomeb_ea37dda6
-    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playwater_8d238150
-    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_getballso_1b37b159
-    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_unlock_43a1c612
-    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playballc_289f7546
-    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_playballc_9a853884
     client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_starttens_14be19e4
-    %% Omitted for readability: 8 nodes, 0 edges
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_startlobb_d79ee964
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_togglemut_08190645
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_togglelob_c5c0becb
+    client_src_utils_audiosfx_soundeffects_9af1e4d2 -->|method| client_src_utils_audiosfx_soundeffects_toggleluc_cd4a0e6c
+    client_src_utils_audiosfx_soundeffects_togglelob_c5c0becb -->|calls| client_src_utils_audiosfx_soundeffects_startlobb_d79ee964
+    %% Omitted for readability: 16 nodes, 0 edges
     class client_src_utils_audiosfx_soundeffects_9af1e4d2 klass;
+    class client_src_utils_audiosfx_soundeffects_togglemut_08190645 function;
     class client_src_utils_audiosfx_soundeffects_starttens_14be19e4 function;
-    class client_src_utils_audiosfx_soundeffects_playballc_289f7546 function;
-    class client_src_utils_audiosfx_soundeffects_playballc_9a853884 function;
-    class client_src_utils_audiosfx_soundeffects_playbubbl_df89f2f0 function;
-    class client_src_utils_audiosfx_soundeffects_playcomeb_ea37dda6 function;
+    class client_src_utils_audiosfx_soundeffects_togglelob_c5c0becb function;
+    class client_src_utils_audiosfx_soundeffects_toggleluc_cd4a0e6c function;
+    class client_src_utils_audiosfx_soundeffects_startlobb_d79ee964 function;
     class client_src_utils_audiosfx_soundeffects_construct_d9266ef0 function;
+    class client_src_utils_audiosfx_soundeffects_playtick_198e5cd2 function;
     class client_src_utils_audiosfx_soundeffects_playtense_48e205a3 function;
     class client_src_utils_audiosfx_soundeffects_playcount_529a16c4 function;
     class client_src_utils_audiosfx_soundeffects_playcutec_9b5821e4 function;
@@ -1510,10 +1491,9 @@ flowchart LR
     class client_src_utils_audiosfx_soundeffects_playwrong_c35ec5b3 function;
     class client_src_utils_audiosfx_soundeffects_playfanfa_685297a2 function;
     class client_src_utils_audiosfx_soundeffects_playpop_55990715 function;
+    class client_src_utils_audiosfx_soundeffects_playbubbl_df89f2f0 function;
     class client_src_utils_audiosfx_soundeffects_playstrea_a9b120cb function;
-    class client_src_utils_audiosfx_soundeffects_playwater_8d238150 function;
-    class client_src_utils_audiosfx_soundeffects_getballso_1b37b159 function;
-    class client_src_utils_audiosfx_soundeffects_unlock_43a1c612 function;
+    class client_src_utils_audiosfx_soundeffects_playcomeb_ea37dda6 function;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -1540,7 +1520,7 @@ flowchart LR
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-class">Class</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>constructor()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>getBallSound()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br>+22 more</td>
+  <td><code>constructor()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>getBallSound()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br>+30 more</td>
   <td>SoundEffects node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
@@ -1563,12 +1543,28 @@ flowchart LR
   <td>4</td>
   <td><code>.init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>playBallClack()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>playBallCrack()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>playBubble()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br>+13 more</td>
+  <td><code>playBallClack()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>playBallCrack()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>playBubble()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br>+15 more</td>
   <td>No direct outbound edge</td>
   <td>.init() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
   <td>5</td>
+  <td><code>.isLobbyBGMPlaying()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.isLobbyBGMPlaying() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>.isLuckyDrawBGMPlaying()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.isLuckyDrawBGMPlaying() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>7</td>
   <td><code>.isMuted()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1576,7 +1572,7 @@ flowchart LR
   <td>.isMuted() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>6</td>
+  <td>8</td>
   <td><code>.playBallClack()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1584,7 +1580,7 @@ flowchart LR
   <td>.playBallClack() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>7</td>
+  <td>9</td>
   <td><code>.playBallCrack()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1592,7 +1588,7 @@ flowchart LR
   <td>.playBallCrack() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>8</td>
+  <td>10</td>
   <td><code>.playBubble()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1600,7 +1596,7 @@ flowchart LR
   <td>.playBubble() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>9</td>
+  <td>11</td>
   <td><code>.playComeback()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1608,7 +1604,7 @@ flowchart LR
   <td>.playComeback() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>10</td>
+  <td>12</td>
   <td><code>.playCorrect()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1616,7 +1612,7 @@ flowchart LR
   <td>.playCorrect() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>11</td>
+  <td>13</td>
   <td><code>.playCountdownBeep()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1624,7 +1620,7 @@ flowchart LR
   <td>.playCountdownBeep() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>12</td>
+  <td>14</td>
   <td><code>.playCuteChime()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1632,7 +1628,7 @@ flowchart LR
   <td>.playCuteChime() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>13</td>
+  <td>15</td>
   <td><code>.playFanfare()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1640,7 +1636,7 @@ flowchart LR
   <td>.playFanfare() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>14</td>
+  <td>16</td>
   <td><code>.playPop()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1648,7 +1644,7 @@ flowchart LR
   <td>.playPop() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>15</td>
+  <td>17</td>
   <td><code>.playStreak()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1656,7 +1652,7 @@ flowchart LR
   <td>.playStreak() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>16</td>
+  <td>18</td>
   <td><code>.playTenseTick()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1664,7 +1660,7 @@ flowchart LR
   <td>.playTenseTick() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>17</td>
+  <td>19</td>
   <td><code>.playTick()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1672,7 +1668,7 @@ flowchart LR
   <td>.playTick() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>18</td>
+  <td>20</td>
   <td><code>.playWaterSplash()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1680,7 +1676,7 @@ flowchart LR
   <td>.playWaterSplash() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>19</td>
+  <td>21</td>
   <td><code>.playWaterStir()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1688,7 +1684,7 @@ flowchart LR
   <td>.playWaterStir() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>20</td>
+  <td>22</td>
   <td><code>.playWrong()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1696,7 +1692,7 @@ flowchart LR
   <td>.playWrong() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>21</td>
+  <td>23</td>
   <td><code>.setBallSound()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1704,7 +1700,23 @@ flowchart LR
   <td>.setBallSound() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>22</td>
+  <td>24</td>
+  <td><code>.startLobbyBGM()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>toggleLobbyBGM()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>stopLobbyBGM()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.startLobbyBGM() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>.startLuckyDrawBGM()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>toggleLuckyDrawBGM()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>init()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>stopLuckyDrawBGM()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td>.startLuckyDrawBGM() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>26</td>
   <td><code>.startTensionLoop()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
@@ -1712,36 +1724,36 @@ flowchart LR
   <td>.startTensionLoop() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>23</td>
+  <td>27</td>
+  <td><code>.stopLobbyBGM()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>startLobbyBGM()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>toggleLobbyBGM()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br>+1 more</td>
+  <td>No direct outbound edge</td>
+  <td>.stopLobbyBGM() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>.stopLuckyDrawBGM()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>startLuckyDrawBGM()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>toggleLuckyDrawBGM()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br>+1 more</td>
+  <td>No direct outbound edge</td>
+  <td>.stopLuckyDrawBGM() node in src/utils/audioSFX.js.</td>
+</tr>
+<tr>
+  <td>29</td>
   <td><code>.stopTensionLoop()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>startTensionLoop()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
+  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>startTensionLoop()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>toggleMute()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td>No direct outbound edge</td>
   <td>.stopTensionLoop() node in src/utils/audioSFX.js.</td>
 </tr>
 <tr>
-  <td>24</td>
+  <td>30</td>
   <td><code>.subscribe()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
   <td>No direct outbound edge</td>
   <td>.subscribe() node in src/utils/audioSFX.js.</td>
-</tr>
-<tr>
-  <td>25</td>
-  <td><code>.toggleMute()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
-  <td>No direct outbound edge</td>
-  <td>.toggleMute() node in src/utils/audioSFX.js.</td>
-</tr>
-<tr>
-  <td>26</td>
-  <td><code>.unlock()</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>SoundEffects</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small></td>
-  <td>No direct outbound edge</td>
-  <td>.unlock() node in src/utils/audioSFX.js.</td>
 </tr>
 </table>
 
@@ -1750,12 +1762,12 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>src/utils/audioSFX.js</code></td><td>26 nodes</td></tr>
+      <tr><td><code>src/utils/audioSFX.js</code></td><td>34 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: method x25, calls x16. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: method x33, calls x27. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -1983,12 +1995,12 @@ flowchart LR
 
 <!-- ====== 8. Leaderboard Podium & Export Reports ====== -->
 <h2 id="leaderboard-podium-export-reports">8. Leaderboard Podium &amp; Export Reports</h2>
-<p>Leaderboard Podium &amp; Export Reports groups implementation around client, components, host, exportreportjs, mostly in src/utils/exportReport.js, components/host/HostLeaderboard.jsx, components/host/SportsPodium.jsx. This section covers 14 nodes and 24 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Leaderboard Podium &amp; Export Reports groups implementation around client, exportreportjs, utils, sessionhistorymodaljsx, mostly in src/utils/exportReport.js, components/teacher/SessionHistoryModal.jsx. This section covers 9 nodes and 15 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Leaderboard Podium &amp; Export Reports (14 nodes, 24 edges)
+    %% Section: Leaderboard Podium &amp; Export Reports (9 nodes, 15 edges)
     subgraph leaderboard_podium_export_reports_src_utils_expo_c4f8f700["src/utils/exportReport.js"]
         client_src_utils_exportreport_8fafbdd0("exportReport.js")
         client_src_utils_exportreport_exportgamereportcs_743a0965("exportGameReportCSV()<br/><small>src/utils/exportReport.js</small>")
@@ -2000,33 +2012,18 @@ flowchart LR
         ref_html2canvas_34a43d58("ref_html2canvas")
         ref_jspdf_cb10dc1c("ref_jspdf")
     end
-    subgraph leaderboard_podium_export_reports_components_hos_f31b36f7["components/host/HostLeaderboard.jsx"]
-        client_src_components_host_hostleaderboard_6530852b("HostLeaderboard.jsx")
-        client_src_components_host_hostleaderboard_hostl_9168cc64("HostLeaderboard()<br/><small>components/host/HostLeaderboard.jsx</small>")
+    subgraph leaderboard_podium_export_reports_components_tea_350dbbeb["components/teacher/SessionHistoryModal.jsx"]
+        client_src_components_teacher_sessionhistorymoda_1e1459e8("SessionHistoryModal.jsx")
+        client_src_components_teacher_sessionhistorymoda_d25143f9("SessionHistoryModal()<br/><small>components/teacher/SessionHistoryModal.jsx</small>")
     end
-    subgraph leaderboard_podium_export_reports_components_hos_0296c808["components/host/SportsPodium.jsx"]
-        client_src_components_host_sportspodium_sportspo_03221185("SportsPodium()<br/><small>components/host/SportsPodium.jsx</small>")
-        client_src_components_host_sportspodium_bdaecec9("SportsPodium.jsx")
-    end
-    subgraph leaderboard_podium_export_reports_components_hos_c2237ac3["components/host/TeamPodium.jsx"]
-        client_src_components_host_teampodium_teampodium_3dbec270("TeamPodium()<br/><small>components/host/TeamPodium.jsx</small>")
-        client_src_components_host_teampodium_53c8a9b0("TeamPodium.jsx")
-    end
-    spec_team_battle_cd0eefe7("Team Battle &amp; Tug-of-War Score Aggregation<br/><small>spec.md</small>")
-    client_src_components_host_hostleaderboard_hostl_9168cc64 -->|calls| client_src_components_host_sportspodium_sportspo_03221185
-    client_src_components_host_hostleaderboard_hostl_9168cc64 -->|calls| client_src_components_host_teampodium_teampodium_3dbec270
-    client_src_components_host_hostleaderboard_hostl_9168cc64 -->|calls| client_src_utils_exportreport_exportgamereportex_b4f42b4c
-    client_src_components_host_hostleaderboard_hostl_9168cc64 -->|calls| client_src_utils_exportreport_exportgamereportpd_b99ff738
+    client_src_components_teacher_sessionhistorymoda_d25143f9 -->|calls| client_src_utils_exportreport_exportgamereportex_b4f42b4c
+    client_src_components_teacher_sessionhistorymoda_d25143f9 -->|calls| client_src_utils_exportreport_exportgamereportpd_b99ff738
     client_src_utils_exportreport_exportgamereportcs_743a0965 -->|calls| client_src_utils_exportreport_preparereportdata_6448dc3d
     client_src_utils_exportreport_exportgamereportex_b4f42b4c -->|calls| client_src_utils_exportreport_preparereportdata_6448dc3d
     client_src_utils_exportreport_exportgamereportpd_b99ff738 -->|calls| client_src_utils_exportreport_preparereportdata_6448dc3d
-    client_src_components_host_hostleaderboard_6530852b -->|imports| client_src_utils_exportreport_exportgamereportex_b4f42b4c
-    client_src_components_host_hostleaderboard_6530852b -->|imports| client_src_utils_exportreport_exportgamereportpd_b99ff738
-    client_src_components_host_hostleaderboard_6530852b -->|imports| client_src_components_host_sportspodium_sportspo_03221185
-    client_src_components_host_hostleaderboard_6530852b -->|imports| client_src_components_host_teampodium_teampodium_3dbec270
-    client_src_components_host_hostleaderboard_6530852b -->|imports| client_src_utils_exportreport_8fafbdd0
-    client_src_components_host_hostleaderboard_6530852b -->|imports| client_src_components_host_sportspodium_bdaecec9
-    client_src_components_host_hostleaderboard_6530852b -->|imports| client_src_components_host_teampodium_53c8a9b0
+    client_src_components_teacher_sessionhistorymoda_1e1459e8 -->|imports| client_src_utils_exportreport_exportgamereportex_b4f42b4c
+    client_src_components_teacher_sessionhistorymoda_1e1459e8 -->|imports| client_src_utils_exportreport_exportgamereportpd_b99ff738
+    client_src_components_teacher_sessionhistorymoda_1e1459e8 -->|imports| client_src_utils_exportreport_8fafbdd0
     client_src_utils_exportreport_8fafbdd0 -->|imports| ref_html2canvas_34a43d58
     client_src_utils_exportreport_8fafbdd0 -->|imports| ref_jspdf_cb10dc1c
     class client_src_utils_exportreport_8fafbdd0 module;
@@ -2036,13 +2033,8 @@ flowchart LR
     class client_src_utils_exportreport_preparereportdata_6448dc3d function;
     class ref_html2canvas_34a43d58 function;
     class ref_jspdf_cb10dc1c function;
-    class client_src_components_host_hostleaderboard_6530852b ui;
-    class client_src_components_host_hostleaderboard_hostl_9168cc64 ui;
-    class client_src_components_host_sportspodium_sportspo_03221185 ui;
-    class client_src_components_host_sportspodium_bdaecec9 ui;
-    class client_src_components_host_teampodium_teampodium_3dbec270 ui;
-    class client_src_components_host_teampodium_53c8a9b0 ui;
-    class spec_team_battle_cd0eefe7 test;
+    class client_src_components_teacher_sessionhistorymoda_1e1459e8 ui;
+    class client_src_components_teacher_sessionhistorymoda_d25143f9 ui;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -2066,30 +2058,14 @@ flowchart LR
 </tr>
 <tr>
   <td>1</td>
-  <td><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
+  <td><code>SessionHistoryModal()</code><br><small style="color:var(--muted)">components/teacher/SessionHistoryModal.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
-  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small><br><code>AppContent()</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
-  <td><code>exportGameReportExcel()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>exportGameReportPDF()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>fireConfetti()</code><br><small style="color:var(--muted)">src/utils/confetti.js</small><br>+3 more</td>
-  <td>HostLeaderboard() node in components/host/HostLeaderboard.jsx.</td>
+  <td><code>TeacherBackoffice()</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small><br><code>TeacherBackoffice.jsx</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small></td>
+  <td><code>exportGameReportExcel()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>exportGameReportPDF()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>useAuth()</code><br><small style="color:var(--muted)">src/context/AuthContext.jsx</small></td>
+  <td>SessionHistoryModal() node in components/teacher/SessionHistoryModal.jsx.</td>
 </tr>
 <tr>
   <td>2</td>
-  <td><code>SportsPodium()</code><br><small style="color:var(--muted)">components/host/SportsPodium.jsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
-  <td>No direct outbound edge</td>
-  <td>SportsPodium() node in components/host/SportsPodium.jsx.</td>
-</tr>
-<tr>
-  <td>3</td>
-  <td><code>TeamPodium()</code><br><small style="color:var(--muted)">components/host/TeamPodium.jsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
-  <td>No direct outbound edge</td>
-  <td>TeamPodium() node in components/host/TeamPodium.jsx.</td>
-</tr>
-<tr>
-  <td>4</td>
   <td><code>exportGameReportCSV()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td>External entry / no inbound edge</td>
@@ -2097,7 +2073,7 @@ flowchart LR
   <td>Exports documentation data to a target format.</td>
 </tr>
 <tr>
-  <td>5</td>
+  <td>3</td>
   <td><code>exportGameReportExcel()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>SessionHistoryModal()</code><br><small style="color:var(--muted)">components/teacher/SessionHistoryModal.jsx</small><br>+1 more</td>
@@ -2105,7 +2081,7 @@ flowchart LR
   <td>Exports documentation data to a target format.</td>
 </tr>
 <tr>
-  <td>6</td>
+  <td>4</td>
   <td><code>exportGameReportPDF()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>HostLeaderboard()</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>SessionHistoryModal()</code><br><small style="color:var(--muted)">components/teacher/SessionHistoryModal.jsx</small><br>+1 more</td>
@@ -2113,7 +2089,7 @@ flowchart LR
   <td>Exports documentation data to a target format.</td>
 </tr>
 <tr>
-  <td>7</td>
+  <td>5</td>
   <td><code>prepareReportData()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>exportGameReportCSV()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>exportGameReportExcel()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>exportGameReportPDF()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
@@ -2121,31 +2097,15 @@ flowchart LR
   <td>prepareReportData() node in src/utils/exportReport.js.</td>
 </tr>
 <tr>
-  <td>8</td>
-  <td><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
+  <td>6</td>
+  <td><code>SessionHistoryModal.jsx</code><br><small style="color:var(--muted)">components/teacher/SessionHistoryModal.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
-  <td><code>App.jsx</code><br><small style="color:var(--muted)">client/src/App.jsx</small></td>
-  <td><code>audioSFX.js</code><br><small style="color:var(--muted)">src/utils/audioSFX.js</small><br><code>confetti.js</code><br><small style="color:var(--muted)">src/utils/confetti.js</small><br><code>exportGameReportExcel()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br>+12 more</td>
-  <td>HostLeaderboard.jsx node in components/host/HostLeaderboard.jsx.</td>
+  <td><code>TeacherBackoffice.jsx</code><br><small style="color:var(--muted)">components/teacher/TeacherBackoffice.jsx</small></td>
+  <td><code>AuthContext.jsx</code><br><small style="color:var(--muted)">src/context/AuthContext.jsx</small><br><code>exportGameReportExcel()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br><code>exportGameReportPDF()</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small><br>+4 more</td>
+  <td>SessionHistoryModal.jsx node in components/teacher/SessionHistoryModal.jsx.</td>
 </tr>
 <tr>
-  <td>9</td>
-  <td><code>SportsPodium.jsx</code><br><small style="color:var(--muted)">components/host/SportsPodium.jsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
-  <td><code>lucide-react</code><br><small style="color:var(--muted)">client/package.json</small><br><code>react</code><br><small style="color:var(--muted)">client/package.json</small></td>
-  <td>SportsPodium.jsx node in components/host/SportsPodium.jsx.</td>
-</tr>
-<tr>
-  <td>10</td>
-  <td><code>TeamPodium.jsx</code><br><small style="color:var(--muted)">components/host/TeamPodium.jsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small></td>
-  <td><code>lucide-react</code><br><small style="color:var(--muted)">client/package.json</small><br><code>react</code><br><small style="color:var(--muted)">client/package.json</small></td>
-  <td>TeamPodium.jsx node in components/host/TeamPodium.jsx.</td>
-</tr>
-<tr>
-  <td>11</td>
+  <td>7</td>
   <td><code>exportReport.js</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
   <td><span class="tag tag-class">Module</span></td>
   <td><code>HostLeaderboard.jsx</code><br><small style="color:var(--muted)">components/host/HostLeaderboard.jsx</small><br><code>SessionHistoryModal.jsx</code><br><small style="color:var(--muted)">components/teacher/SessionHistoryModal.jsx</small></td>
@@ -2153,15 +2113,7 @@ flowchart LR
   <td>Exports documentation data to a target format.</td>
 </tr>
 <tr>
-  <td>12</td>
-  <td><code>Team Battle &amp; Tug-of-War Score Aggregation</code><br><small style="color:var(--muted)">spec.md</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Team Battle &amp; Tug-of-War Score Aggregation node in spec.md.</td>
-</tr>
-<tr>
-  <td>13</td>
+  <td>8</td>
   <td><code>ref_html2canvas</code><br><small style="color:var(--muted)"></small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>exportReport.js</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
@@ -2169,7 +2121,7 @@ flowchart LR
   <td>Exports documentation data to a target format.</td>
 </tr>
 <tr>
-  <td>14</td>
+  <td>9</td>
   <td><code>ref_jspdf</code><br><small style="color:var(--muted)"></small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>exportReport.js</code><br><small style="color:var(--muted)">src/utils/exportReport.js</small></td>
@@ -2184,15 +2136,12 @@ flowchart LR
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
       <tr><td><code>src/utils/exportReport.js</code></td><td>5 nodes</td></tr>
-<tr><td><code>components/host/HostLeaderboard.jsx</code></td><td>2 nodes</td></tr>
-<tr><td><code>components/host/SportsPodium.jsx</code></td><td>2 nodes</td></tr>
-<tr><td><code>components/host/TeamPodium.jsx</code></td><td>2 nodes</td></tr>
-<tr><td><code>spec.md</code></td><td>1 nodes</td></tr>
+<tr><td><code>components/teacher/SessionHistoryModal.jsx</code></td><td>2 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: calls x7, contains x7, imports x5, imports x4. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: calls x5, contains x5, imports x3, imports x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -2438,8 +2387,8 @@ flowchart LR
   <div class="card">
     <h4>Graph</h4>
     <table style="width:100%;font-size:0.85rem;">
-      <tr><td>Nodes</td><td>399</td></tr>
-      <tr><td>Edges</td><td>1051</td></tr>
+      <tr><td>Nodes</td><td>409</td></tr>
+      <tr><td>Edges</td><td>1081</td></tr>
       <tr><td>Hyperedges</td><td>1</td></tr>
       <tr><td>Communities</td><td>13</td></tr>
       <tr><td>Documented Sections</td><td>9</td></tr>
@@ -2448,7 +2397,7 @@ flowchart LR
   <div class="card">
     <h4>Edge Confidence</h4>
     <table style="width:100%;font-size:0.85rem;">
-      <tr><td>EXTRACTED</td><td>927</td></tr>
+      <tr><td>EXTRACTED</td><td>957</td></tr>
       <tr><td>INFERRED</td><td>124</td></tr>
       <tr><td>AMBIGUOUS</td><td>0</td></tr>
     </table>
@@ -2457,7 +2406,7 @@ flowchart LR
 
 <div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
   <p>KaoJai — Architecture Documentation</p>
-  <p>Generated: 2026-10-24 14:07 UTC · graphify callflow-html</p>
+  <p>Generated: 2026-10-24 15:24 UTC · graphify callflow-html</p>
 </div>
 
 </div><!-- .container -->
