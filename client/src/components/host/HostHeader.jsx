@@ -2,9 +2,11 @@ import React from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { Users, Play, Activity, LogOut, Gift } from 'lucide-react';
 import { SoundToggle } from '../common/SoundToggle';
+import { useI18n } from '../../context/I18nContext';
 import { LanguageToggle } from '../common/LanguageToggle';
 
 export const HostHeader = ({ pin, mode, counts, onSwitchMode, onLeave, onOpenLuckyDraw }) => {
+  const { t } = useI18n();
   return (
     <header
       style={{
@@ -76,12 +78,12 @@ export const HostHeader = ({ pin, mode, counts, onSwitchMode, onLeave, onOpenLuc
         <div className="counter-badge">
           <Users size={18} color="var(--accent-earth-orange)" />
           <span>
-            {mode === 'QUIZ' ? 'ตอบแล้ว ' : 'ส่งสัญญาณแล้ว '}
+            {mode === 'QUIZ' ? t('answered', 'ตอบแล้ว ') : t('signaled', 'ส่งสัญญาณแล้ว ')}
             <span className="highlight">
               {mode === 'QUIZ' ? (counts?.answeredCount || 0) : (counts?.pulseAnsweredCount || 0)}
             </span>
             {' / '}
-            {counts?.totalPlayers || 0} คน
+            {counts?.totalPlayers || 0} {t('personUnit', 'คน')}
           </span>
         </div>
 
@@ -130,7 +132,7 @@ export const HostHeader = ({ pin, mode, counts, onSwitchMode, onLeave, onOpenLuc
             gap: '6px'
           }}
         >
-          <LogOut size={16} /> จบเซสชัน
+          <LogOut size={16} /> {t('endSession', 'จบเซสชัน')}
         </button>
       </div>
     </header>

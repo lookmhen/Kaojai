@@ -696,6 +696,19 @@ export function AppContent() {
     socket.emit('assign_team', { pin, playerId, teamId: typeof teamId === 'string' ? teamId : null, hostToken: getEffectiveHostToken() });
   };
 
+  const handleRemovePlayer = (playerId) => {
+    if (!socket || !playerId) return;
+    socket.emit('host_remove_player', {
+      pin,
+      hostToken: getEffectiveHostToken(),
+      playerId
+    }, (res) => {
+      if (res && !res.success) {
+        setErrorMessage(res.message || 'ไม่สามารถนำผู้เล่นออกได้');
+      }
+    });
+  };
+
   return (
     <div className="app-container">
       {/* Connection Indicator Banner */}

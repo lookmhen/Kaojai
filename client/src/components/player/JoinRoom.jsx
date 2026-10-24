@@ -5,9 +5,11 @@ import { AdminLoginModal } from '../auth/AdminLoginModal';
 import { UserManagementModal } from '../teacher/UserManagementModal';
 import { AvatarPicker, getRandomAvatar } from './AvatarPicker';
 import { LanguageToggle } from '../common/LanguageToggle';
+import { useI18n } from '../../context/I18nContext';
 import { LogIn, Crown, BookOpen, Gamepad2, MonitorPlay, ArrowLeft, Rocket, Sparkles, Tv, Users, Gift, Lock, LogOut, Shield, GraduationCap } from 'lucide-react';
 
 export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacherBackoffice, onOpenLuckyDraw }) => {
+  const { t } = useI18n();
   const { socket, session, saveSessionData } = useSocket();
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
@@ -247,7 +249,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
               boxShadow: '0 2px 6px rgba(0,0,0,0.04)'
             }}
           >
-            <ArrowLeft size={18} color="var(--accent-earth-blue)" /> กลับสู่หน้าเลือกบทบาท
+            <ArrowLeft size={18} color="var(--accent-earth-blue)" /> {t('backToRoles', 'กลับสู่หน้าเลือกบทบาท')}
           </button>
           <LanguageToggle />
         </div>
@@ -258,10 +260,10 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
               <Gamepad2 size={34} color="#138808" />
             </div>
             <h2 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--text-main)' }}>
-              เข้าร่วมตอบคำถาม (Join Game)
+              {t('joinGame', 'เข้าร่วมตอบคำถาม (Join Game)')}
             </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-              กรอก Game PIN และตั้งชื่อ Nickname เพื่อเข้าเล่น
+              {t('joinGameDesc', 'กรอก Game PIN และตั้งชื่อ Nickname เพื่อเข้าเล่น')}
             </p>
           </div>
 
@@ -283,7 +285,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
               }}
             >
               <div style={{ fontSize: '0.86rem', color: '#1E40AF', fontWeight: 700, marginBottom: '6px' }}>
-                ✨ ตรวจพบเซสชันเดิมของคุณในห้องนี้
+                ✨ {t('reconnectNotice', 'ตรวจพบเซสชันเดิมของคุณในห้องนี้')}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '10px' }}>
                 <img
@@ -461,7 +463,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
               <input
                 type="text"
                 maxLength={30}
-                placeholder="กรอกชื่อของคุณ..."
+                placeholder={t('enterNickname', 'กรอกชื่อของคุณ...')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 style={{
@@ -498,7 +500,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                 borderBottom: '4px solid #0B5605'
               }}
             >
-              <LogIn size={22} /> {isLoading ? 'กำลังเข้าห้อง...' : 'เข้าร่วมตอบคำถาม (Join Game)'}
+              <LogIn size={22} /> {isLoading ? t('joiningRoom', 'กำลังเข้าห้อง...') : t('joinGame', 'เข้าร่วมตอบคำถาม (Join Game)')}
             </button>
           </form>
         </div>
@@ -563,7 +565,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                   cursor: 'pointer'
                 }}
               >
-                <Users size={12} /> จัดการผู้ใช้
+                <Users size={12} /> {t('manageUsers', 'จัดการผู้ใช้')}
               </button>
             )}
             <button
@@ -584,7 +586,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                 cursor: 'pointer'
               }}
             >
-              <LogOut size={12} /> ออกจากระบบ
+              <LogOut size={12} /> {t('logout', 'ออกจากระบบ')}
             </button>
           </div>
         ) : (
@@ -610,7 +612,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
               transition: 'all 0.2s'
             }}
           >
-            <Lock size={15} color="var(--accent-earth-blue)" /> 🔐 เข้าสู่ระบบผู้สอน/แอดมิน
+            <Lock size={15} color="var(--accent-earth-blue)" /> 🔐 {t('loginHost', 'เข้าสู่ระบบผู้สอน/แอดมิน')}
           </button>
         )}
       </div>
@@ -620,10 +622,10 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
           <Sparkles size={16} /> Interactive Training & Quiz System
         </div>
         <h1 style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-main)', letterSpacing: '-0.5px' }}>
-          ยินดีต้อนรับสู่ KaoJai
+          {t('welcome', 'ยินดีต้อนรับสู่ KaoJai')}
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginTop: '6px', fontWeight: 500 }}>
-          โปรดเลือกบทบาทของคุณเพื่อเริ่มต้นใช้งานระบบ
+          {t('chooseRole', 'โปรดเลือกบทบาทของคุณเพื่อเริ่มต้นใช้งานระบบ')}
         </p>
       </div>
 
@@ -652,13 +654,13 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
             </div>
             <div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 800, color: '#138808', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
-                <Rocket size={14} /> สำหรับผู้เรียน / ผู้เข้าร่วม
+                <Rocket size={14} /> {t('forStudent', 'สำหรับผู้เรียน / ผู้เข้าร่วม')}
               </div>
               <h2 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 6px 0', lineHeight: 1.2 }}>
-                เข้าร่วมตอบคำถาม (Join Game)
+                {t('joinGame', 'เข้าร่วมตอบคำถาม (Join Game)')}
               </h2>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0, lineHeight: 1.5 }}>
-                กรอกรหัส **Game PIN 6 หลัก** หรือสแกน QR Code เพื่อเข้าตอบคำถามสดผ่านสมาร์ทโฟน
+                {t('studentCardDesc', 'กรอกรหัส Game PIN 6 หลัก หรือสแกน QR Code เพื่อเข้าตอบคำถามสดผ่านสมาร์ทโฟน')}
               </p>
             </div>
           </div>
@@ -684,7 +686,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                 cursor: 'pointer'
               }}
             >
-              <Rocket size={22} /> เข้าตอบคำถาม
+              <Rocket size={22} /> {t('enterQuiz', 'เข้าตอบคำถาม')}
             </button>
           </div>
         </div>
@@ -706,13 +708,13 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
               </div>
               <div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-earth-blue)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
-                  <Tv size={14} /> สำหรับวิทยากร / ผู้สอน
+                  <Tv size={14} /> {t('forTeacher', 'สำหรับวิทยากร / ผู้สอน')}
                 </div>
                 <h2 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 6px 0', lineHeight: 1.2 }}>
-                  เปิดเกมสดขึ้นจอใหญ่ (Host Dashboard)
+                  {t('hostDashboard', 'เปิดเกมสดขึ้นจอใหญ่ (Host Dashboard)')}
                 </h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0, lineHeight: 1.5 }}>
-                  สร้างห้องกิจกรรมใหม่ แสดง PIN & QR Code สลับโหมด Quiz & Pulse หรือเข้าคลังข้อสอบ
+                  {t('hostCardDesc', 'สร้างห้องกิจกรรมใหม่ แสดง PIN & QR Code สลับโหมด Quiz & Pulse หรือเข้าคลังข้อสอบ')}
                 </p>
               </div>
             </div>
@@ -737,7 +739,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                   cursor: 'pointer'
                 }}
               >
-                <Tv size={20} /> สร้างห้องกิจกรรมใหม่
+                <Tv size={20} /> {t('createNewRoom', 'สร้างห้องกิจกรรมใหม่')}
               </button>
 
               <button
@@ -758,7 +760,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                   cursor: 'pointer'
                 }}
               >
-                <BookOpen size={18} color="var(--accent-earth-blue)" /> คลังคำถาม
+                <BookOpen size={18} color="var(--accent-earth-blue)" /> {t('quizBank', 'คลังคำถาม')}
               </button>
 
               <button
@@ -780,7 +782,7 @@ export const JoinRoom = ({ onJoined, onSwitchToHost, onResumeRoom, onOpenTeacher
                   boxShadow: '0 2px 6px rgba(234, 88, 12, 0.1)'
                 }}
               >
-                <Gift size={18} color="#EA580C" /> Lucky Draw
+                <Gift size={18} color="#EA580C" /> {t('luckyDraw', 'Lucky Draw')}
               </button>
             </div>
           </div>
